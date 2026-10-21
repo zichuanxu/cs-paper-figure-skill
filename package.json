@@ -1,0 +1,29 @@
+{
+  "name": "cs-paper-figure-skill",
+  "version": "1.0.0",
+  "description": "Agent skill for designing and drawing figures for computer-science research papers (Claude Code, Codex).",
+  "bin": {
+    "cs-paper-figure-skill": "bin/install.js"
+  },
+  "files": [
+    "bin/",
+    "cs-paper-figure/"
+  ],
+  "keywords": [
+    "claude-code",
+    "agent-skill",
+    "skill",
+    "scientific-figures",
+    "paper",
+    "matplotlib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zichuanxu/cs-paper-figure-skill.git"
+  },
+  "homepage": "https://github.com/zichuanxu/cs-paper-figure-skill#readme",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.7"
+  }
+}

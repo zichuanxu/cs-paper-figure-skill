@@ -17,27 +17,44 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 
 ## Gallery
 
-### MemT-1.0 redesign
+### MemT-1.0: the paper's figures vs. this skill's
 
-The two figures below redesign Figures 3 and 4 of *MemT-1.0: Towards Memory-Native Evolution* ([arXiv:2610.26825](https://arxiv.org/abs/2610.26825); the originals are on pages 2 and 6). Every value, symbol and equation comes from the paper. An independent review agent checked both against the paper's text.
+These are redesigns of Figures 3 and 4 of *MemT-1.0: Towards Memory-Native Evolution* ([arXiv:2610.26825](https://arxiv.org/abs/2610.26825), pages 2 and 6). Every value, symbol and equation comes from the paper, and an independent review agent checked both redesigns against the paper's text. Both figures are shown at the same width.
 
-**Figure 4: architecture.** The original nests four zoom levels with crossing rays, draws the memory matrix, gates and update rule as text boxes, and leaves the key idea (memory evolving across turns) to a small inset. The redesign:
-- uses one zoom step into the Transformer block;
-- gives the memory state `M_t` its own column;
-- separates the read path (every token, green) from the write path (once per turn, purple);
-- draws one GDN-2 update step on the matrix itself (forget → erase → outer-product write) above its typeset equation;
-- marks the offline-trained hyper-memory projections as amber trapezoids in place;
-- adds a turn timeline for `θ_t = {θ_b, φ, M_t}`.
+#### Figure 4: architecture
+
+| Original (MemT-1.0 paper) | Redesigned with this skill |
+| --- | --- |
+| <img src="gallery/memt/original/memt_original_fig4.png" width="420"> | <img src="gallery/memt/memt_fig4_architecture.png" width="420"> |
+
+| | Original | Redesign |
+| --- | --- | --- |
+| Zoom structure | Four nested zoom levels; the blue and purple rays cross | One zoom step into the Transformer block; a separate column holds the memory state |
+| Key idea: memory evolves across turns | A small inset at the bottom left | Panel (e): a turn timeline (`M₁ = 0` → write → `M₂` → `M₃`), with reads on every token and a write at each turn end |
+| Memory state `M_t` | A small grid icon | Stacked matrix slabs in its own teal column, the only teal element in the figure |
+| Storage update | Erase / Write / Forget text boxes and a "GDN-2 Update" box | A token-level chain of state grids, plus one step drawn on the grid (forget fade → erase row → ⊕ outer-product write) above the typeset rule |
+| Hyper memory φ | A separate inventory box of parameter names, joined by ~250 pt green loops | Amber trapezoids where the projections are used; no inventory box and no long loops |
+| Colour meaning | Green is both the state and a readout box; "inherited" blue also fills the new projections | Grey = frozen backbone, teal = state, blue = read path, violet = write path, amber = φ; panel header bands share the colour of their path |
+| Text | Subscripts at 3–3.5 pt, slogans inside the figure | Typeset STIX math at ≥ 6 pt; noun-phrase labels; narrative moved to the caption |
 
 [PDF](gallery/memt/memt_fig4_architecture.pdf) · [source](cs-paper-figure/scripts/examples/memt/render_fig4.py)
 
-**Figure 3: efficiency.** The original uses log-scale bars that start at an arbitrary floor, so bar length means nothing, and it never shows the ratios. The redesign:
-- plots latency as a slope chart from 128K to 256K, with brackets for **3.99×** and **59×** faster;
-- shows storage as an area-true waffle where one cell is the 40 MiB MemT memory: Full Context fills about 130 cells, Temp-LoRA 4.3 and MemT 1.
+#### Figure 3: efficiency
+
+| Original (MemT-1.0 paper) | Redesigned with this skill |
+| --- | --- |
+| <img src="gallery/memt/original/memt_original_fig3.png" width="420"> | <img src="gallery/memt/memt_fig3_efficiency.png" width="420"> |
+
+| | Original | Redesign |
+| --- | --- | --- |
+| Encoding | Horizontal bars on a log axis starting at an arbitrary 10, so bar length means nothing | Dots and slope lines on a log axis for latency; an area-true waffle for storage (one cell = 40 MiB) |
+| The claim | Ratios are never shown | Brackets for **3.99×** and **59×** faster at 256K; **130×** and **4.3×** less storage |
+| Scaling with context | 128K and 256K split into two panels | One slope chart 128K → 256K with the latency increase per method (+46 % vs +214 % vs +100 %) |
+| 1M context | "Too Large" in a hatched bar tail | "at 1M: too large", as reported, next to the Full Context waffle |
 
 [PDF](gallery/memt/memt_fig3_efficiency.pdf) · [source](cs-paper-figure/scripts/examples/memt/render_fig3.py)
 
-![MemT-1.0 efficiency, redesigned](gallery/memt/memt_fig3_efficiency.png)
+The original figure crops in `gallery/memt/original/` are © the MemT-1.0 authors, reproduced for comparison under the paper's [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) license; they are not covered by this repository's MIT license.
 
 ### Five worked examples: before → after
 
@@ -55,7 +72,29 @@ Full-size PDFs: [method](gallery/after/method.pdf) · [attention](gallery/after/
 
 ## Installation
 
-Copy the skill folder into your agent's skills directory. For Claude Code:
+Install with `npx` (Node.js 16.7 or later; nothing else is installed globally):
+
+```bash
+npx github:zichuanxu/cs-paper-figure-skill
+```
+
+This copies the skill to `~/.claude/skills/cs-paper-figure` for Claude Code. Options:
+
+| Flag | Installs to |
+| --- | --- |
+| *(none)* | `~/.claude/skills/cs-paper-figure` (Claude Code, all projects) |
+| `--project` | `./.claude/skills/cs-paper-figure` (Claude Code, current project only) |
+| `--codex` | `~/.codex/skills/cs-paper-figure` (Codex) |
+| `--dir <path>` | `<path>/cs-paper-figure` (any skills directory) |
+| `--force` | Replaces an existing install; the old copy is kept as a timestamped backup |
+
+For example, to install into the current project only:
+
+```bash
+npx github:zichuanxu/cs-paper-figure-skill --project
+```
+
+Or install manually:
 
 ```bash
 git clone https://github.com/zichuanxu/cs-paper-figure-skill.git
@@ -110,4 +149,4 @@ python scripts/paperkit.py compare original.png out/new.png side_by_side.png
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE), except the original MemT-1.0 figure crops in `gallery/memt/original/` (CC BY-NC-SA 4.0, © their authors).

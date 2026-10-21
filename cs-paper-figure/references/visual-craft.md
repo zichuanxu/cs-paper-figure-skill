@@ -28,8 +28,8 @@ The previous examples were scientifically careful but read as flowcharts or comp
 
 Before polishing, state the one thing a reader should get in five seconds and make it the largest,
 most saturated, highest-contrast element. MemT Fig. 4 → "memory is read every token and written once
-per turn"; the redesign gives the state matrix its own column, colours the read path green, the write
-path purple, and adds a turn timeline. MemT Fig. 3 → "4× faster, 130× smaller"; the redesign prints
+per turn"; the redesign gives the state matrix its own column, colours the read path blue, the write
+path violet, the state teal, and adds a turn timeline. MemT Fig. 3 → "4× faster, 130× smaller"; the redesign prints
 those ratios in bold hero blue next to brackets. If nothing is visibly the hero, the figure is not done.
 
 ## 2. Typography
@@ -56,8 +56,11 @@ role), `mark` (saturated, data marks and the hero). Text on a role is always tha
 pure black and never the stroke colour.
 
 - 3–5 hues, each with exactly one meaning, stated somewhere (legend row, caption, or panel title).
-  MemT redesign: slate = frozen backbone, green = memory state and read path, purple = write path,
-  amber = parameters trained offline (φ), coral/teal = locally scoped gate terms.
+  MemT redesign: grey = frozen backbone (recedes), teal = the memory state M only, blue = read path,
+  violet = write path, amber = parameters trained offline (φ), coral/grey = locally scoped gate terms.
+  Each panel's header band takes the colour of the path it explains, so the reader can match panels
+  to wires without a legend. A first draft used green for both the state and the read path; an
+  independent review flagged it, and splitting state from read was the single biggest clarity gain.
 - **Novel vs inherited.** Inherited parts neutral/slate; the paper's contribution gets the saturated
   hue, a 0.8–1.0 pt stroke, and optionally a soft shadow (`shadow=True`). Do not paint inherited
   and new parts with one hue (MemT original used "inherited" blue for its new K/V/Q projections).
