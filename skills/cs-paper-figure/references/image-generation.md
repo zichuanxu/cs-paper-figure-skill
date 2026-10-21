@@ -52,11 +52,15 @@ vector text; photos and screenshots are always real artefacts, never illustratio
    against the paper's definitions before generating.
 9. **Extend from a reference.** To add icons to an existing set (or keep two figures of one paper
    consistent), pass an existing icon with `--ref`; the prompt marks it as a style reference.
-10. **Check at print size.** Read the contact sheet's 48 px previews; if the prop that carries the
+10. **Place icons with `cv.image()`, never a raw `imshow`.** It resamples the 512 px icon once with
+    Lanczos to its printed size at `paperkit.RASTER_DPI` (600) and mattes off only the border-connected
+    white. Letting matplotlib shrink a 512 px icon to ~70 px itself breaks thin outlines into dashes,
+    which reads as "blurry". PNGs are exported at 600 dpi for the same reason.
+11. **Check at print size.** Read the contact sheet's 48 px previews; if the prop that carries the
    meaning (laptop, pencil, magnifier) is not readable at 8 mm, simplify the subject or enlarge.
-11. **Record provenance.** `manifest.json` keeps the prompt, tool version and date; many venues ask
+12. **Record provenance.** `manifest.json` keeps the prompt, tool version and date; many venues ask
    authors to disclose generated imagery, so mention it in the acknowledgements or caption notes.
-12. **Keep a vector fallback in the script.** Render scripts must still run without the PNGs
+13. **Keep a vector fallback in the script.** Render scripts must still run without the PNGs
     (`--vector-icons`, or a missing file falls back to `cv.icon_*`).
 
 ## 4. Workflow

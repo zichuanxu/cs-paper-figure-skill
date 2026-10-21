@@ -41,7 +41,8 @@ STYLES = {
                 "pastel colours led by the accent colour, no hard shadows on the ground, no reflections"),
 }
 RULES = ("Pure white (#FFFFFF) background, square 1024x1024 canvas, the subject centred with about 12% empty "
-         "margin on every side, readable as a silhouette at 8 mm wide. No text, letters, numbers, logos, "
+         "margin on every side. It will be printed 6-9 mm wide, so use bold outlines (about 2.5% of the canvas "
+         "width), large simple shapes and few small details; it must stay clear at 64x64 px. No text, letters, numbers, logos, "
          "watermarks, UI chrome, borders or frames anywhere in the image.")
 
 

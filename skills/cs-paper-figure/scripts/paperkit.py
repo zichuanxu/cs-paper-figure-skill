@@ -89,6 +89,10 @@ def use_fonts(family="serif"):
     return fam[0]
 
 
+# PNG export resolution; raster icons are pre-resampled to it so they stay crisp
+RASTER_DPI = 600
+
+
 # ----------------------------------------------------------------- canvas ---
 class Canvas:
     def __init__(self, width_mm, height_mm, family="serif", size=7.0):
@@ -374,24 +378,36 @@ class Canvas:
     def image(self, path, cx, cy, w, z=12, knockout_white=True, crop=True):
         """Place a raster icon/illustration centred at (cx, cy) with width w mm (height from aspect).
         Use only for illustrative content (agent mascots, scene photos), never for labels or data.
-        knockout_white makes near-white pixels transparent; crop trims empty margins first."""
-        from PIL import Image
+        The icon is resampled once with Lanczos to its printed size at RASTER_DPI: letting matplotlib
+        shrink a 512 px icon to ~70 px breaks thin outlines into dashes. knockout_white mattes off only
+        the white background connected to the border, with soft (un-multiplied) edges, so interior
+        whites stay opaque and rims don't halo on tinted bands. Returns the placed height in mm."""
+        from PIL import Image, ImageDraw, ImageFilter
         im = Image.open(path).convert("RGBA")
-        a = np.asarray(im).astype(float)
+        im = Image.alpha_composite(Image.new("RGBA", im.size, "white"), im).convert("RGB")
         if crop:
-            ink = (a[..., :3].min(axis=2) < 245) & (a[..., 3] > 10)
-            ys, xs = np.nonzero(ink)
-            if len(xs):
+            box = im.convert("L").point(lambda v: 255 if v < 245 else 0).getbbox()
+            if box:
                 pad = 8
-                im = im.crop((max(xs.min() - pad, 0), max(ys.min() - pad, 0),
-                              min(xs.max() + pad, im.width), min(ys.max() + pad, im.height)))
-                a = np.asarray(im).astype(float)
+                im = im.crop((max(box[0] - pad, 0), max(box[1] - pad, 0),
+                              min(box[2] + pad, im.width), min(box[3] + pad, im.height)))
+        tw = max(8, round(w / 25.4 * RASTER_DPI))
+        th = max(8, round(tw * im.height / im.width))
+        im = im.resize((tw, th), Image.LANCZOS)
+        a = np.asarray(im).astype(float) / 255.0
+        alpha = np.ones(a.shape[:2])
         if knockout_white:
-            lum = a[..., :3].min(axis=2)
-            a[..., 3] = np.where(lum > 248, 0, a[..., 3])
-        h = w * a.shape[0] / a.shape[1]
-        self.ax.imshow(a / 255.0, extent=(cx - w / 2, cx + w / 2, cy - h / 2, cy + h / 2), zorder=z,
-                       interpolation="lanczos")
+            m = Image.new("L", (tw + 2, th + 2), 255)
+            m.paste(Image.fromarray(((a.min(axis=2) > 0.96) * 255).astype(np.uint8)), (1, 1))
+            ImageDraw.floodfill(m, (0, 0), 128)
+            outside = np.asarray(m)[1:-1, 1:-1] == 128
+            rim = np.asarray(Image.fromarray((outside * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5))) > 0
+            soft = np.clip((1.0 - a.min(axis=2)) / 0.25, 0.0, 1.0)
+            alpha = np.where(outside, 0.0, np.where(rim, soft, 1.0))
+            a = np.clip((a - (1.0 - alpha[..., None])) / np.maximum(alpha, 1e-3)[..., None], 0.0, 1.0)
+        h = w * th / tw
+        self.ax.imshow(np.dstack([a, alpha]), extent=(cx - w / 2, cx + w / 2, cy - h / 2, cy + h / 2), zorder=z,
+                       interpolation="lanczos", interpolation_stage="rgba")
         self.ax.set_xlim(0, self.w)
         self.ax.set_ylim(0, self.h)
         return h
@@ -522,12 +538,12 @@ class Canvas:
         return (x + s * depth, ym)
 
     # ---- export ---------------------------------------------------------------
-    def save(self, stem, png_dpi=300, formats=("pdf", "svg", "png")):
+    def save(self, stem, png_dpi=None, formats=("pdf", "svg", "png")):
         _P(stem).parent.mkdir(parents=True, exist_ok=True)
         out = []
         for f in formats:
             p = f"{stem}.{f}"
-            kw = {"dpi": png_dpi} if f == "png" else {}
+            kw = {"dpi": png_dpi or RASTER_DPI} if f == "png" else {}
             if f == "pdf":
                 kw["metadata"] = {"Creator": "paperkit", "CreationDate": None}
             self.fig.savefig(p, **kw)
