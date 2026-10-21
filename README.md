@@ -14,6 +14,7 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | [`references/visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | The rulebook for *how it should look*: typography, role colour families, glyph vocabulary, composition patterns, connectors, density targets, chart craft, a beat-the-original protocol and an anti-pattern checklist |
 | [`references/craft-study-2026-10.md`](skills/cs-paper-figure/references/craft-study-2026-10.md) | The evidence behind those rules: readings of IdeaScientist and SkillOpt overview figures and measured fonts, colours, strokes and ink density of Gated DeltaNet, Kimi Linear, Titans, NSA, DeepSeek-V3, Hymba, BLT, Nemotron-H and others |
 | [`scripts/paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at printed size: cards, nodes, state matrices, vectors, trapezoid projections, ⊕/⊙ operators, token strips, documents, stacks, gates, icons (frozen / trainable / fixed / evolving), zoom rays, routed arrows, colour-coded equations, plus `density` and `compare` review commands |
+| [`references/image-generation.md`](skills/cs-paper-figure/references/image-generation.md) + [`scripts/codex_icons.py`](skills/cs-paper-figure/scripts/codex_icons.py) | Optional icon generation with Codex CLI: when generated art helps and when it does not (from 11 overview figures by Microsoft, NVIDIA, Google DeepMind, Meta, OpenAI, Tencent, Alibaba and DeepSeek), rules for one matched set, and a helper that writes the prompt, runs `codex exec`, cleans the PNGs and records provenance |
 | `scripts/examples/` | Reference figures with their render scripts: the Transformer, Harness² and MemT-1.0 redesigns and the five restyled examples below |
 | `references/` (other files) | A 120-paper / 261-figure corpus of 2024–2026 papers, per-lab studies, figure patterns, scientific-integrity contract, export and review checks |
 
@@ -54,8 +55,9 @@ Redesigns of Figures 2 and 3 of *Harness²: Recursive Agent Harnessing for an Op
 
 | | Original | Redesign |
 | --- | --- | --- |
-| The agent loop | Call/result arrows only; the order is left implicit | Numbered steps ① context → ② tool call → ③ plugin hook into the tool → ④ result → ⑤ trajectory and deliverable |
-| Frozen vs editable | A glowing circle | Model marked frozen (snowflake); every component drawn as an editable file with its ID, path and activation |
+| The agent loop | Call/result arrows only | Context in, tool call through the plugin hook to the tools, result back (a cycle mark, since the loop repeats), then trajectory and deliverable out |
+| Frozen vs editable | A glowing circle | The model is drawn as the paper's robot held in an ice block, the same character as in Figure 3; every component is drawn as an editable file with its ID, path and activation |
+| Icons | Generic clipart | Six icons generated with this skill's Codex helper from one style spec, with the Figure 3 executor as a style reference: the frozen model, the new subagent, and one emblem per group header (context, plugin, tools, orchestration), each in its group colour. `--vector-icons` renders without them |
 | Delegation | A dashed arrow into the Orchestration box | A dashed "delegate" route into C5, which spawns a "new agent" |
 | Decoration | Soft blue glow behind the model | Removed; one quiet halo ring |
 
@@ -69,7 +71,7 @@ Redesigns of Figures 2 and 3 of *Harness²: Recursive Agent Harnessing for an Op
 
 | | Original | Redesign |
 | --- | --- | --- |
-| Visual style | Mixed clipart from different sources, handwritten and serif fonts | One matched icon set generated with Codex: the same robot character for executor, editor/composer and reflector, each in its role colour (blue, amber, violet). The script falls back to vector icons if the PNGs are absent. One serif typeface with typeset math |
+| Visual style | Mixed clipart from different sources, handwritten and serif fonts | One icon set generated with this skill's Codex helper and shared with Figure 2: the same robot character for executor (laptop), editor/composer (pencil over a +/− diff) and reflector (magnifier over a notebook), each in its role colour (blue, amber, violet). `--vector-icons` renders without them. One serif typeface with typeset math |
 | Structure | Two boxes joined by thick arrows | Two bands forming one cycle: the task level runs left to right through numbered stages (Reference → Propose → Probe → Compose), the harnessing level runs right to left, and the library sits under the Propose stage it feeds |
 | Probe | Two rows with no outcome | Each candidate is run under the same model and environment and contrasted with e₀: mitigates / no change / regresses |
 | Compose | "Combine & Finalize" and a gauge | The four decisions from the paper (merge supported, revise conflicts, adopt one, keep current) → successor H′ → e′ |
@@ -201,6 +203,18 @@ python scripts/paperkit.py density out/memt_fig4_architecture.png
 python scripts/paperkit.py compare original.png out/new.png side_by_side.png
 ```
 
+### Generated icons with Codex CLI (optional)
+
+If [Codex CLI](https://github.com/openai/codex) is installed and logged in, the skill can generate a matched icon set for figures with agents, tools or stages, as in the Harness² examples. It writes one prompt for the whole set, uses Codex's built-in image tool (a ChatGPT login is enough), cleans each PNG and saves the prompt to `manifest.json` so you can disclose it. Without Codex the skill uses its vector icons.
+
+```bash
+python scripts/codex_icons.py check                    # is codex available?
+python scripts/codex_icons.py prompt icons.json        # preview the prompt
+python scripts/codex_icons.py generate icons.json --out out/icons --ref existing_icon.png
+```
+
+`icons.json` lists a style (`flat-pastel`, `line` or `soft-3d`) and one `{name, subject, accent}` per icon; see [image-generation.md](skills/cs-paper-figure/references/image-generation.md). Labels, numbers and arrows always stay vector text, and real data (photos, screenshots, simulator frames) is never replaced by generated pictures.
+
 ## Design rules in brief
 
 1. Decide the five-second message; make one hero element carry it.
@@ -213,6 +227,7 @@ python scripts/paperkit.py compare original.png out/new.png side_by_side.png
 8. In charts, give the method a hero colour and baselines grey. Label directly, make ratios visible, and use area-true encodings. Never put bars on a log axis.
 9. Every number comes from the inputs, and derived numbers are asserted in code.
 10. Render and inspect the result, then iterate. A side-by-side with the original should show a clear win.
+11. Generated icons are optional: 3–7 per figure, one style, role-coloured, always with a label beside them, never carrying text or data.
 
 ## Notes
 

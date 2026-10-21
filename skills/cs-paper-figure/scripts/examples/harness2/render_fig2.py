@@ -9,7 +9,10 @@ frozen model M to form an agent; components are grouped by runtime role:
   orchestration: C5 subagents (sub_agents/<n>/AGENT.md, task tool) delegate work to a new agent.
 The agent produces a trajectory and a deliverable.
 
-    python render_fig2.py --out <dir>
+    python render_fig2.py --out <dir> [--vector-icons]
+
+Icons in icons/ (model, subagent and four group emblems) were generated with scripts/codex_icons.py,
+using the Fig. 3 executor icon as a style reference; --vector-icons draws paperkit's vector glyphs instead.
 """
 import argparse
 import os
@@ -36,10 +39,26 @@ COMPONENTS = {  # id: (group, name, file, activation)
     "C5": ("orc", "Subagents", "sub_agents/<n>/AGENT.md", "task tool"),
 }
 W, H = 178, 86
+ICON_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+NO_ICONS = False
 
 
-def card(cv, x, y, w, h, c, title, sub):
+def icon(name):
+    p = os.path.join(ICON_DIR, f"{name}.png")
+    return p if os.path.exists(p) and not NO_ICONS else None
+
+
+def emblem(cv, x, y, w, h, name, size=7.4):
+    """Generated group emblem at the right end of a header band (band height = 0.62 * size)."""
+    p = icon(name)
+    if p:
+        cv.image(p, x + w - 4.8, y + h - size * 0.31, 4.2)
+
+
+def card(cv, x, y, w, h, c, title, sub, em=None):
     cv.group(x, y, w, h, c, title, band=True, size=7.4, radius=2.0, lw=0.7, fill="white")
+    if em:
+        emblem(cv, x, y, w, h, em)
     cv.text(x + 2.0, y + h - 7.6, sub, size=6.0, color=MUTED, ha="left", style="italic")
 
 
@@ -63,37 +82,47 @@ def step(cv, x, y, k):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out")
+    ap.add_argument("--vector-icons", action="store_true", help="ignore icons/*.png and draw vector glyphs")
     a = ap.parse_args()
+    global NO_ICONS
+    NO_ICONS = a.vector_icons
     assert len(COMPONENTS) == 8 and sorted(COMPONENTS) == [f"C{i}" for i in range(1, 9)]
     cv = Canvas(W, H, family="serif", size=7.0)
 
     # context construction
-    card(cv, 2, 2, 52, 82, CTX, "Context construction", "what enters the context, and when")
+    card(cv, 2, 2, 52, 82, CTX, "Context construction", "what enters the context, and when", em="context")
     for k, cid in enumerate(("C1", "C2", "C3", "C6")):
         comp(cv, 4.0, 58.6 - k * 18.0, 48, 14.4, cid, CTX)
 
     # frozen model at the centre
-    mx, my, r = 76.5, 50.0, 10.0
+    mx, my = 76.5, 50.0
+    r = 11.5 if icon("model") else 10.0
     cv.ax.add_patch(Circle((mx, my), r + 1.6, fc="#F4F6F9", ec="#C9D2DE", lw=0.5, zorder=3))
     cv.ax.add_patch(Circle((mx, my), r, fc="white", ec=NEU["ink"], lw=1.1, zorder=4))
-    cv.text(mx, my + 3.4, "Frozen model", size=7.2, color=NEU["ink"], weight="bold")
-    cv.text(mx, my - 1.6, r"$\mathcal{M}$", size=11, color=NEU["ink"])
-    cv.icon_snow(mx, my - 6.6, 2.6, color=NEU["stroke"])
-    cv.text(mx, 70.2, "Agent = model + harness", size=6.6, color=INK, weight="bold")
-    cv.text(mx, 67.2, "8 editable files around a model", size=6.0, color=MUTED, style="italic")
-    cv.text(mx, 64.6, "whose weights never change", size=6.0, color=MUTED, style="italic")
+    if icon("model"):
+        cv.text(mx, my + 6.6, "Frozen model", size=7.2, color=NEU["ink"], weight="bold")
+        cv.image(icon("model"), mx - 2.4, my - 2.0, 11.6)
+        cv.text(mx + 6.0, my - 2.6, r"$\mathcal{M}$", size=10, color=NEU["ink"])
+    else:
+        cv.text(mx, my + 3.4, "Frozen model", size=7.2, color=NEU["ink"], weight="bold")
+        cv.text(mx, my - 1.6, r"$\mathcal{M}$", size=11, color=NEU["ink"])
+        cv.icon_snow(mx, my - 6.6, 2.6, color=NEU["stroke"])
+    cv.text(mx, 72.2, "Agent = model + harness", size=6.6, color=INK, weight="bold")
+    cv.text(mx, 69.2, "8 editable files around a model", size=6.0, color=MUTED, style="italic")
+    cv.text(mx, 66.6, "whose weights never change", size=6.0, color=MUTED, style="italic")
 
     # (1) context in
     cv.arrow([(54.0, my), (mx - r - 1.8, my)], color=CTX["mark"], lw=0.9, head=1.3)
     cv.text(60.0, my + 2.6, "context", size=6.1, color=CTX["ink"])
 
     # middleware + tool interface
-    card(cv, 98, 37, 78, 47, MID, "Middleware", "hooks every tool call, outside the model's discretion")
+    card(cv, 98, 37, 78, 47, MID, "Middleware", "hooks every tool call, outside the model's discretion", em="plugin")
     comp(cv, 99.6, 43.0, 28.4, 26.0, "C8", MID)
     cv.chip(113.8, 58.6, "inside the tool loop", MID, size=5.9, pad=0.7)
     cv.text(113.8, 54.6, "tool calls + turn", size=5.9, color=MID["ink"])
     cv.text(113.8, 52.0, "boundaries", size=5.9, color=MID["ink"])
     cv.group(129.5, 39.5, 44.5, 33.0, TOOL, "Tool interface", size=7.0, radius=1.6, lw=0.6, band=True)
+    emblem(cv, 129.5, 39.5, 44.5, 33.0, "tools", size=7.0)
     cv.text(131.3, 66.0, "what the model can call, and how", size=5.9, color=MUTED, ha="left", style="italic")
     comp(cv, 131.0, 52.0, 41.5, 12.2, "C4", TOOL)
     comp(cv, 131.0, 40.8, 41.5, 10.6, "C7", TOOL)
@@ -107,9 +136,12 @@ def main():
     cv.text(92.4, my - 6.4, "result", size=6.1, color=MID["ink"])
 
     # orchestration
-    card(cv, 98, 2, 78, 32, ORC, "Orchestration", "when work is delegated to a new agent, and how")
+    card(cv, 98, 2, 78, 32, ORC, "Orchestration", "when work is delegated to a new agent, and how", em="orchestration")
     comp(cv, 100.5, 7.0, 46.0, 14.4, "C5", ORC)
-    cv.icon_robot(160.0, 15.6, 6.4, color=ORC["mark"])
+    if icon("subagent"):
+        cv.image(icon("subagent"), 160.0, 16.2, 9.0)
+    else:
+        cv.icon_robot(160.0, 15.6, 6.4, color=ORC["mark"])
     cv.text(160.0, 8.4, "new agent", size=6.0, color=ORC["ink"], style="italic")
     cv.arrow([(148.6, 14.2), (155.6, 14.2)], color=ORC["mark"], lw=0.7, head=1.0)
     # delegation from the model
@@ -118,7 +150,7 @@ def main():
     cv.text(86.0, 33.4, "delegate", size=6.0, color=ORC["ink"], ha="right", style="italic")
 
     # output
-    cv.arrow([(mx - 7.0, my - 7.14), (mx - 7.0, 24.0)], color=INK, lw=0.9, head=1.3)
+    cv.arrow([(mx - 7.0, my - (r * r - 49.0) ** 0.5), (mx - 7.0, 24.0)], color=INK, lw=0.9, head=1.3)
     cv.doc(mx - 10.2, 11.0, 6.4, 13.0, NEU, lines=4, fold=2.0)
     cv.text(mx - 2.0, 20.4, r"trajectory $\tau$", size=6.7, color=INK, ha="left")
     cv.text(mx - 2.0, 15.4, r"+ deliverable $y$", size=6.7, color=INK, ha="left")

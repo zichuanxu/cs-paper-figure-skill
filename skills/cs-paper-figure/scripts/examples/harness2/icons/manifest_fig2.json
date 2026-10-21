@@ -1,0 +1,41 @@
+{
+  "set": "harness2-fig2",
+  "generator": "codex-cli 0.163.0 built-in image_gen",
+  "date": "2026-10-21",
+  "refs": [
+    "executor.png"
+  ],
+  "prompt": "Use your built-in image generation tool to create 6 separate square PNG icons that form ONE consistent set for a figure in a scientific paper. Make one image_gen call per icon.\nStyle for every icon: clean flat vector illustration, uniform thin dark-grey outlines, soft pastel fills with the accent colour as the main hue, at most one lighter tint for highlights, no gradients, no drop shadows, no texture.\nPure white (#FFFFFF) background, square 1024x1024 canvas, the subject centred with about 12% empty margin on every side, readable as a silhouette at 8 mm wide. No text, letters, numbers, logos, watermarks, UI chrome, borders or frames anywhere in the image.\nImage 1 (executor.png) is a STYLE REFERENCE from the same figure set, not an edit target: match its character design, outline weight, fill treatment and margin.\nIcons:\n(1) model.png: the same robot character from the reference image, standing still inside a translucent pale ice block, eyes calm, a small snowflake on its chest, meaning a frozen model whose weights never change, accent colour #8F98A4.\n(2) subagent.png: the same robot character from the reference image, smaller, waving and holding a small task card, meaning a newly spawned helper agent, accent colour #C27896.\n(3) context.png: a short stack of three paper notes sliding into a rounded speech bubble, meaning text assembled into a model's context, accent colour #5A8BCB.\n(4) plugin.png: a plug-in puzzle piece clipped onto a curved loop arrow, meaning a hook that intercepts every tool call, accent colour #8C6CC8.\n(5) tools.png: a small terminal window with a wrench resting across its corner, meaning tools and scripts the model can call, accent colour #5E9E62.\n(6) orchestration.png: two small rounded nodes linked by a forked arrow branching from one parent node, meaning work delegated to new agents, accent colour #C27896.\nCopy each final image into the current directory with exactly those file names, overwrite nothing else, do not edit the images afterwards, then list the directory.",
+  "icons": [
+    {
+      "name": "model",
+      "subject": "the same robot character from the reference image, standing still inside a translucent pale ice block, eyes calm, a small snowflake on its chest, meaning a frozen model whose weights never change",
+      "accent": "#8F98A4"
+    },
+    {
+      "name": "subagent",
+      "subject": "the same robot character from the reference image, smaller, waving and holding a small task card, meaning a newly spawned helper agent",
+      "accent": "#C27896"
+    },
+    {
+      "name": "context",
+      "subject": "a short stack of three paper notes sliding into a rounded speech bubble, meaning text assembled into a model's context",
+      "accent": "#5A8BCB"
+    },
+    {
+      "name": "plugin",
+      "subject": "a plug-in puzzle piece clipped onto a curved loop arrow, meaning a hook that intercepts every tool call",
+      "accent": "#8C6CC8"
+    },
+    {
+      "name": "tools",
+      "subject": "a small terminal window with a wrench resting across its corner, meaning tools and scripts the model can call",
+      "accent": "#5E9E62"
+    },
+    {
+      "name": "orchestration",
+      "subject": "two small rounded nodes linked by a forked arrow branching from one parent node, meaning work delegated to new agents",
+      "accent": "#C27896"
+    }
+  ]
+}

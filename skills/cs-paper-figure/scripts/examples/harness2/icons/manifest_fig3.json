@@ -1,0 +1,32 @@
+{
+  "set": "harness2-fig3-v2",
+  "generator": "codex-cli 0.163.0 built-in image_gen",
+  "date": "2026-10-21",
+  "refs": [
+    "subagent.png",
+    "tools.png"
+  ],
+  "prompt": "Use your built-in image generation tool to create 4 separate square PNG icons that form ONE consistent set for a figure in a scientific paper. Make one image_gen call per icon.\nStyle for every icon: clean flat vector illustration, uniform thin dark-grey outlines, soft pastel fills with the accent colour as the main hue, at most one lighter tint for highlights, no gradients, no drop shadows, no texture.\nPure white (#FFFFFF) background, square 1024x1024 canvas, the subject centred with about 12% empty margin on every side, readable as a silhouette at 8 mm wide. No text, letters, numbers, logos, watermarks, UI chrome, borders or frames anywhere in the image.\nImage 1 (subagent.png) is a STYLE REFERENCE from the same figure set, not an edit target: match its character design, outline weight, fill treatment and margin.\nImage 2 (tools.png) is a STYLE REFERENCE from the same figure set, not an edit target: match its character design, outline weight, fill treatment and margin.\nIcons:\n(1) executor.png: the same robot character as Image 1, seated and typing on a large open laptop seen from the side, the laptop clearly visible and about as wide as the robot, meaning an agent that executes a task, accent colour #5A8BCB.\n(2) editor.png: the same robot character as Image 1, holding a large pencil over a big sheet of paper that shows two green plus lines and one red minus line, the pencil and sheet clearly visible, meaning an agent that edits a harness, accent colour #D29A3C.\n(3) reflector.png: the same robot character as Image 1, holding a large magnifying glass up to an open notebook, the magnifier lens clearly visible and about half the robot's height, meaning an agent that reflects on past runs, accent colour #8C6CC8.\n(4) context.png: no character: a short stack of three paper notes sliding into a rounded speech bubble, simple object pictogram in the same flat style as Image 2, meaning text assembled into a model's context, accent colour #5A8BCB.\nCopy each final image into the current directory with exactly those file names, overwrite nothing else, do not edit the images afterwards, then list the directory.",
+  "icons": [
+    {
+      "name": "executor",
+      "subject": "the same robot character as Image 1, seated and typing on a large open laptop seen from the side, the laptop clearly visible and about as wide as the robot, meaning an agent that executes a task",
+      "accent": "#5A8BCB"
+    },
+    {
+      "name": "editor",
+      "subject": "the same robot character as Image 1, holding a large pencil over a big sheet of paper that shows two green plus lines and one red minus line, the pencil and sheet clearly visible, meaning an agent that edits a harness",
+      "accent": "#D29A3C"
+    },
+    {
+      "name": "reflector",
+      "subject": "the same robot character as Image 1, holding a large magnifying glass up to an open notebook, the magnifier lens clearly visible and about half the robot's height, meaning an agent that reflects on past runs",
+      "accent": "#8C6CC8"
+    },
+    {
+      "name": "context",
+      "subject": "no character: a short stack of three paper notes sliding into a rounded speech bubble, simple object pictogram in the same flat style as Image 2, meaning text assembled into a model's context",
+      "accent": "#5A8BCB"
+    }
+  ]
+}

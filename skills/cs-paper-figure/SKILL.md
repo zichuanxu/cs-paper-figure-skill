@@ -24,6 +24,7 @@ Make the scientific argument visible and give it an intentional visual form. Opt
 | **How to make it look good**: diagnosis, typography, role colours, glyph vocabulary, composition patterns, connectors, density targets, chart craft, beat-the-original protocol | [visual-craft.md](references/visual-craft.md) |
 | Evidence behind those rules: IdeaScientist/SkillOpt readings, measured architecture figures (Gated DeltaNet, Kimi Linear, Titans, NSA, DeepSeek-V3, Hymba, BLT, …), MemT critique | [craft-study-2026-10.md](references/craft-study-2026-10.md) |
 | Drawing primitives in mm: role palette, cards, nodes, matrices, vectors, trapezoids, operators, tokens, docs, icons, zoom rays, routed arrows, rich math, density/compare checks | [scripts/paperkit.py](scripts/paperkit.py) |
+| Optional generated icon sets with Codex CLI: when to use them, rules from 11 top-lab figures, prompt anatomy, helper | [image-generation.md](references/image-generation.md), [scripts/codex_icons.py](scripts/codex_icons.py) |
 | Reference-quality redesigns (architecture + efficiency chart) | [scripts/examples/memt/](scripts/examples/memt/), [advanced-examples.md](references/advanced-examples.md#memt-10-redesigns) |
 | Rich multi-level figures; system, mechanism, instance and evidence | [dense-composition.md](references/dense-composition.md) |
 | Scenes, frame sequences, trajectories, token structures and visual memory | [visual-objects.md](references/visual-objects.md) |
@@ -129,6 +130,8 @@ Use real font weights and verify the exported font program, not just its family 
 
 Use white child cards inside tinted groups only when the nesting expresses real scope. Permit icons, token strips, record stacks, insets and light backgrounds when they explain the method. Avoid adding decorative detail that has no scientific role. Use raster images for real image/video/spatial data; use vector objects for exact topology and labels.
 
+**Generated icons (optional).** When the figure has actors, roles, tools or stages the reader must tell apart, and `scripts/codex_icons.py check` succeeds, a matched set of 3–7 illustrated icons may replace the vector glyphs: one style spec, one Codex run, each icon tinted with its role colour, a text label beside every icon, no text inside the pixels, and a vector fallback kept in the render script. Use real photos or screenshots, not generated pictures, for data, inputs or environments. Follow [image-generation.md](references/image-generation.md); without Codex, use paperkit's vector icons and continue.
+
 ### 5. Implement precise, reproducible source
 
 Preserve the project's existing toolchain where appropriate. Use scientific plotting libraries for data, and SVG/TikZ/Graphviz/programmatic vectors for diagrams. Do not use image generation for quantitative marks, exact labels, or computational topology.
@@ -139,6 +142,13 @@ Utilities:
 # Reference-quality redesigns built on paperkit (start here and adapt)
 python <skill-root>/scripts/examples/memt/render_fig4.py --out figures/memt   # architecture
 python <skill-root>/scripts/examples/memt/render_fig3.py --out figures/memt   # efficiency chart
+python <skill-root>/scripts/examples/transformer/render_fig1.py --out figures/transformer
+python <skill-root>/scripts/examples/harness2/render_fig2.py --out figures/harness2   # [--vector-icons]
+python <skill-root>/scripts/examples/harness2/render_fig3.py --out figures/harness2   # [--vector-icons]
+
+# Optional generated icon sets via Codex CLI (only if `check` exits 0; see references/image-generation.md)
+python <skill-root>/scripts/codex_icons.py check
+python <skill-root>/scripts/codex_icons.py generate icons.json --out figures/icons [--ref existing.png]
 
 # The five classic examples rebuilt in the new style (data bundled under scripts/examples/restyled/data)
 python <skill-root>/scripts/examples/restyled/render_method.py --out figures/method

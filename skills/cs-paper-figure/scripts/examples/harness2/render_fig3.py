@@ -57,13 +57,15 @@ def robot(cv, x, y, c, label, s=6.2):
     generated once as a matched set), else the vector robot."""
     name = {id(EXE): "executor", id(EDT): "editor", id(RFL): "reflector"}.get(id(c))
     png = os.path.join(ICON_DIR, f"{name}.png") if name else None
-    cv.ax.add_patch(Circle((x, y), s * 0.62, fc=c["fill"], ec=c["stroke"], lw=0.5, zorder=11))
     if png and os.path.exists(png) and not NO_ICONS:
-        cv.image(png, x, y - 0.1, s * 0.82, z=12)
+        # the illustrated set carries its role colour itself; no disc behind it
+        h = cv.image(png, x, y, s * 1.12, z=12)
     else:
+        h = s * 1.24
+        cv.ax.add_patch(Circle((x, y), s * 0.62, fc=c["fill"], ec=c["stroke"], lw=0.5, zorder=11))
         cv.icon_robot(x, y - 0.2, s * 0.78, color=c["mark"], z=12)
     if label:
-        cv.text(x, y - s * 0.62 - 2.0, label, size=6.2, color=c["ink"], weight="bold")
+        cv.text(x, y - h / 2 - 1.7, label, size=6.2, color=c["ink"], weight="bold")
 
 
 def diff_lines(cv, x, y, w=8.0):
@@ -177,16 +179,18 @@ def panel_harnessing(cv):
             size=6.8, color=RFL["ink"])
     cv.arrow([(124.8, 15.0), (92.0, 15.0)], color=RFL["mark"], lw=0.9, head=1.3)
     # library (under Propose)
-    cv.cylinder(57.0, 6.0, 35.0, 18.4, RFL)
+    cy0, ch = 3.8, 21.2
+    cv.cylinder(57.0, cy0, 35.0, ch, RFL)
+    rim = cy0 + ch - min(ch * 0.22, 35.0 * 0.22)  # lowest point of the top ellipse's front rim
     for k in range(3):
-        xx = 62.0 + k * 9.0
-        cv.doc(xx, 9.6, 3.4, 4.6, RFL, lines=2, fold=1.0, lw=0.4)
-        cv.doc(xx + 3.6, 9.6, 3.4, 4.6, EDT, lines=2, fold=1.0, lw=0.4)
-    cv.text(74.5, 19.8, r"improvement harness $\mathcal{R}$", size=6.4, color=RFL["ink"], weight="bold")
-    cv.text(74.5, 16.4, "library: harness + EXPERIENCE.md", size=5.9, color=RFL["ink"])
-    cv.icon_cycle(89.0, 9.0, 2.6, color=RFL["mark"])
+        xx = 61.0 + k * 8.4
+        cv.doc(xx, 7.6, 3.4, 4.6, RFL, lines=2, fold=1.0, lw=0.4)
+        cv.doc(xx + 3.6, 7.6, 3.4, 4.6, EDT, lines=2, fold=1.0, lw=0.4)
+    cv.text(74.5, rim - 2.6, r"improvement harness $\mathcal{R}$", size=6.4, color=RFL["ink"], weight="bold")
+    cv.text(74.5, rim - 6.0, "library: harness + EXPERIENCE.md", size=5.9, color=RFL["ink"])
+    cv.icon_cycle(87.6, 10.0, 2.6, color=RFL["mark"])
     # guides proposals of the next task
-    cv.arrow([(78.0, 23.6), (78.0, 44.6)], color=RFL["mark"], lw=0.9, head=1.3, dashed=True)
+    cv.arrow([(78.0, cy0 + ch - 0.6), (78.0, 44.6)], color=RFL["mark"], lw=0.9, head=1.3, dashed=True)
     cv.text(94.0, 25.4, r"guides $q_{t+1}$ (Propose, Probe, Compose),", size=5.9, color=RFL["ink"], ha="left", style="italic")
     cv.text(94.0, 22.8, r"which starts again from $\mathcal{H}_0$", size=5.9, color=RFL["ink"], ha="left", style="italic")
     # fixed vs evolving
@@ -196,9 +200,9 @@ def panel_harnessing(cv):
     cv.text(8.8, 14.0, "decision rule", size=6.0, color=INK, ha="left")
     cv.icon_cycle(6.4, 8.6, 2.6, color=RFL["mark"])
     cv.text(8.8, 8.6, "evolves: the library", size=6.0, color=RFL["ink"], ha="left")
-    for x, c, lab in ((35.0, EXE, "executor"), (44.0, EDT, "editor /\ncomposer"), (53.0, RFL, "reflector")):
-        robot(cv, x, 16.2, c, None, s=4.6)
-        cv.text(x, 10.4, lab, size=5.8, color=c["ink"], linespacing=0.95)
+    for x, c, lab in ((33.4, EXE, "executor"), (42.4, EDT, "editor /\ncomposer"), (51.2, RFL, "reflector")):
+        robot(cv, x, 16.8, c, None, s=5.0)
+        cv.text(x, 12.0, lab, size=5.8, color=c["ink"], linespacing=0.95, va="top")
 
 
 def main():
