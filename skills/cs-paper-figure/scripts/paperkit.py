@@ -371,6 +371,31 @@ class Canvas:
         self.ax.set_ylim(0, self.h)
         return im
 
+    def image(self, path, cx, cy, w, z=12, knockout_white=True, crop=True):
+        """Place a raster icon/illustration centred at (cx, cy) with width w mm (height from aspect).
+        Use only for illustrative content (agent mascots, scene photos), never for labels or data.
+        knockout_white makes near-white pixels transparent; crop trims empty margins first."""
+        from PIL import Image
+        im = Image.open(path).convert("RGBA")
+        a = np.asarray(im).astype(float)
+        if crop:
+            ink = (a[..., :3].min(axis=2) < 245) & (a[..., 3] > 10)
+            ys, xs = np.nonzero(ink)
+            if len(xs):
+                pad = 8
+                im = im.crop((max(xs.min() - pad, 0), max(ys.min() - pad, 0),
+                              min(xs.max() + pad, im.width), min(ys.max() + pad, im.height)))
+                a = np.asarray(im).astype(float)
+        if knockout_white:
+            lum = a[..., :3].min(axis=2)
+            a[..., 3] = np.where(lum > 248, 0, a[..., 3])
+        h = w * a.shape[0] / a.shape[1]
+        self.ax.imshow(a / 255.0, extent=(cx - w / 2, cx + w / 2, cy - h / 2, cy + h / 2), zorder=z,
+                       interpolation="lanczos")
+        self.ax.set_xlim(0, self.w)
+        self.ax.set_ylim(0, self.h)
+        return h
+
     # ---- icons (pure vector) -------------------------------------------------
     def icon_snow(self, x, y, s, color=LINE, lw=0.55, z=12):
         """Snowflake = frozen / not trained."""

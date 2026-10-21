@@ -89,6 +89,7 @@ pure black and never the stroke colour.
 | Decision / validation gate | `diamond()` with accept/reject coloured exits | SkillOpt: mustard gate, green accept, red dashed reject |
 | Frozen / trainable / fixed / evolving | `icon_snow`, `icon_flame`, `icon_lock`, `icon_cycle` | One icon per role, top-right of the node, 2.4 mm |
 | Agent / model | `icon_robot`, distinct colour per role | IdeaScientist: one coloured robot head per agent + a role glyph |
+| Illustrated agent roles (optional) | `image()` with a *matched* generated set (one character, role accent colours, white background knocked out) | Harness² Fig. 3: three Codex-generated icons; keep `icon_robot` as the fallback; never use generated images for labels or data |
 | Edits / operations on text | `chip()` pills: ADD / DEL / REP | |
 | Scores, traces, curves | mini plot inside the card | SkillOpt trace cards carry a tiny line plot and a score |
 | Time / turns / epochs | columns t−1 · t · t+1, or a strip with write arrows between | Promote time to a panel when evolution is the claim |

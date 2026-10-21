@@ -34,6 +34,7 @@ GOOD = dict(fill="#ECF5EC", soft="#CFE6CF", stroke="#5E9E62", ink="#25592A", mar
 BAD = dict(fill="#FDEEEA", soft="#F8D6CC", stroke="#D9826B", ink="#86321F", mark="#D9583B")
 NEU = dict(fill="#F3F4F6", soft="#E4E7EB", stroke="#8F98A4", ink="#353C47", mark="#6B7480")
 W, H = 178, 106
+NO_ICONS = False
 
 
 def harness(cv, x, y, c, label, w=7.0, h=9.0):
@@ -48,9 +49,19 @@ def run_doc(cv, x, y, label, c=NEU, w=5.6, h=7.2):
     cv.text(x + w / 2, y - 2.0, label, size=6.3, color=INK)
 
 
+ICON_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+
+
 def robot(cv, x, y, c, label, s=6.2):
+    """Agent role glyph: the bundled illustrated icon when present (icons/<role>.png,
+    generated once as a matched set), else the vector robot."""
+    name = {id(EXE): "executor", id(EDT): "editor", id(RFL): "reflector"}.get(id(c))
+    png = os.path.join(ICON_DIR, f"{name}.png") if name else None
     cv.ax.add_patch(Circle((x, y), s * 0.62, fc=c["fill"], ec=c["stroke"], lw=0.5, zorder=11))
-    cv.icon_robot(x, y - 0.2, s * 0.78, color=c["mark"], z=12)
+    if png and os.path.exists(png) and not NO_ICONS:
+        cv.image(png, x, y - 0.1, s * 0.82, z=12)
+    else:
+        cv.icon_robot(x, y - 0.2, s * 0.78, color=c["mark"], z=12)
     if label:
         cv.text(x, y - s * 0.62 - 2.0, label, size=6.2, color=c["ink"], weight="bold")
 
@@ -81,18 +92,18 @@ def panel_task(cv):
     # 1 reference run
     harness(cv, 5.0, 70.0, NEU, r"current $\mathcal{H}$")
     cv.arrow([(14.2, 76.0), (21.0, 76.0)], head=1.1)
-    robot(cv, 25.5, 76.0, EXE, "executor")
-    cv.icon_snow(31.4, 80.6, 2.2, color=EXE["stroke"])
-    cv.arrow([(25.5, 68.6), (25.5, 59.6)], head=1.1)
+    robot(cv, 25.5, 76.0, EXE, "executor", s=8.0)
+    cv.icon_snow(32.4, 81.8, 2.2, color=EXE["stroke"])
+    cv.arrow([(25.5, 67.2), (25.5, 59.6)], head=1.1)
     run_doc(cv, 22.7, 52.0, r"$e_0=(\tau_0, y_0)$")
     cv.text(20.5, 44.4, "how the harness behaves,", size=5.9, color=MUTED, style="italic")
     cv.text(20.5, 41.9, "not whether it is correct", size=5.9, color=MUTED, style="italic")
     # 2 propose
     cv.arrow([(28.3, 55.6), (34.5, 55.6), (34.5, 82.0), (42.5, 82.0)], head=1.1, radius=1.2)
-    robot(cv, 46.5, 82.0, EDT, None)
-    cv.text(51.6, 84.0, "editor reads task, harness,", size=5.9, color=MUTED, ha="left", style="italic")
-    cv.text(51.6, 81.4, r"$e_0$, history, library in $\mathcal{R}_t$", size=5.9, color=MUTED, ha="left", style="italic")
-    cv.line([(46.5, 78.2), (46.5, 75.4)])
+    robot(cv, 46.5, 82.0, EDT, None, s=8.0)
+    cv.text(52.4, 84.0, "editor reads task, harness,", size=5.9, color=MUTED, ha="left", style="italic")
+    cv.text(52.4, 81.4, r"$e_0$, history, library in $\mathcal{R}_t$", size=5.9, color=MUTED, ha="left", style="italic")
+    cv.line([(46.5, 77.0), (46.5, 75.4)])
     cv.dot(46.5, 75.4)
     for (yc, c, title, sub) in ((66.5, INV, "Invariant", "planning · tool use · context · delegation"),
                                  (51.0, DOM, "Domain-specific", "knowledge · procedures · constraints")):
@@ -104,13 +115,13 @@ def panel_task(cv):
     cv.arrow([(46.5, 75.4), (38.0, 75.4), (38.0, 51.0), (41.0, 51.0)], head=1.0, radius=1.0)
     cv.chip(52.0, 43.2, r"parallel: $\times k$ per scope", NEU, size=5.9, pad=0.6)
     # candidates + their diffs also go to Compose (over the empty top of the Probe column)
-    cv.arrow([(78.0, 72.6), (78.0, 87.0), (139.0, 87.0), (139.0, 85.6)], color=LINE, lw=0.55, head=1.0, radius=1.0)
-    cv.text(105.0, 88.6, "candidate harnesses + diffs", size=5.9, color=MUTED, style="italic")
+    cv.arrow([(78.0, 72.6), (78.0, 89.2), (135.2, 89.2), (135.2, 87.4)], color=LINE, lw=0.55, head=1.0, radius=1.0)
+    cv.text(105.0, 87.4, "candidate harnesses + diffs", size=5.9, color=MUTED, style="italic")
     # 3 probe under matched conditions
     for (yc, c, lab) in ((66.5, INV, r"$e_{\mathrm{inv}}$"), (51.0, DOM, r"$e_{\mathrm{dom}}$")):
-        cv.arrow([(80.7, yc), (86.6, yc)], color=c["mark"], head=1.0)
-        robot(cv, 90.2, yc, EXE, None, s=5.4)
-        cv.arrow([(93.8, yc), (97.0, yc)], head=1.0)
+        cv.arrow([(80.7, yc), (86.2, yc)], color=c["mark"], head=1.0)
+        robot(cv, 90.2, yc, EXE, None, s=6.4)
+        cv.arrow([(94.2, yc), (97.0, yc)], head=1.0)
         run_doc(cv, 97.0, yc - 3.6, lab, c=c, w=5.0, h=7.0)
         cv.arrow([(102.4, yc), (106.4, yc)], head=1.0)
     cv.text(105.0, 78.0, "same model, same environment", size=5.9, color=MUTED, style="italic")
@@ -122,17 +133,17 @@ def panel_task(cv):
         cv.chip(116.5, yy, s, NEU, size=6.0, pad=0.8)
     # 4 compose
     cv.arrow([(126.6, 58.5), (129.4, 58.5)], head=1.0)
-    robot(cv, 135.2, 82.0, EDT, None)
-    cv.text(135.2, 76.4, "composer", size=6.0, color=EDT["ink"], weight="bold")
-    cv.text(140.3, 83.0, "decisions tied to", size=5.9, color=MUTED, ha="left", style="italic")
-    cv.text(140.3, 80.4, "observed contrasts", size=5.9, color=MUTED, ha="left", style="italic")
+    robot(cv, 135.2, 82.0, EDT, None, s=8.0)
+    cv.text(135.2, 75.0, "composer", size=6.0, color=EDT["ink"], weight="bold")
+    cv.text(141.2, 83.0, "decisions tied to", size=5.9, color=MUTED, ha="left", style="italic")
+    cv.text(141.2, 80.4, "observed contrasts", size=5.9, color=MUTED, ha="left", style="italic")
     for k, s in enumerate(("merge supported", "revise conflicts", "adopt one", "keep current")):
         cv.chip(130.6, 70.0 - k * 4.6, s, NEU, size=6.0, ha="left", pad=0.8)
     tip = cv.brace(152.4, 54.6, 72.2, side="right", depth=1.2)
     cv.arrow([(tip[0] + 0.2, 63.0), (157.4, 63.0)], head=1.1)
     harness(cv, 157.4, 58.0, EDT, r"successor $\mathcal{H}'$")
     cv.arrow([(161.8, 55.2), (161.8, 50.6)], head=1.0)
-    robot(cv, 161.8, 47.2, EXE, None, s=5.0)
+    robot(cv, 161.8, 47.2, EXE, None, s=5.6)
     cv.arrow([(165.2, 47.2), (167.4, 47.2)], head=1.0)
     run_doc(cv, 167.4, 43.6, r"$e'$", w=4.8, h=7.0)
     cv.text(129.6, 44.4, r"adopted $\mathcal{H}^{\star}_t$ (selected", size=5.9, color=MUTED, style="italic", ha="left")
@@ -158,13 +169,13 @@ def panel_harnessing(cv):
     for k, s_ in enumerate(("references", "candidates", "probes", "decisions", "selected result")):
         cv.text(161.6, 21.4 - k * 2.9, s_, size=5.9, color=MUTED, ha="left")
     # reflect
-    cv.arrow([(145.0, 15.0), (134.6, 15.0)], color=RFL["mark"], lw=0.9, head=1.3)
-    robot(cv, 130.0, 16.0, RFL, "reflector")
+    cv.arrow([(145.0, 15.0), (135.2, 15.0)], color=RFL["mark"], lw=0.9, head=1.3)
+    robot(cv, 130.0, 16.4, RFL, "reflector", s=8.0)
     cv.text(107.5, 19.6, "keeps a lesson only if", size=6.0, color=INK)
     cv.text(107.5, 16.8, "execution contrasts support it", size=6.0, color=INK)
     cv.text(107.5, 11.6, r"$\mathcal{R}_{t+1}=\mathrm{Update}(\mathcal{R}_t,\ \mathcal{H}^{\star}_t,\ \mathcal{D}_t)$",
             size=6.8, color=RFL["ink"])
-    cv.arrow([(125.4, 15.0), (92.0, 15.0)], color=RFL["mark"], lw=0.9, head=1.3)
+    cv.arrow([(124.8, 15.0), (92.0, 15.0)], color=RFL["mark"], lw=0.9, head=1.3)
     # library (under Propose)
     cv.cylinder(57.0, 6.0, 35.0, 18.4, RFL)
     for k in range(3):
@@ -193,7 +204,10 @@ def panel_harnessing(cv):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out")
+    ap.add_argument("--vector-icons", action="store_true", help="ignore icons/*.png and draw vector robots")
     a = ap.parse_args()
+    global NO_ICONS
+    NO_ICONS = a.vector_icons
     cv = Canvas(W, H, family="serif", size=7.0)
     panel_task(cv)
     panel_harnessing(cv)

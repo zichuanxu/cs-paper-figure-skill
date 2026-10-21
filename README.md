@@ -33,7 +33,8 @@ A redesign of the most-reproduced architecture figure in deep learning ([arXiv:1
 | Masking and cross-attention | Only the word "Masked" and an unlabeled wire | Panel (b) draws each pattern as a 4×4 mask in the matching colour: full, causal with hatched −∞ cells, and target × source |
 | Encoder → decoder link | A wire into the middle block | A teal path labelled "encoder output → keys, values", entering the cross-attention as K, V, while Q comes from below |
 | "Shifted right" | A text label | Real token strips: `<s> die Katze saß` in, `die Katze saß </s>` out, aligned so the shift is visible |
-| Multi-head attention | A separate figure (Fig. 2) | An inset (projections → h = 8 heads → concat → W^O), plus the two equations and the base-model hyperparameters in panel (c) |
+| Multi-head attention | A separate figure (Fig. 2) | An inset (projections → h = 8 heads → concat → W^O), plus the two equations and a strip of base-model hyperparameters in panel (c) |
+| Cross-attention inputs | K and V arrive on one wire from the encoder | K and V enter as separate teal arrows from the encoder, and Q enters from the decoder below, matching the other attention blocks |
 | Stacks of N = 6 | "N×" beside the box | Offset stacked cards with an "N = 6" chip |
 | Add & Norm | Yellow boxes as heavy as the sublayers | Slim neutral bars, with residual paths in light grey |
 
@@ -68,7 +69,7 @@ Redesigns of Figures 2 and 3 of *Harness²: Recursive Agent Harnessing for an Op
 
 | | Original | Redesign |
 | --- | --- | --- |
-| Visual style | Mixed raster clipart, handwritten and serif fonts | One vector icon set: the executor, editor and reflector roles in fixed colours (blue, amber, violet); one serif typeface with typeset math |
+| Visual style | Mixed clipart from different sources, handwritten and serif fonts | One matched icon set generated with Codex: the same robot character for executor, editor/composer and reflector, each in its role colour (blue, amber, violet). The script falls back to vector icons if the PNGs are absent. One serif typeface with typeset math |
 | Structure | Two boxes joined by thick arrows | Two bands forming one cycle: the task level runs left to right through numbered stages (Reference → Propose → Probe → Compose), the harnessing level runs right to left, and the library sits under the Propose stage it feeds |
 | Probe | Two rows with no outcome | Each candidate is run under the same model and environment and contrasted with e₀: mitigates / no change / regresses |
 | Compose | "Combine & Finalize" and a gauge | The four decisions from the paper (merge supported, revise conflicts, adopt one, keep current) → successor H′ → e′ |

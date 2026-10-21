@@ -102,6 +102,8 @@ def multihead_inset(cv):
 
 def panel_a(cv):
     card(cv, 2, 2, 111, 100, NEU, "(a) Transformer: encoder and decoder")
+    cd, xd, wd = 84.0, 67.0, 34.0
+    cd_k_v = (cd - 12.0, cd - 4.0)        # K, V enter cross-attention from the encoder; Q from below
     # ---------------- encoder ----------------
     ce, xe, we = 32.0, 16.0, 32.0
     strip(cv, ce, 6.0, SRC, NEU)
@@ -129,13 +131,16 @@ def panel_a(cv):
     cv.dot(ce, 45.6, color=RES, d=0.7)
     norm_bar(cv, xe, 55.5, we)
     # encoder output -> K, V of cross-attention in every decoder layer
-    cv.arrow([(ce, 58.4), (ce, 66.0), (58.6, 66.0), (58.6, 46.0), (70.5, 46.0), (70.5, 47.6)],
-             color=CRS["mark"], lw=1.0, head=1.3)
+    cv.line([(ce, 58.4), (ce, 66.0), (58.6, 66.0), (58.6, 45.9), (cd_k_v[1], 45.9)], color=CRS["mark"], lw=1.0)
+    for xk, lab in zip(cd_k_v, ("K", "V")):
+        cv.arrow([(xk, 45.9), (xk, 48.6)], color=CRS["mark"], lw=0.9, head=1.0)
+        cv.text(xk + 0.9, 47.3, lab, size=6.0, color=CRS["ink"], ha="left", style="italic")
     cv.text(45.0, 70.4, r"encoder output $\rightarrow$ keys, values", size=6.1, color=CRS["ink"])
     cv.text(45.0, 67.6, f"for all {N} decoder layers", size=6.0, color=CRS["ink"], style="italic")
     multihead_inset(cv)
     # ---------------- decoder ----------------
     cd, xd, wd = 84.0, 67.0, 34.0
+    cd_k_v = (cd - 12.0, cd - 4.0)        # K, V enter cross-attention from the encoder; Q from below
     strip(cv, cd, 6.0, TGT_IN, NEU)
     cv.text(xd - 0.6, 7.9, "shifted\nright", size=6.0, color=MUTED, ha="right", style="italic", linespacing=0.95)
     cv.arrow([(cd, 9.8), (cd, 13.0)])
@@ -155,12 +160,12 @@ def panel_a(cv):
            shadow=True, gap=1.6)
     residual(cv, cd + 8.0, 29.6, 102.6, 42.9, xd + wd)
     norm_bar(cv, xd, 41.5, wd)
-    cv.arrow([(cd, 44.4), (cd, 47.6)])
-    cv.text(cd + 0.9, 46.1, "Q", size=5.8, color=MUTED, ha="left", style="italic")
-    cv.text(72.0, 46.9, "K, V", size=5.8, color=CRS["ink"], ha="left", style="italic")
-    cv.box(xd, 47.6, wd, 8.0, CRS, "Cross-attention", "multi-head", size=6.7, lw=0.9, shadow=True, gap=1.6)
-    residual(cv, cd, 45.6, 102.6, 58.4, xd + wd)
-    cv.dot(cd, 45.6, color=RES, d=0.7)
+    cv.line([(cd, 44.4), (cd, 45.9), (cd + 8.0, 45.9)])
+    cv.arrow([(cd + 8.0, 45.9), (cd + 8.0, 48.6)], head=1.0)
+    cv.text(cd + 8.9, 47.3, "Q", size=6.0, color=MUTED, ha="left", style="italic")
+    cv.box(xd, 48.6, wd, 7.2, CRS, "Cross-attention", "multi-head", size=6.7, lw=0.9, shadow=True, gap=1.45)
+    residual(cv, cd + 8.0, 45.9, 102.6, 58.4, xd + wd)
+    cv.dot(cd, 45.9, color=RES, d=0.7)
     norm_bar(cv, xd, 57.0, wd)
     cv.arrow([(cd, 59.9), (cd, 62.6)])
     cv.box(xd, 62.6, wd, 6.4, NEU, "Feed-forward", r"$d_{ff}=%d$" % D_FF, size=6.5, gap=1.35)
@@ -193,7 +198,7 @@ def mask_row(cv, x, ytop, kind, c, title, l1, l2):
 
 
 def panel_b(cv):
-    card(cv, 116, 38, 60, 64, NEU, "(b) Who attends to whom")
+    card(cv, 116, 43, 60, 59, NEU, "(b) Who attends to whom")
     x = 119.5
     cv.text(x + 5.4, 94.2, r"keys $\rightarrow$", size=5.8, color=MUTED)
     from matplotlib.patches import Rectangle
@@ -201,26 +206,33 @@ def panel_b(cv):
     cv.text(153.0, 94.2, r"masked: score $=-\infty$", size=5.9, color=MUTED, ha="left")
     cv.text(x - 1.3, 88.0, r"queries $\downarrow$", size=5.8, color=MUTED, rotation=90)
     a = mask_row(cv, x, 92.4, "full", ENC, "Encoder self-attention", "every source token sees", "all source tokens")
-    b = mask_row(cv, x, 73.6, "causal", DEC, "Masked self-attention", r"target token $i$ sees only", r"tokens $\leq i$")
-    c = mask_row(cv, x, 54.8, "full", CRS, "Cross-attention", "target queries read the", "encoder's keys and values")
+    b = mask_row(cv, x, 75.4, "causal", DEC, "Masked self-attention", r"target token $i$ sees only", r"tokens $\leq i$")
+    c = mask_row(cv, x, 58.4, "full", CRS, "Cross-attention", "target queries read the", "encoder's keys and values")
     assert a.sum() == 16 and b.sum() == 10 and c.sum() == 16 and np.all(np.triu(b, 1) == 0)
 
 
+def spec_strip(cv, x, y, w, h):
+    """Base-model hyperparameters as a strip: bold value over its symbol, hairline dividers."""
+    cells = [(str(N), r"$N$ layers"), (str(H_HEADS), r"$h$ heads"), (str(D_MODEL), r"$d_{\mathrm{model}}$"),
+             (str(D_K), r"$d_k=d_v$"), (str(D_FF), r"$d_{\mathrm{ff}}$")]
+    cv.box(x, y, w, h, NEU, fill="#F7F8FA", lw=0.5, radius=1.4)
+    cw = w / len(cells)
+    for i, (val, sym) in enumerate(cells):
+        cx = x + (i + 0.5) * cw
+        cv.text(cx, y + h * 0.66, val, size=8.4, color=INK, weight="bold")
+        cv.text(cx, y + h * 0.25, sym, size=6.1, color=MUTED)
+        if i:
+            cv.ax.plot([x + i * cw] * 2, [y + 1.6, y + h - 1.6], color="#D5DAE1", lw=0.5, zorder=6)
+    cv.text(x + 0.4, y + h + 2.0, "base model", size=6.1, color=MUTED, ha="left", style="italic")
+
+
 def panel_c(cv):
-    card(cv, 116, 2, 60, 33, NEU, "(c) Attention, per head")
-    cv.text(146.0, 24.2, r"$\mathrm{Attention}(Q,K,V)=\mathrm{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V$",
+    card(cv, 116, 2, 60, 38, NEU, "(c) Attention, per head")
+    cv.text(146.0, 29.8, r"$\mathrm{Attention}(Q,K,V)=\mathrm{softmax}\!\left(\frac{QK^{\top}}{\sqrt{d_k}}\right)V$",
             size=7.2, color=INK)
-    cv.text(146.0, 15.8, r"$\mathrm{MultiHead}(Q,K,V)=\mathrm{Concat}(\mathrm{head}_1,\ldots,\mathrm{head}_h)\,W^{O}$",
+    cv.text(146.0, 22.4, r"$\mathrm{MultiHead}(Q,K,V)=\mathrm{Concat}(\mathrm{head}_1,\ldots,\mathrm{head}_h)\,W^{O}$",
             size=6.6, color=INK)
-    x = 119.0
-    for s in (f"N = {N}", f"h = {H_HEADS}", r"$d_{model}$ = %d" % D_MODEL):
-        x0, w = cv.chip(x, 8.6, s, NEU, size=6.1, ha="left")
-        x = x0 + w + 1.2
-    x = 119.0
-    for s in (r"$d_k = d_v$ = %d" % D_K, r"$d_{ff}$ = %d" % D_FF):
-        x0, w = cv.chip(x, 4.6, s, NEU, size=6.1, ha="left")
-        x = x0 + w + 1.2
-    cv.text(174.0, 4.6, "base model", size=6.0, color=MUTED, ha="right", style="italic")
+    spec_strip(cv, 119.0, 3.8, 54.0, 9.6)
 
 
 def main():
