@@ -1,0 +1,426 @@
+{
+  "schema_version": 2,
+  "status": "Original adaptable design recommendations informed by regionally inspected papers. These are not a corporate house style or measurements unless stated by a source atlas entry.",
+  "units": {
+    "geometry": "mm at final output size",
+    "typography": "pt at final output size",
+    "strokes": "pt"
+  },
+  "canvas": {
+    "single_column_width_mm": 85,
+    "wide_width_mm": 178,
+    "background": "#FFFFFF",
+    "outer_margin_mm": [
+      2.5,
+      4.0
+    ],
+    "spacing_unit_mm": 2.0,
+    "panel_gutter_mm": [
+      3.5,
+      6.0
+    ]
+  },
+  "type": {
+    "preferred_sans": [
+      "Helvetica",
+      "Arial",
+      "Liberation Sans",
+      "DejaVu Sans (last resort only)"
+    ],
+    "preferred_serif": [
+      "Times New Roman",
+      "STIXGeneral (bundled with matplotlib)",
+      "Nimbus Roman"
+    ],
+    "mono": [
+      "Liberation Mono",
+      "DejaVu Sans Mono",
+      "Nimbus Mono PS"
+    ],
+    "panel_heading_pt": [
+      9,
+      10
+    ],
+    "module_heading_pt": [
+      8.3,
+      9
+    ],
+    "body_pt": [
+      7.5,
+      8.3
+    ],
+    "secondary_pt": [
+      7,
+      7.5
+    ],
+    "minimum_recommended_pt": 7,
+    "role_count": 3,
+    "math": "Use a compatible math family; never infer type from page body when figure is raster or outlined.",
+    "export_font_strategy": {
+      "status": "Production recommendation; source family and chosen production family are recorded separately.",
+      "matplotlib_pdf_fonttype_42": "Select actual TrueType regular and bold font programs. Confirm the program signature, not only filename extension; CFF OpenType programs can cause a format mismatch in this path.",
+      "other_backends": "Use a format supported by the export backend and verify the rendered PDF. CFF is not universally unsupported.",
+      "required_records": [
+        "selected family",
+        "regular and bold file paths",
+        "font program format",
+        "fallback or substitution",
+        "final physical sizes",
+        "PDF render and embedding check"
+      ]
+    },
+    "default_family": "Match the manuscript body; LaTeX/Times papers -> serif with mathtext.fontset='stix'. Implemented by scripts/paperkit.py use_fonts()."
+  },
+  "geometry": {
+    "group_padding_mm": [
+      2.0,
+      3.0
+    ],
+    "child_gap_mm": [
+      1.5,
+      2.5
+    ],
+    "module_corner_radius_mm": [
+      0.8,
+      1.3
+    ],
+    "group_corner_radius_mm": [
+      1.5,
+      2.0
+    ],
+    "label_edge_clearance_mm": [
+      1.2,
+      2.0
+    ],
+    "parallel_route_separation_mm": [
+      2.5,
+      4.0
+    ],
+    "feedback_corridor_mm": [
+      4.0,
+      7.0
+    ],
+    "port_radius_mm": [
+      0.35,
+      0.55
+    ],
+    "stroke_group_pt": [
+      0.65,
+      0.8
+    ],
+    "stroke_module_pt": [
+      0.8,
+      1.0
+    ],
+    "stroke_focus_pt": [
+      1.1,
+      1.35
+    ],
+    "stroke_arrow_pt": [
+      0.95,
+      1.2
+    ],
+    "arrowhead_length_mm": [
+      1.6,
+      2.2
+    ],
+    "arrowhead_width_mm": [
+      1.1,
+      1.6
+    ]
+  },
+  "themes": {
+    "structured_system": {
+      "sources": [
+        "2610.14224v1 Fig.2",
+        "2608.30320v1 Fig.1"
+      ],
+      "roles": {
+        "context": {
+          "ink": "#2F5597",
+          "fill": "#E3EBF6"
+        },
+        "compute": {
+          "ink": "#7B5FB5",
+          "fill": "#F1ECF8"
+        },
+        "memory": {
+          "ink": "#4F7D58",
+          "fill": "#E9F0E7"
+        },
+        "update": {
+          "ink": "#AD6A30",
+          "fill": "#FFF0DE"
+        },
+        "orchestration": {
+          "ink": "#A5637E",
+          "fill": "#F6EDF1"
+        }
+      },
+      "neutral": {
+        "ink": "#28313D",
+        "secondary": "#596471",
+        "line": "#AAB3BE",
+        "fill": "#F5F7FA"
+      },
+      "children_fill": "#FFFFFF",
+      "note": "Use only roles present in the actual system; the update amber pair is an adapted recommendation, not an extracted Harness color."
+    },
+    "token_architecture": {
+      "sources": [
+        "2606.19348v1 Fig.3",
+        "2601.04720v1 Fig.2"
+      ],
+      "roles": {
+        "query": {
+          "fill": "#E2F0D9",
+          "ink": "#456A3C"
+        },
+        "key_value": {
+          "fill": "#FFF2CC",
+          "ink": "#8D6B1F"
+        },
+        "text": {
+          "fill": "#C8C7F5",
+          "ink": "#5C48D4"
+        },
+        "vision": {
+          "fill": "#A2DCDE",
+          "ink": "#276B70"
+        },
+        "weights": {
+          "fill": "#F5DDBF",
+          "ink": "#885D31"
+        },
+        "operator": {
+          "fill": "#E8E8E8",
+          "ink": "#34383E"
+        }
+      },
+      "note": "Select a subset according to scientific roles; do not combine all categories gratuitously. Dark inks are adaptation choices unless separately measured in atlas."
+    },
+    "analytical_comparison": {
+      "sources": [
+        "2608.30320v1 Fig.6"
+      ],
+      "series": [
+        "#2563A6",
+        "#D97706",
+        "#7A5195",
+        "#4C8C5A"
+      ],
+      "markers": [
+        "o",
+        "^",
+        "s",
+        "D"
+      ],
+      "dashes": [
+        "solid",
+        "dashed",
+        "dashdot",
+        "dotted"
+      ],
+      "ink": "#28313D",
+      "secondary": "#596471",
+      "grid": "#DFE4EA",
+      "grid_width_pt": 0.45,
+      "line_width_pt": [
+        1.3,
+        1.7
+      ],
+      "marker_size_pt": [
+        3.5,
+        4.5
+      ],
+      "uncertainty_alpha": [
+        0.1,
+        0.18
+      ],
+      "note": "Series colors are extracted; widths, marker sizes, and alpha are original recommendations. Preserve all relevant conditions at readable contrast."
+    },
+    "warm_editorial": {
+      "sources": [
+        "Automated Researchers Can Reliably Mitigate Alignment Failures, official2026-08-28 Fig.1"
+      ],
+      "series": [
+        "#0F3C5F",
+        "#F8A27E",
+        "#30685C"
+      ],
+      "neutral": "#9A9A9A",
+      "text": "#28313D",
+      "note": "The peach is a mark/fill color; use dark labels instead of peach small text. Combine with shape/line encoding."
+    },
+    "algorithm_correspondence": {
+      "sources": [
+        "2506.13131v1 Figure 2, PDF p. 4"
+      ],
+      "status": "Original opaque production recommendations; source structural correspondence is observed.",
+      "roles": {
+        "prompt": {
+          "ink": "#2C64B7",
+          "fill": "#E9F0FB"
+        },
+        "proposal": {
+          "ink": "#B9453D",
+          "fill": "#F9E9E7"
+        },
+        "evaluation": {
+          "ink": "#8A6500",
+          "fill": "#FFF3CF"
+        },
+        "memory": {
+          "ink": "#287A48",
+          "fill": "#E4F2E8"
+        }
+      },
+      "scope_fill": "#EEF3FB",
+      "ink": "#263238",
+      "note": "Use a role only if present. Repeat its exact ink in matching code identifiers; ordinary syntax remains neutral. Colors do not establish corporate branding."
+    },
+    "provenance_expansion": {
+      "sources": [
+        "2511.16719v1 Figures 4 and 10, PDF pp. 4 and 19"
+      ],
+      "status": "Original opaque production recommendations; source provenance grouping and typed objects are observed.",
+      "roles": {
+        "new": {
+          "fill": "#FFF2B8",
+          "ink": "#6D5300"
+        },
+        "inherited": {
+          "fill": "#DCEBFA",
+          "ink": "#315F9A"
+        },
+        "state": {
+          "fill": "#D7ECE8",
+          "ink": "#286E64"
+        }
+      },
+      "ink": "#26333D",
+      "feedback_corridor_mm": [
+        4,
+        6
+      ],
+      "note": "Provide a provenance key. State is an optional separate role; do not combine provenance and modality into one ambiguous hue mapping."
+    },
+    "stage_storyboard": {
+      "sources": [
+        "2604.14268v1 Figure 2, PDF p. 5"
+      ],
+      "status": "Pale fills are observed vector values; dark text inks, footer, dimensions and font sizes are authoring recommendations.",
+      "stage_fills": [
+        "#DDEBF7",
+        "#DFEDDA",
+        "#FCE6C6",
+        "#F6DAF1"
+      ],
+      "stage_inks": [
+        "#215F9A",
+        "#3B7D23",
+        "#9C461D",
+        "#7030A0"
+      ],
+      "footer_fill": "#405888",
+      "recommended_four_card_geometry_mm": {
+        "canvas_width": 178,
+        "outer_margin": 6,
+        "card_width": 37,
+        "gutter": 6
+      },
+      "note": "The third ink is darkened from observed #E97132. Use four stages only if the method has four stages. Interiors must contain meaningful operations and outputs, not decorative icons."
+    }
+  },
+  "evidence_rules": [
+    "Separate source values from adaptation choices.",
+    "Inspect selected palette and all text at final printed size.",
+    "Ratios are starting templates, not inferred universal optima.",
+    "No theme alone certifies color accessibility.",
+    "Retain raw color, alpha and background separately; an opaque rendered sample is a different evidence type.",
+    "Do not use hidden text or local font fallback as evidence of the source visible font.",
+    "Reject physically implausible raw stroke widths before using them as final-size design values.",
+    "Dashed-line meanings are defined per figure; training-only, optionality, copying and expansion are distinct roles."
+  ],
+  "role_families_2026_10": {
+    "status": "Recommended paperkit palette (references/visual-craft.md §3). fill L*95-97, soft L*88-90, stroke L*55-65, ink L*25-35, mark saturated.",
+    "roles": {
+      "neutral": {
+        "fill": "#F4F5F7",
+        "soft": "#E6E8EC",
+        "stroke": "#8C95A1",
+        "ink": "#3A4250",
+        "mark": "#7D8794"
+      },
+      "frozen": {
+        "fill": "#EEF2F8",
+        "soft": "#DCE4EF",
+        "stroke": "#7A8DA8",
+        "ink": "#34445C",
+        "mark": "#6F84A3"
+      },
+      "blue": {
+        "fill": "#EAF1FB",
+        "soft": "#D3E2F6",
+        "stroke": "#5B8AC9",
+        "ink": "#1F4E8C",
+        "mark": "#2F6FC0"
+      },
+      "memory": {
+        "fill": "#E9F4EC",
+        "soft": "#CFE6D6",
+        "stroke": "#4E9166",
+        "ink": "#1E5B36",
+        "mark": "#2E8B57"
+      },
+      "amber": {
+        "fill": "#FFF4E3",
+        "soft": "#FCE3BD",
+        "stroke": "#D49A45",
+        "ink": "#7A4A0E",
+        "mark": "#E08A1E"
+      },
+      "purple": {
+        "fill": "#F3EEFA",
+        "soft": "#E2D8F3",
+        "stroke": "#9479C4",
+        "ink": "#4B2F80",
+        "mark": "#7A54C2"
+      },
+      "teal": {
+        "fill": "#E7F5F5",
+        "soft": "#C9E8E8",
+        "stroke": "#4FA3A5",
+        "ink": "#175E60",
+        "mark": "#1F8A8C"
+      },
+      "coral": {
+        "fill": "#FDEEEA",
+        "soft": "#F8D6CC",
+        "stroke": "#D9826B",
+        "ink": "#86321F",
+        "mark": "#D9583B"
+      },
+      "rose": {
+        "fill": "#FBEFF4",
+        "soft": "#F3D5E2",
+        "stroke": "#C77D9C",
+        "ink": "#7A2E50",
+        "mark": "#C2507F"
+      }
+    },
+    "text": {
+      "ink": "#262B33",
+      "muted": "#6B7480",
+      "connector": "#4A4F57",
+      "hairline": "#C9CED6"
+    },
+    "chart": {
+      "hero": "blue.mark",
+      "baseline_dark": "#5E6875",
+      "baseline_light": "#8E99A8",
+      "grid": "#E6E9ED",
+      "tick_label": "#5A626D"
+    }
+  }
+}

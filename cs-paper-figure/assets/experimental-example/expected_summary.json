@@ -1,0 +1,22 @@
+{
+  "data_status": "SYNTHETIC DATA",
+  "primary_effect_pp": 6.570095486111112,
+  "primary_ci_pp": [
+    6.046549479166669,
+    7.128906250000001
+  ],
+  "history_ablation_effect_pp": 0.02441406250000207,
+  "history_ablation_ci_pp": [
+    -0.4069010416666658,
+    0.4557291666666699
+  ],
+  "independent_seed_blocks": 24,
+  "shared_scenarios": 9216,
+  "outcome_rows": 147456,
+  "dimensions_mm": [
+    178,
+    181
+  ],
+  "min_font_pt": 7.25,
+  "caption_word_count": 141
+}

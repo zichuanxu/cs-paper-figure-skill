@@ -1,0 +1,74 @@
+{
+  "papers": 120,
+  "figure_anchors": 261,
+  "papers_by_year": {
+    "2015": 1,
+    "2017": 1,
+    "2019": 1,
+    "2020": 2,
+    "2021": 4,
+    "2022": 4,
+    "2023": 1,
+    "2024": 10,
+    "2025": 67,
+    "2026": 29
+  },
+  "company_counts": [
+    {
+      "company": "Alibaba / Qwen",
+      "papers": 15,
+      "papers_since_2025": 14,
+      "figure_anchors": 32
+    },
+    {
+      "company": "Anthropic",
+      "papers": 12,
+      "papers_since_2025": 8,
+      "figure_anchors": 26
+    },
+    {
+      "company": "DeepSeek",
+      "papers": 13,
+      "papers_since_2025": 11,
+      "figure_anchors": 32
+    },
+    {
+      "company": "Google / DeepMind",
+      "papers": 15,
+      "papers_since_2025": 10,
+      "figure_anchors": 32
+    },
+    {
+      "company": "Meta / FAIR",
+      "papers": 14,
+      "papers_since_2025": 10,
+      "figure_anchors": 31
+    },
+    {
+      "company": "Microsoft Research",
+      "papers": 11,
+      "papers_since_2025": 9,
+      "figure_anchors": 21
+    },
+    {
+      "company": "NVIDIA",
+      "papers": 13,
+      "papers_since_2025": 11,
+      "figure_anchors": 30
+    },
+    {
+      "company": "OpenAI",
+      "papers": 13,
+      "papers_since_2025": 10,
+      "figure_anchors": 24
+    },
+    {
+      "company": "Tencent",
+      "papers": 14,
+      "papers_since_2025": 13,
+      "figure_anchors": 33
+    }
+  ],
+  "counting_policy": "Each canonical paper and each numbered/descriptive figure anchor is counted once. Panels are not counted separately. Company counts use the primary corporate family; collaborations are not double-counted.",
+  "qualification": "Counts describe the curated source records. They do not establish venue acceptance or independently verify a record's inspection claim."
+}

@@ -1,0 +1,31 @@
+{
+  "evidence_status": "SCHEMATIC: original deterministic illustration, not an evaluated research system",
+  "base_version": "v12",
+  "next_version": "v13",
+  "base_record": {"units": "implicit", "citation": "URL"},
+  "worked_trace": {"id": "T08", "source_value": "12 ms", "source_date": "2026-10-20", "baseline_answer": "12", "omission": "unit and date omitted"},
+  "validation_trace": {"id": "V01", "source_value": "7.5 ms", "source_date": "2026-10-18", "baseline_answer": "7.5", "split": "validation", "status": "separate deterministic toy fixture; never used to propose edits"},
+  "other_evidence": [{"id": "T11", "source_form": "table column: latency (ms); cell: 12", "proposed_rule": "retain the unit in a header", "limitation": "The scalar V01 validation answer has no header; this alternative fails V01's explicit-unit assertion."}],
+  "rejection_history": [],
+  "rejection_rule": "An exactly repeated rejected proposal ID is excluded by the arbiter. A materially changed proposal requires a new ID. The illustrated initial transaction starts with an empty buffer.",
+  "edit_budget": 2,
+  "proposals": [
+    {"id": "P1", "operation": "REPLACE", "key": "units", "value": "value + unit", "priority": 4, "evidence": "T08"},
+    {"id": "P2", "operation": "REPLACE", "key": "units", "value": "header only", "priority": 3, "evidence": "T11"},
+    {"id": "P3", "operation": "ADD", "key": "freshness", "value": "source date", "priority": 2, "evidence": "T08"}
+  ],
+  "assertions": [
+    {"id": "U", "label": "Value carries its unit", "key": "value", "expected": "7.5 ms"},
+    {"id": "D", "label": "Source date is retained", "key": "source_date", "expected": "2026-10-18"},
+    {"id": "C", "label": "Citation is preserved", "key": "citation", "expected": "URL"}
+  ],
+  "gate": "Strict improvement in passed assertions on this fixed illustrative fixture; no uncertainty or empirical generalization claim",
+  "execution_semantics": "A deterministic toy executor attaches the source unit when the units rule is value + unit, attaches the source date when the freshness rule is source date, and preserves a URL when the citation rule is URL. This is a correctness fixture, not a real agent rollout.",
+  "mutable_state": ["current memory", "rejection buffer", "proposer context at epoch boundaries"],
+  "frozen_state": ["execution-model weights", "validation cases during selection", "final test until the final snapshot"],
+  "source_design_jobs": [
+    {"source": "IdeaScientist 2610.04074v1 Figure 1", "job": "overview plus concrete worked instance"},
+    {"source": "SkillOpt 2605.23904v2 Figure 2", "job": "parallel proposals and distinct fast/epoch update scopes"},
+    {"source": "Native Sparse Attention 2502.11089 Figure 2", "job": "mechanism made concrete with an explicitly indexed matrix"}
+  ]
+}

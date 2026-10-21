@@ -1,0 +1,653 @@
+{
+  "fixture_id": "deterministic-scene-01",
+  "task": "Reach g; avoid Barrier A and Pier B.",
+  "candidates": [
+    {
+      "id": "D",
+      "name": "Direct",
+      "actions": [
+        [
+          2.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ],
+        [
+          2.0,
+          0.0
+        ]
+      ],
+      "states": [
+        [
+          1.0,
+          3.0
+        ],
+        [
+          3.0,
+          3.0
+        ],
+        [
+          5.0,
+          3.0
+        ],
+        [
+          7.0,
+          3.0
+        ],
+        [
+          9.0,
+          3.0
+        ]
+      ],
+      "action_norms": [
+        2.0,
+        2.0,
+        2.0,
+        2.0
+      ],
+      "segments": [
+        {
+          "k": 0,
+          "from": [
+            1.0,
+            3.0
+          ],
+          "to": [
+            3.0,
+            3.0
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 1.0,
+              "closest": [
+                3.0,
+                3.0
+              ],
+              "distance_to_center": 3.9812058474788765,
+              "clearance": 3.4312058474788767
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        },
+        {
+          "k": 1,
+          "from": [
+            3.0,
+            3.0
+          ],
+          "to": [
+            5.0,
+            3.0
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": true,
+              "interval": [
+                0.19999999999999996,
+                0.7999999999999998
+              ]
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 1.0,
+              "closest": [
+                5.0,
+                3.0
+              ],
+              "distance_to_center": 2.33452350598575,
+              "clearance": 1.78452350598575
+            }
+          ],
+          "within_room": true,
+          "collision": true
+        },
+        {
+          "k": 2,
+          "from": [
+            5.0,
+            3.0
+          ],
+          "to": [
+            7.0,
+            3.0
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 0.7999999999999998,
+              "closest": [
+                6.6,
+                3.0
+              ],
+              "distance_to_center": 1.7000000000000002,
+              "clearance": 1.1500000000000001
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        },
+        {
+          "k": 3,
+          "from": [
+            7.0,
+            3.0
+          ],
+          "to": [
+            9.0,
+            3.0
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 0.0,
+              "closest": [
+                7.0,
+                3.0
+              ],
+              "distance_to_center": 1.7464249196572983,
+              "clearance": 1.1964249196572982
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        }
+      ],
+      "terminal_squared_distance": 0.0,
+      "effort": 16.0,
+      "collision": 1,
+      "cost": 101.6
+    },
+    {
+      "id": "U",
+      "name": "Upper detour",
+      "actions": [
+        [
+          1.5,
+          1.8
+        ],
+        [
+          2.3,
+          0.0
+        ],
+        [
+          2.0,
+          0.7
+        ],
+        [
+          2.2,
+          -2.5
+        ]
+      ],
+      "states": [
+        [
+          1.0,
+          3.0
+        ],
+        [
+          2.5,
+          4.8
+        ],
+        [
+          4.8,
+          4.8
+        ],
+        [
+          6.8,
+          5.5
+        ],
+        [
+          9.0,
+          3.0
+        ]
+      ],
+      "action_norms": [
+        2.3430749027719964,
+        2.3,
+        2.118962010041709,
+        3.3301651610693423
+      ],
+      "segments": [
+        {
+          "k": 0,
+          "from": [
+            1.0,
+            3.0
+          ],
+          "to": [
+            2.5,
+            4.8
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 1.0,
+              "closest": [
+                2.5,
+                4.8
+              ],
+              "distance_to_center": 4.1012193308819755,
+              "clearance": 3.5512193308819757
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        },
+        {
+          "k": 1,
+          "from": [
+            2.5,
+            4.8
+          ],
+          "to": [
+            4.8,
+            4.8
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 1.0,
+              "closest": [
+                4.8,
+                4.8
+              ],
+              "distance_to_center": 1.8027756377319943,
+              "clearance": 1.2527756377319943
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        },
+        {
+          "k": 2,
+          "from": [
+            4.8,
+            4.8
+          ],
+          "to": [
+            6.8,
+            5.5
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 0.7861915367483295,
+              "closest": [
+                6.372383073496659,
+                5.350334075723831
+              ],
+              "distance_to_center": 0.6890166001471928,
+              "clearance": 0.13901660014719275
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        },
+        {
+          "k": 3,
+          "from": [
+            6.8,
+            5.5
+          ],
+          "to": [
+            9.0,
+            3.0
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 0.1406672678088367,
+              "closest": [
+                7.109467989179441,
+                5.148331830477908
+              ],
+              "distance_to_center": 0.6786450192981712,
+              "clearance": 0.12864501929817118
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        }
+      ],
+      "terminal_squared_distance": 0.0,
+      "effort": 26.36,
+      "collision": 0,
+      "cost": 2.636
+    },
+    {
+      "id": "L",
+      "name": "Lower detour",
+      "actions": [
+        [
+          1.5,
+          -1.8
+        ],
+        [
+          2.3,
+          0.0
+        ],
+        [
+          2.0,
+          0.6
+        ],
+        [
+          2.2,
+          1.2
+        ]
+      ],
+      "states": [
+        [
+          1.0,
+          3.0
+        ],
+        [
+          2.5,
+          1.2
+        ],
+        [
+          4.8,
+          1.2
+        ],
+        [
+          6.8,
+          1.7999999999999998
+        ],
+        [
+          9.0,
+          3.0
+        ]
+      ],
+      "action_norms": [
+        2.3430749027719964,
+        2.3,
+        2.08806130178211,
+        2.505992817228334
+      ],
+      "segments": [
+        {
+          "k": 0,
+          "from": [
+            1.0,
+            3.0
+          ],
+          "to": [
+            2.5,
+            1.2
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 0.9726775956284149,
+              "closest": [
+                2.4590163934426226,
+                1.2491803278688531
+              ],
+              "distance_to_center": 5.390352645174921,
+              "clearance": 4.840352645174921
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        },
+        {
+          "k": 1,
+          "from": [
+            2.5,
+            1.2
+          ],
+          "to": [
+            4.8,
+            1.2
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 1.0,
+              "closest": [
+                4.8,
+                1.2
+              ],
+              "distance_to_center": 3.935733730830885,
+              "clearance": 3.385733730830885
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        },
+        {
+          "k": 2,
+          "from": [
+            4.8,
+            1.2
+          ],
+          "to": [
+            6.8,
+            1.7999999999999998
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 1.0,
+              "closest": [
+                6.8,
+                1.7999999999999998
+              ],
+              "distance_to_center": 2.9068883707497273,
+              "clearance": 2.3568883707497275
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        },
+        {
+          "k": 3,
+          "from": [
+            6.8,
+            1.7999999999999998
+          ],
+          "to": [
+            9.0,
+            3.0
+          ],
+          "obstacles": [
+            {
+              "obstacle_id": "A",
+              "hit": false,
+              "interval": null
+            },
+            {
+              "obstacle_id": "B",
+              "hit": false,
+              "t_closest": 0.4840764331210191,
+              "closest": [
+                7.864968152866242,
+                2.3808917197452226
+              ],
+              "distance_to_center": 2.6416675875878295,
+              "clearance": 2.0916675875878292
+            }
+          ],
+          "within_room": true,
+          "collision": false
+        }
+      ],
+      "terminal_squared_distance": 0.0,
+      "effort": 21.42,
+      "collision": 0,
+      "cost": 2.1420000000000003
+    }
+  ],
+  "selected_id": "L",
+  "executed_action": [
+    1.5,
+    -1.8
+  ],
+  "initial_state": {
+    "bounds": [
+      0.0,
+      10.0,
+      0.0,
+      6.0
+    ],
+    "agent": {
+      "geometry": "point",
+      "position": [
+        1.0,
+        3.0
+      ]
+    },
+    "goal": [
+      9.0,
+      3.0
+    ],
+    "obstacles": [
+      {
+        "id": "A",
+        "name": "Barrier",
+        "type": "aabb",
+        "bounds": [
+          3.4,
+          4.6,
+          1.8,
+          4.2
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Pier",
+        "type": "circle",
+        "center": [
+          6.6,
+          4.7
+        ],
+        "radius": 0.55
+      }
+    ]
+  },
+  "next_state": {
+    "bounds": [
+      0.0,
+      10.0,
+      0.0,
+      6.0
+    ],
+    "agent": {
+      "geometry": "point",
+      "position": [
+        2.5,
+        1.2
+      ]
+    },
+    "goal": [
+      9.0,
+      3.0
+    ],
+    "obstacles": [
+      {
+        "id": "A",
+        "name": "Barrier",
+        "type": "aabb",
+        "bounds": [
+          3.4,
+          4.6,
+          1.8,
+          4.2
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Pier",
+        "type": "circle",
+        "center": [
+          6.6,
+          4.7
+        ],
+        "radius": 0.55
+      }
+    ]
+  },
+  "executed_action_count": 1,
+  "unexecuted_selected_actions": [
+    [
+      2.3,
+      0.0
+    ],
+    [
+      2.0,
+      0.6
+    ],
+    [
+      2.2,
+      1.2
+    ]
+  ]
+}

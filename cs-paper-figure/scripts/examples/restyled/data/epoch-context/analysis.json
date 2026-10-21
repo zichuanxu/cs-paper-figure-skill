@@ -1,0 +1,261 @@
+{
+  "evidence_status": "DETERMINISTIC ILLUSTRATION: a constructed rule system, not a learned-model or real-agent result",
+  "split": "training_replay",
+  "replay": [
+    {
+      "case_id": "T08",
+      "format": "scalar",
+      "split": "training_replay",
+      "states": {
+        "M0": {
+          "output": "12",
+          "checks": {
+            "scalar.unit": false,
+            "scalar.date": false
+          },
+          "pass": false
+        },
+        "M1": {
+          "output": "12 ms | 20 Oct",
+          "checks": {
+            "scalar.unit": true,
+            "scalar.date": true
+          },
+          "pass": true
+        }
+      },
+      "group": "improved"
+    },
+    {
+      "case_id": "T11",
+      "format": "csv",
+      "split": "training_replay",
+      "states": {
+        "M0": {
+          "output": "latency_ms\n12",
+          "checks": {
+            "csv.header": true,
+            "csv.numeric": true,
+            "csv.value": true
+          },
+          "pass": true
+        },
+        "M1": {
+          "output": "latency_ms\n12 ms",
+          "checks": {
+            "csv.header": true,
+            "csv.numeric": false,
+            "csv.value": false
+          },
+          "pass": false
+        }
+      },
+      "group": "regressed"
+    },
+    {
+      "case_id": "T03",
+      "format": "score",
+      "split": "training_replay",
+      "states": {
+        "M0": {
+          "output": "0.91",
+          "checks": {
+            "score.value": true
+          },
+          "pass": true
+        },
+        "M1": {
+          "output": "0.91",
+          "checks": {
+            "score.value": true
+          },
+          "pass": true
+        }
+      },
+      "group": "unchanged"
+    },
+    {
+      "case_id": "T14",
+      "format": "range",
+      "split": "training_replay",
+      "states": {
+        "M0": {
+          "output": "3 ms",
+          "checks": {
+            "range.end": false
+          },
+          "pass": false
+        },
+        "M1": {
+          "output": "3 ms",
+          "checks": {
+            "range.end": false
+          },
+          "pass": false
+        }
+      },
+      "group": "unchanged"
+    }
+  ],
+  "groups": {
+    "improved": [
+      "T08"
+    ],
+    "regressed": [
+      "T11"
+    ],
+    "unchanged": [
+      "T03",
+      "T14"
+    ]
+  },
+  "counts": {
+    "improved": 1,
+    "regressed": 1,
+    "unchanged": 2
+  },
+  "context_before": {
+    "allow_inline": [
+      "scalar",
+      "csv"
+    ],
+    "retain": [],
+    "protect": [],
+    "open": [],
+    "evidence": {
+      "allow_inline": [],
+      "retain": [],
+      "protect": [],
+      "open": []
+    }
+  },
+  "context_after": {
+    "allow_inline": [
+      "scalar"
+    ],
+    "retain": [
+      "scalar.unit",
+      "scalar.date"
+    ],
+    "protect": [
+      "csv.numeric"
+    ],
+    "open": [
+      "range.end"
+    ],
+    "evidence": {
+      "allow_inline": [
+        "T11"
+      ],
+      "retain": [
+        "T08"
+      ],
+      "protect": [
+        "T11"
+      ],
+      "open": [
+        "T14"
+      ]
+    }
+  },
+  "reflection_trace": [
+    {
+      "rule": "R1",
+      "case_id": "T08",
+      "field": "retain",
+      "action": "add",
+      "value": "scalar.unit"
+    },
+    {
+      "rule": "R1",
+      "case_id": "T08",
+      "field": "retain",
+      "action": "add",
+      "value": "scalar.date"
+    },
+    {
+      "rule": "R2",
+      "case_id": "T11",
+      "field": "allow_inline",
+      "action": "remove",
+      "value": "csv"
+    },
+    {
+      "rule": "R2",
+      "case_id": "T11",
+      "field": "protect",
+      "action": "add",
+      "value": "csv.numeric"
+    },
+    {
+      "rule": "R4",
+      "case_id": "T03",
+      "action": "no new rule"
+    },
+    {
+      "rule": "R3",
+      "case_id": "T14",
+      "field": "open",
+      "action": "add",
+      "value": "range.end"
+    }
+  ],
+  "proposal_before": {
+    "request_id": "P04",
+    "patch": {
+      "op": "REPLACE",
+      "target": "unit_placement",
+      "value": "inline",
+      "scope": [
+        "scalar",
+        "csv"
+      ]
+    },
+    "keep": [],
+    "guards": [],
+    "deferred": [],
+    "evidence": {
+      "allow_inline": [],
+      "retain": [],
+      "protect": [],
+      "open": []
+    },
+    "status": "proposed only; not applied or validated"
+  },
+  "proposal_after": {
+    "request_id": "P04",
+    "patch": {
+      "op": "REPLACE",
+      "target": "unit_placement",
+      "value": "inline",
+      "scope": [
+        "scalar"
+      ]
+    },
+    "keep": [
+      "scalar.unit",
+      "scalar.date"
+    ],
+    "guards": [
+      "csv.numeric"
+    ],
+    "deferred": [
+      "range.end"
+    ],
+    "evidence": {
+      "allow_inline": [
+        "T11"
+      ],
+      "retain": [
+        "T08"
+      ],
+      "protect": [
+        "T11"
+      ],
+      "open": [
+        "T14"
+      ]
+    },
+    "status": "proposed only; not applied or validated"
+  }
+}

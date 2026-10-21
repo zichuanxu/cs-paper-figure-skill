@@ -1,0 +1,25 @@
+{
+  "data_status": "SYNTHETIC DATA — constructed demonstration, not results from real agents",
+  "master_seed": 264817,
+  "bootstrap_seed": 812604,
+  "n_seeds": 24,
+  "episodes_per_stream": 96,
+  "bootstrap_replicates": 20000,
+  "budgets_tokens": [256, 512, 1024, 2048],
+  "policies": ["none", "unfiltered", "verified", "no_history"],
+  "task_families": [
+    {"id": "recall", "name": "Fact recall", "baseline": 0.66, "valid_benefit": 0.15, "invalid_harm": 0.10, "invalid_proposal_rate": 0.22, "proposal_rate": 0.82, "base_tokens": 1850, "key_space": 40, "zipf": 0.90},
+    {"id": "repair", "name": "Code repair", "baseline": 0.48, "valid_benefit": 0.29, "invalid_harm": 0.35, "invalid_proposal_rate": 0.37, "proposal_rate": 0.82, "base_tokens": 3400, "key_space": 40, "zipf": 1.00},
+    {"id": "tools", "name": "Tool routing", "baseline": 0.56, "valid_benefit": 0.22, "invalid_harm": 0.30, "invalid_proposal_rate": 0.42, "proposal_rate": 0.82, "base_tokens": 2400, "key_space": 40, "zipf": 1.10},
+    {"id": "long", "name": "Long horizon", "baseline": 0.36, "valid_benefit": 0.34, "invalid_harm": 0.44, "invalid_proposal_rate": 0.34, "proposal_rate": 0.82, "base_tokens": 4400, "key_space": 40, "zipf": 1.05}
+  ],
+  "record_tokens": 64,
+  "rejection_hash_tokens": 16,
+  "history_fraction": 0.25,
+  "false_accept_probability": 0.20,
+  "false_reject_probability": 0.035,
+  "verifier_model_tokens": 620,
+  "memory_write_model_tokens": 64,
+  "history_lookup_model_tokens": 12,
+  "description": "A deliberately constructed online-memory simulator. A task is scored before its update is considered. Valid records raise success probability; invalid records lower it. Verified policies check proposals with a fallible checker. Only verified keeps a bounded rejection-signature ledger. The ledger consumes the same total configured memory budget. Policies and budgets share the exact scenario stream and random variates within each seed/family. The no-memory policy ignores its assigned memory capacity and is exactly identical across budgets."
+}

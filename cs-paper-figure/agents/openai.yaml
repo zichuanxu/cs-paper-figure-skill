@@ -1,0 +1,4 @@
+interface:
+  display_name: "CS Paper Figure"
+  short_description: "Design rich, precise figures from modern AI research"
+  default_prompt: "Use $cs-paper-figure to design or improve my research figures, drawing on 2025–2026 AI papers for precise color, typography, layout, shape, and arrow choices while preserving scientific fidelity."

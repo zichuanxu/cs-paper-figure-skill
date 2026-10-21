@@ -1,0 +1,121 @@
+id,title,primary_company,first_publication_year,first_submission_date,inspected_version,inspected_revision_date,figure_count,figure_anchors,primary_source,study_file
+qwen38-next,"On the Design of Qwen3.8-Next Architecture: Evaluation, Efficiency, and Training Stability",Alibaba / Qwen,2026,,v1,,4,Figure 1; Figure 3; Figure 5; Figure 6,https://arxiv.org/pdf/2608.30320v1,modern-source-index.json
+qwen3-asr,Qwen3-ASR Technical Report,Alibaba / Qwen,2026,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2601.21337v1,dense-study-deepseek-tencent-alibaba.md
+qwen3-tts,Qwen3-TTS Technical Report,Alibaba / Qwen,2026,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2601.15621v1,study-deepseek-tencent-alibaba.md
+qwen3-vl-embedding,Qwen3-VL-Embedding and Qwen3-VL-Reranker: A Unified Framework for State-of-the-Art Multimodal Retrieval and Ranking,Alibaba / Qwen,2026,,v1,,2,Figure 2; Figure 5,https://arxiv.org/pdf/2601.04720v1,modern-source-index.json
+qwen35-omni,Qwen3.5-Omni Technical Report,Alibaba / Qwen,2026,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2604.15804v1,study-deepseek-tencent-alibaba.md
+wan-animate2,Wan-Animate-2: Pushing the Application Boundaries of Character Animation,Alibaba / Qwen,2026,,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2608.06009v1,dense-study-deepseek-tencent-alibaba.md
+qwen-image,Qwen-Image Technical Report,Alibaba / Qwen,2025,,v1,,2,Figure 6; Figure 10,https://arxiv.org/pdf/2508.02324v1,study-deepseek-tencent-alibaba.md
+qwen25-omni,Qwen2.5-Omni Technical Report,Alibaba / Qwen,2025,,v1,,3,Figure 2; Figure 3; Figure 4,https://arxiv.org/pdf/2503.20215v1,dense-study-deepseek-tencent-alibaba.md
+qwen2.5-vl,Qwen2.5-VL Technical Report,Alibaba / Qwen,2025,,arXiv:2502.13923v1,,1,1,https://arxiv.org/pdf/2502.13923v1,source-index.json
+qwen3,Qwen3 Technical Report,Alibaba / Qwen,2025,,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2505.09388v1,modern-source-index.json
+qwen3-omni,Qwen3-Omni Technical Report,Alibaba / Qwen,2025,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2509.17765v1,modern-source-index.json
+qwen3-vl,Qwen3-VL Technical Report,Alibaba / Qwen,2025,,v1,,2,Figure 1; Figure 3,https://arxiv.org/pdf/2511.21631v1,study-deepseek-tencent-alibaba.md
+wan-animate,Wan-Animate: Unified Character Animation and Replacement with Holistic Replication,Alibaba / Qwen,2025,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2509.14055v1,dense-study-deepseek-tencent-alibaba.md
+wan21,Wan: Open and Advanced Large-Scale Video Generative Models,Alibaba / Qwen,2025,,v1,,2,Figure 6; Figure 21,https://arxiv.org/pdf/2503.20314v1,dense-study-deepseek-tencent-alibaba.md
+qwen2.5,Qwen2.5 Technical Report,Alibaba / Qwen,2024,,arXiv:2412.15115v1,,2,2; 3,https://arxiv.org/pdf/2412.15115v1,source-index.json
+auditbench,AuditBench: Evaluating Alignment Auditing Techniques on Models with Hidden Behaviors,Anthropic,2026,2026-02-26,v4,2026-10-01,2,Figure 1; Figure 5,https://arxiv.org/pdf/2602.22755v4,dense-study-openai-anthropic-microsoft.md
+anthropic-aar,Automated Researchers Can Reliably Mitigate Alignment Failures,Anthropic,2026,,official-2026-08-28,,2,Figure 1; Figure 2,https://www-cdn.anthropic.com/7b1c44894e980876479947dcdd40716278aeeffd/automated-alignment-researchers-august-2026.pdf,modern-source-index.json
+hidden-objectives,Auditing language models for hidden objectives,Anthropic,2025,2025-03-14,v2,2025-03-28,2,Figure 1; Figure 2,https://arxiv.org/pdf/2503.10965v2,dense-study-openai-anthropic-microsoft.md
+anthropic-circuit-tracing,Circuit Tracing: Revealing Computational Graphs in Language Models,Anthropic,2025,,Official web paper published 2025-03-27; retrieved 2026-10-21,,2,Opening diagram: methods-diagram-svg; Multiplicative patching: crosscoder-patching-tutorial-svg,,study-openai-anthropic-microsoft.md
+emergent-misalignment,Natural Emergent Misalignment from Reward Hacking in Production RL,Anthropic,2025,2025-11-23,v1,2025-11-23,2,Figure 1; Figure 6,https://arxiv.org/pdf/2511.18397v1,dense-study-openai-anthropic-microsoft.md
+anthropic-biology,On the Biology of a Large Language Model,Anthropic,2025,,Official web paper published 2025-03-27; retrieved 2026-10-21,,2,Multi-step reasoning: dallas-capitial-big-svg; Planning in poems: poems-hero-svg,,study-openai-anthropic-microsoft.md
+reasoning-faithfulness,Reasoning Models Don't Always Say What They Think,Anthropic,2025,,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2505.05410v1,study-openai-anthropic-microsoft.md
+shade-arena,SHADE-Arena: Evaluating Sabotage and Monitoring in LLM Agents,Anthropic,2025,2025-06-17,v2,2025-07-08,2,Figure 1; Figure 2,https://arxiv.org/pdf/2506.15740v2,dense-study-openai-anthropic-microsoft.md
+alignment-faking,Alignment faking in large language models,Anthropic,2024,2024-12-18,v2,2024-12-20,2,Figure 1; Figure 2,https://arxiv.org/pdf/2412.14093v2,dense-study-openai-anthropic-microsoft.md
+anthropic-sleeper-agents-2024,Sleeper Agents: Training Deceptive LLMs that Persist Through Safety Training,Anthropic,2024,,"arXiv:2401.05566v3, 17 January 2024",,2,1; 2,https://arxiv.org/pdf/2401.05566v3,source-index.json
+anthropic-constitutional-ai-2022,Constitutional AI: Harmlessness from AI Feedback,Anthropic,2022,,"arXiv:2212.08073v1, 15 December 2022",,3,1; 2; 3,https://arxiv.org/pdf/2212.08073v1,source-index.json
+anthropic-toy-superposition-2022,Toy Models of Superposition,Anthropic,2022,,"arXiv:2209.10652v1, 21 September 2022; article dated 14 September 2022",,3,Unnumbered opening sparsity/feature-vector triptych; Unnumbered linked weight matrices and feature norms; Unnumbered sparsity-relative-importance phase diagram,https://arxiv.org/pdf/2209.10652v1,source-index.json
+engram,Conditional Memory via Scalable Lookup: A New Axis of Sparsity for Large Language Models,DeepSeek,2026,,v1,,3,Figure 1; Figure 2; Figure 3,https://arxiv.org/pdf/2601.07372v1,modern-source-index.json
+deepseek-ocr2,DeepSeek-OCR 2: Visual Causal Flow,DeepSeek,2026,,v1,,2,Figure 3; Figure 5,https://arxiv.org/pdf/2601.20552v1,study-deepseek-tencent-alibaba.md
+deepseek-v41-flash,DeepSeek-V4.1-Flash: Pushing the Limits of KV Cache Compression,DeepSeek,2026,,v1,,3,Figure 1; Figure 3; Figure 4,https://arxiv.org/pdf/2609.19969v1,study-deepseek-tencent-alibaba.md
+deepseek-v4,DeepSeek-V4: Towards Highly Efficient Million-Token Context Intelligence,DeepSeek,2026,,v1,,4,Figure 2; Figure 3; Figure 5; Figure 9,https://arxiv.org/pdf/2606.19348v1,modern-source-index.json
+deepseek-ocr,DeepSeek-OCR: Contexts Optical Compression,DeepSeek,2025,,v1,,3,Figure 1; Figure 3; Figure 13,https://arxiv.org/pdf/2510.18234v1,study-deepseek-tencent-alibaba.md
+deepseek-prover-v2,DeepSeek-Prover-V2: Advancing Formal Mathematical Reasoning via Reinforcement Learning for Subgoal Decomposition,DeepSeek,2025,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2504.21801v1,dense-study-deepseek-tencent-alibaba.md
+deepseek-r1,DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning,DeepSeek,2025,,arXiv:2501.12948v1,,2,2; 3,https://arxiv.org/pdf/2501.12948v1,source-index.json
+deepseek-v3.2,DeepSeek-V3.2: Pushing the Frontier of Open Large Language Models,DeepSeek,2025,,v1,,2,Figure 2; Figure 4,https://arxiv.org/pdf/2512.02556v1,modern-source-index.json
+janus-pro,Janus-Pro: Unified Multimodal Understanding and Generation with Data and Model Scaling,DeepSeek,2025,,v1,,2,Figure 3; Figure 4,https://arxiv.org/pdf/2501.17811v1,dense-study-deepseek-tencent-alibaba.md
+native-sparse-attention,Native Sparse Attention: Hardware-Aligned and Natively Trainable Sparse Attention,DeepSeek,2025,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2502.11089v1,dense-study-deepseek-tencent-alibaba.md
+deepseek-mhc,mHC: Manifold-Constrained Hyper-Connections,DeepSeek,2025,,v1,,2,Figure 1; Figure 4,https://arxiv.org/pdf/2512.24880v1,study-deepseek-tencent-alibaba.md
+deepseek-v2,"DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model",DeepSeek,2024,,arXiv:2405.04434v1,,2,2; 3,https://arxiv.org/pdf/2405.04434v1,source-index.json
+deepseek-v3,DeepSeek-V3 Technical Report,DeepSeek,2024,,v1,,3,Figure 3; Figure 4; Figure 5,https://arxiv.org/pdf/2412.19437v1,dense-study-deepseek-tencent-alibaba.md
+gemma4,Gemma 4 Technical Report,Google / DeepMind,2026,,v2,,1,Figure 1,https://arxiv.org/pdf/2607.02770v2,study-google-meta-nvidia.md
+harness2,Harness²: Recursive Agent Harnessing for an Open World,Google / DeepMind,2026,,v1,,4,Figure 1; Figure 2; Figure 3; Figure 9,https://arxiv.org/pdf/2610.14224v1,modern-source-index.json
+alphaevolve,AlphaEvolve: A coding agent for scientific and algorithmic discovery,Google / DeepMind,2025,,v1,,3,Figure 2; Figure 3; Figure 8,https://arxiv.org/pdf/2506.13131v1,study-google-meta-nvidia.md
+gemini25,"Gemini 2.5: Pushing the Frontier with Advanced Reasoning, Multimodality, Long Context, and Next Generation Agentic Capabilities",Google / DeepMind,2025,,v6,,2,Figure 1; Figure 4,https://arxiv.org/pdf/2507.06261v6,modern-source-index.json
+gemini-robotics,Gemini Robotics: Bringing AI into the Physical World,Google / DeepMind,2025,,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2503.20020v1,study-google-meta-nvidia.md
+gemma3,Gemma 3 Technical Report,Google / DeepMind,2025,,v1,,2,Figure 2; Figure 5,https://arxiv.org/pdf/2503.19786v1,study-google-meta-nvidia.md
+alphageometry2,Gold-medalist Performance in Solving Olympiad Geometry with AlphaGeometry2,Google / DeepMind,2025,2025-02-05,v3,2025-12-08,2,Figure 4; Figure 14,https://arxiv.org/pdf/2502.03544v3,dense-study-google-meta-nvidia.md
+miras,"It's All Connected: A Journey Through Test-Time Memorization, Attentional Bias, Retention, and Online Optimization",Google / DeepMind,2025,2025-04-17,v1,2025-04-17,2,Figure 1; Figure 2,https://arxiv.org/pdf/2504.13173v1,dense-study-google-meta-nvidia.md
+nested-learning,Nested Learning: The Illusion of Deep Learning Architectures,Google / DeepMind,2025,2025-12-31,v1,2025-12-31,2,Figure 2; Figure 5,https://arxiv.org/pdf/2512.24695v1,dense-study-google-meta-nvidia.md
+agent-scaling,Towards a Science of Scaling Agent Systems,Google / DeepMind,2025,2025-12-09,v3,2026-04-08,2,Figure 1; Figure 3,https://arxiv.org/pdf/2512.08296v3,dense-study-google-meta-nvidia.md
+titans,Titans: Learning to Memorize at Test Time,Google / DeepMind,2024,2024-12-31,v1,2024-12-31,2,Figure 1; Figure 2,https://arxiv.org/pdf/2501.00663v1,dense-study-google-meta-nvidia.md
+deepmind-chinchilla,Training Compute-Optimal Large Language Models,Google / DeepMind,2022,,arXiv:2203.15556v1 (2022-03-29),,2,1; 3,https://arxiv.org/pdf/2203.15556v1,source-index.json
+google-rliable,Deep Reinforcement Learning at the Edge of the Statistical Precipice,Google / DeepMind,2021,,arXiv:2108.13264v4 (2022-01-05),,2,7; 9,https://arxiv.org/pdf/2108.13264v4,source-index.json
+google-vit,An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale,Google / DeepMind,2020,,arXiv:2010.11929v2 (2021-06-03); ICLR 2021,,2,1; 7,https://arxiv.org/pdf/2010.11929v2,source-index.json
+google-transformer,Attention Is All You Need,Google / DeepMind,2017,,arXiv:1706.03762v7 (2023-08-02),,2,1; 2,https://arxiv.org/pdf/1706.03762v7,source-index.json
+eupe,Efficient Universal Perception Encoder,Meta / FAIR,2026,,v2,,3,Figure 1; Figure 2; Figure 3,https://arxiv.org/pdf/2603.22387v2,study-google-meta-nvidia.md
+fast-blt,Fast Byte Latent Transformer,Meta / FAIR,2026,2026-05-08,v1,2026-05-08,2,Figure 1; Figure 5,https://arxiv.org/pdf/2605.08044v1,dense-study-google-meta-nvidia.md
+ideascientist,IdeaScientist: Orchestrating Agents for Grounded Scientific Ideation,Meta / FAIR,2026,2026-10-02,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2610.04074v1,dense-user-anchor-study.md
+vjepa21,V-JEPA 2.1: Unlocking Dense Features in Video Self-Supervised Learning,Meta / FAIR,2026,,v3,,2,Figure 1; Figure 4,https://arxiv.org/pdf/2603.14482v3,modern-source-index.json
+dinov3,DINOv3,Meta / FAIR,2025,,v1,,2,Figure 5; Figure 9,https://arxiv.org/pdf/2508.10104v1,study-google-meta-nvidia.md
+perception-encoder,Perception Encoder: The best visual embeddings are not at the output of the network,Meta / FAIR,2025,,v1,,2,Figure 5; Figure 8,https://arxiv.org/pdf/2504.13181v1,study-google-meta-nvidia.md
+perception-lm,PerceptionLM: Open-Access Data and Models for Detailed Visual Understanding,Meta / FAIR,2025,2025-04-17,v3,2025-07-23,2,Figure 5; Figure 6,https://arxiv.org/pdf/2504.13180v3,dense-study-google-meta-nvidia.md
+pe-av,Pushing the Frontier of Audiovisual Perception with Large-Scale Multimodal Correspondence Learning,Meta / FAIR,2025,2025-12-22,v1,2025-12-22,2,Figure 2; Figure 13,https://arxiv.org/pdf/2512.19687v1,dense-study-google-meta-nvidia.md
+sam3,SAM 3: Segment Anything with Concepts,Meta / FAIR,2025,,v1,,2,Figure 4; Figure 10,https://arxiv.org/pdf/2511.16719v1,study-google-meta-nvidia.md
+vjepa2,"V-JEPA 2: Self-Supervised Video Models Enable Understanding, Prediction and Planning",Meta / FAIR,2025,,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2506.09985v1,modern-source-index.json
+movie-gen,Movie Gen: A Cast of Media Foundation Models,Meta / FAIR,2024,2024-10-17,v2,2025-02-26,2,Figure 8; Figure 17,https://arxiv.org/pdf/2410.13720v2,dense-study-google-meta-nvidia.md
+meta-llama3,The Llama 3 Herd of Models,Meta / FAIR,2024,,arXiv:2407.21783v3 (2024-11-23),,2,7; 27,https://arxiv.org/pdf/2407.21783v3,source-index.json
+meta-sam,Segment Anything,Meta / FAIR,2023,,arXiv:2304.02643v1 (2023-04-05),,3,1; 4; 9,https://arxiv.org/pdf/2304.02643v1,source-index.json
+meta-mae,Masked Autoencoders Are Scalable Vision Learners,Meta / FAIR,2021,,arXiv:2111.06377v3 (2021-12-19),,3,1; 2; 3,https://arxiv.org/pdf/2111.06377v3,source-index.json
+phi-vision,Phi-4-reasoning-vision-15B Technical Report,Microsoft Research,2026,,Official PDF retrieved 2026-10-21,,2,Figure 2; Figure 3,https://www.microsoft.com/en-us/research/wp-content/uploads/2026/03/Phi-4-reasoning-vision-15B-Tech-Report.pdf,study-openai-anthropic-microsoft.md
+skillopt,SkillOpt: Executive Strategy for Self-Evolving Agent Skills,Microsoft Research,2026,2026-05-22,v2,2026-05-25,2,Figure 2; Figure 3,https://arxiv.org/pdf/2605.23904v2,dense-user-anchor-study.md
+agent-lightning,Agent Lightning: Train ANY AI Agents with Reinforcement Learning,Microsoft Research,2025,,v1,,2,Figure 1; Figure 4,https://arxiv.org/pdf/2508.03680v1,study-openai-anthropic-microsoft.md
+fara,Fara-7B: An Efficient Agentic Model for Computer Use,Microsoft Research,2025,2025-11-24,v1,2025-11-24,2,Figure 2; Figure 4,https://arxiv.org/pdf/2511.19663v1,dense-study-openai-anthropic-microsoft.md
+magma,Magma: A Foundation Model for Multimodal AI Agents,Microsoft Research,2025,,v1,,2,Figure 1; Figure 7,https://arxiv.org/pdf/2502.13130v1,study-openai-anthropic-microsoft.md
+phi-mini,Phi-4-Mini Technical Report: Compact yet Powerful Multimodal Language Models via Mixture-of-LoRAs,Microsoft Research,2025,,v1,,2,Figure 1; Figure 3,https://arxiv.org/pdf/2503.01743v1,study-openai-anthropic-microsoft.md
+rd-quant,R&D-Agent-Quant: A Multi-Agent Framework for Data-Centric Factors and Model Joint Optimization,Microsoft Research,2025,2025-05-21,v2,2025-09-25,2,Figure 3; Figure 4,https://arxiv.org/pdf/2505.15155v2,dense-study-openai-anthropic-microsoft.md
+rd-agent,R&D-Agent: An LLM-Agent Framework Towards Autonomous Data Science,Microsoft Research,2025,2025-05-20,v2,2025-10-01,2,Figure 2; Figure 3,https://arxiv.org/pdf/2505.14738v2,dense-study-openai-anthropic-microsoft.md
+ufo2,UFO2: The Desktop AgentOS,Microsoft Research,2025,2025-04-20,v2,2025-04-25,2,Figure 7; Figure 11,https://arxiv.org/pdf/2504.14603v2,dense-study-openai-anthropic-microsoft.md
+data-formulator2,"Data Formulator 2: Iterative Creation of Data Visualizations, with AI Transforming Data Along the Way",Microsoft Research,2024,2024-08-28,v2,2025-02-21,2,Figure 2; Figure 6,https://arxiv.org/pdf/2408.16119v2,dense-study-openai-anthropic-microsoft.md
+microsoft-resnet,Deep Residual Learning for Image Recognition,Microsoft Research,2015,,arXiv:1512.03385v1 (2015-12-10),,1,2,https://arxiv.org/pdf/1512.03385v1,source-index.json
+cosmos3,Cosmos 3: Omnimodal World Models for Physical AI,NVIDIA,2026,,v4,,4,Figure 1; Figure 5; Figure 8; Figure 11,https://arxiv.org/pdf/2606.02800v4,modern-source-index.json
+cosmos-policy,Cosmos Policy: Fine-Tuning Video Models for Visuomotor Control and Planning,NVIDIA,2026,2026-01-22,v1,2026-01-22,2,Figure 2; Figure 12,https://arxiv.org/pdf/2601.16163v1,dense-study-google-meta-nvidia.md
+dreamdojo,DreamDojo: A Generalist Robot World Model from Large-Scale Human Videos,NVIDIA,2026,2026-02-06,v1,2026-02-06,2,Figure 1; Figure 3,https://arxiv.org/pdf/2602.06949v1,dense-study-google-meta-nvidia.md
+nemotron3-super,"Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning",NVIDIA,2026,,v1,,2,Figure 1; Figure 3,https://arxiv.org/pdf/2604.12374v1,study-google-meta-nvidia.md
+nemotron-diffusion,"Nemotron-Labs-Diffusion: A Tri-Mode Language Model Unifying Autoregressive, Diffusion, and Self-Speculation Decoding",NVIDIA,2026,,v1,,3,Figure 1; Figure 3; Figure 5,https://arxiv.org/pdf/2607.05722v1,study-google-meta-nvidia.md
+cosmos-reason1,Cosmos-Reason1: From Physical Common Sense To Embodied Reasoning,NVIDIA,2025,,v1,,2,Figure 1; Figure 6,https://arxiv.org/pdf/2503.15558v1,study-google-meta-nvidia.md
+cosmos-transfer1,Cosmos-Transfer1: Conditional World Generation with Adaptive Multimodal Control,NVIDIA,2025,2025-03-18,v2,2025-04-01,2,Figure 2; Figure 6,https://arxiv.org/pdf/2503.14492v2,dense-study-google-meta-nvidia.md
+dreamgen,DreamGen: Unlocking Generalization in Robot Learning through Video World Models,NVIDIA,2025,2025-05-19,v2,2025-06-17,2,Figure 2; Figure 3,https://arxiv.org/pdf/2505.12705v2,dense-study-google-meta-nvidia.md
+gr00t-n1,GR00T N1: An Open Foundation Model for Generalist Humanoid Robots,NVIDIA,2025,,v2,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2503.14734v2,study-google-meta-nvidia.md
+nvidia-nemotron-h,Nemotron-H: A Family of Accurate and Efficient Hybrid Mamba-Transformer Models,NVIDIA,2025,,arXiv:2504.03624v4 (2025-09-05; PDF header 2025-09-09),,2,1; 2,https://arxiv.org/pdf/2504.03624v4,source-index.json
+cosmos25,World Simulation with Video Foundation Models for Physical AI,NVIDIA,2025,2025-10-28,v2,2026-02-24,2,Figure 1; Figure 2,https://arxiv.org/pdf/2511.00062v2,dense-study-google-meta-nvidia.md
+nvidia-megatron-2021,Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM,NVIDIA,2021,,arXiv:2104.04473v5 (2021-08-23),,3,3; 4; 6,https://arxiv.org/pdf/2104.04473v5,source-index.json
+nvidia-megatron-2019,Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism,NVIDIA,2019,,arXiv:1909.08053v4 (2020-03-13),,2,3; 4,https://arxiv.org/pdf/1909.08053v4,source-index.json
+astra,GPT-6 Astra System Card,OpenAI,2026,,Official PDF retrieved 2026-10-21,,2,Figure 5; Figure 22,https://deploymentsafety.openai.com/gpt-6-astra/gpt-6-astra.pdf,study-openai-anthropic-microsoft.md
+reward-seeking,Measuring Reward-Seeking via Contrastive Belief Updates,OpenAI,2026,2026-07-21,v1,2026-07-21,2,Figure 1; Figure 5,https://arxiv.org/pdf/2607.18966v1,dense-study-openai-anthropic-microsoft.md
+openai-controllability,Reasoning Models Struggle to Control their Chains of Thought,OpenAI,2026,,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2603.05706v1,modern-source-index.json
+healthbench,HealthBench: Evaluating Large Language Models Towards Improved Human Health,OpenAI,2025,,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2505.08775v1,study-openai-anthropic-microsoft.md
+monitorability,Monitoring Monitorability,OpenAI,2025,,v1,,2,Figure 2; Figure 8,https://arxiv.org/pdf/2512.18311v1,study-openai-anthropic-microsoft.md
+openai-monitoring,Monitoring Reasoning Models for Misbehavior and the Risks of Promoting Obfuscation,OpenAI,2025,,v1,,2,Figure 1; Figure 2,https://arxiv.org/pdf/2503.11926v1,modern-source-index.json
+paperbench,PaperBench: Evaluating AI's Ability to Replicate AI Research,OpenAI,2025,2025-04-02,v3,2025-04-07,2,Figure 1; Figure 2,https://arxiv.org/pdf/2504.01848v3,dense-study-openai-anthropic-microsoft.md
+swe-lancer,SWE-Lancer: Can Frontier LLMs Earn $1 Million from Real-World Freelance Software Engineering?,OpenAI,2025,2025-02-17,v4,2025-05-29,2,Figure 1; Figure 2,https://arxiv.org/pdf/2502.12115v4,dense-study-openai-anthropic-microsoft.md
+inference-robustness,Trading Inference-Time Compute for Adversarial Robustness,OpenAI,2025,2025-01-31,v1,2025-01-31,2,Figure 1; Figure 2,https://arxiv.org/pdf/2501.18841v1,dense-study-openai-anthropic-microsoft.md
+gpt-oss,gpt-oss-120b & gpt-oss-20b Model Card,OpenAI,2025,,v1,,2,Figure 1; Figure 3,https://arxiv.org/pdf/2508.10925v1,study-openai-anthropic-microsoft.md
+openai-instructgpt-2022,Training language models to follow instructions with human feedback,OpenAI,2022,,"arXiv:2203.02155v1, 4 March 2022",,2,1; 2,https://arxiv.org/pdf/2203.02155v1,source-index.json
+openai-clip-2021,Learning Transferable Visual Models From Natural Language Supervision,OpenAI,2021,,"arXiv:2103.00020v1, 26 February 2021",,1,1,https://arxiv.org/pdf/2103.00020v1,source-index.json
+openai-scaling-laws-2020,Scaling Laws for Neural Language Models,OpenAI,2020,,"arXiv:2001.08361v1, 23 January 2020",,1,1,https://arxiv.org/pdf/2001.08361v1,source-index.json
+hunyuanworld2,"HY-World 2.0: A Multi-Modal World Model for Reconstructing, Generating, and Simulating 3D Worlds",Tencent,2026,,v1,,2,Figure 2; Figure 7,https://arxiv.org/pdf/2604.14268v1,study-deepseek-tencent-alibaba.md
+hunyuan3d-2,Hunyuan3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation,Tencent,2025,,arXiv:2501.12202v1,,2,2; 7,https://arxiv.org/pdf/2501.12202v1,source-index.json
+hunyuan3d-2.1,Hunyuan3D 2.1: From Images to High-Fidelity 3D Assets with Production-Ready PBR Material,Tencent,2025,,v1,,3,Figure 2; Figure 3; Figure 4,https://arxiv.org/pdf/2506.15442v1,modern-source-index.json
+hunyuan3d25,Hunyuan3D 2.5: Towards High-Fidelity 3D Assets Generation with Ultimate Details,Tencent,2025,,v1,,2,Figure 3; Figure 5,https://arxiv.org/pdf/2506.16504v1,study-deepseek-tencent-alibaba.md
+hunyuan-custom,HunyuanCustom: A Multimodal-Driven Architecture for Customized Video Generation,Tencent,2025,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2505.04512v1,dense-study-deepseek-tencent-alibaba.md
+hunyuanimage-3,HunyuanImage 3.0 Technical Report,Tencent,2025,,v1,,3,Figure 2; Figure 3; Figure 4,https://arxiv.org/pdf/2509.23951v1,modern-source-index.json
+hunyuan-portrait,HunyuanPortrait: Implicit Condition Control for Enhanced Portrait Animation,Tencent,2025,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2503.18860v1,dense-study-deepseek-tencent-alibaba.md
+hunyuanvideo-1.5,HunyuanVideo 1.5 Technical Report,Tencent,2025,,v1,,3,Figure 1; Figure 2; Figure 3,https://arxiv.org/pdf/2511.18870v1,modern-source-index.json
+hunyuan-video-avatar,HunyuanVideo-Avatar: High-Fidelity Audio-Driven Human Animation for Multiple Characters,Tencent,2025,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2505.20156v1,dense-study-deepseek-tencent-alibaba.md
+hunyuan-video-foley,HunyuanVideo-Foley: Multimodal Diffusion with Representation Alignment for High-Fidelity Foley Audio Generation,Tencent,2025,,v1,,2,Figure 2; Figure 4,https://arxiv.org/pdf/2508.16930v1,dense-study-deepseek-tencent-alibaba.md
+hunyuanworld1,"HunyuanWorld 1.0: Generating Immersive, Explorable, and Interactive 3D Worlds from Words or Pixels",Tencent,2025,,v1,,2,Figure 2; Figure 3,https://arxiv.org/pdf/2507.21809v1,study-deepseek-tencent-alibaba.md
+worldmirror,WorldMirror: Universal 3D World Reconstruction with Any-Prior Prompting,Tencent,2025,,v1,,2,Figure 2; Figure 5,https://arxiv.org/pdf/2510.10726v1,dense-study-deepseek-tencent-alibaba.md
+worldplay,WorldPlay: Towards Long-Term Geometric Consistency for Real-Time Interactive World Modeling,Tencent,2025,,v1,,3,Figure 2; Figure 4; Figure 5,https://arxiv.org/pdf/2512.14614v1,study-deepseek-tencent-alibaba.md
+hunyuanvideo,HunyuanVideo: A Systematic Framework For Large Video Generative Models,Tencent,2024,,arXiv:2412.03603v1,,3,4; 5; 10,https://arxiv.org/pdf/2412.03603v1,source-index.json

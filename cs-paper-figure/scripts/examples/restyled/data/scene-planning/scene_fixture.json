@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "deterministic-scene-01",
+  "status": "deterministic illustrative simulation",
+  "coordinate_units": "dimensionless scene units",
+  "scene": {
+    "bounds": [0.0, 10.0, 0.0, 6.0],
+    "agent": {"geometry": "point", "position": [1.0, 3.0]},
+    "goal": [9.0, 3.0],
+    "obstacles": [
+      {"id": "A", "name": "Barrier", "type": "aabb", "bounds": [3.4, 4.6, 1.8, 4.2]},
+      {"id": "B", "name": "Pier", "type": "circle", "center": [6.6, 4.7], "radius": 0.55}
+    ]
+  },
+  "task_template": "Reach g; avoid {obstacle_0} A and {obstacle_1} B.",
+  "dynamics": {
+    "formula": "p[k+1] = p[k] + dt * a[k]",
+    "dt": 1.0,
+    "horizon": 4,
+    "max_action_norm": 3.5,
+    "rollout_semantics": "Nominal kinematic states are retained after a predicted collision for scoring and display. Only the selected first action is eligible for execution, and its swept segment must pass a separate collision guard. No later action is executed by this fixture.",
+    "collision_boundary": "Closed obstacles: tangency or boundary contact counts as collision. Leaving the closed scene bounds also counts as collision."
+  },
+  "candidates": [
+    {"id": "D", "name": "Direct", "actions": [[2.0, 0.0], [2.0, 0.0], [2.0, 0.0], [2.0, 0.0]]},
+    {"id": "U", "name": "Upper detour", "actions": [[1.5, 1.8], [2.3, 0.0], [2.0, 0.7], [2.2, -2.5]]},
+    {"id": "L", "name": "Lower detour", "actions": [[1.5, -1.8], [2.3, 0.0], [2.0, 0.6], [2.2, 1.2]]}
+  ],
+  "objective": {
+    "formula": "J = terminal_squared_distance + effort_weight * sum(||a[k]||_2^2) + collision_penalty * C",
+    "effort_weight": 0.1,
+    "effort_meaning": "Quadratic control effort in dimensionless scene coordinates; not a physical energy measurement.",
+    "collision_penalty": 100.0,
+    "C_definition": "1 iff any swept segment intersects any closed obstacle or leaves the scene bounds; otherwise 0",
+    "selection": "Minimum finite J among the three supplied candidates; ties broken by fixture order. A finite collision penalty is not a general feasibility guarantee. The selected candidate is entirely collision-free in this fixture.",
+    "execute": "Only the selected candidate's first action, after confirming its swept segment is collision-free."
+  },
+  "renderer": {
+    "type": "deterministic orthographic vector scene renderer",
+    "observation_pixels": [600, 360],
+    "state_access": "Planner receives exact scene state and generated task; there is no image-to-state inference or learned vision model."
+  }
+}

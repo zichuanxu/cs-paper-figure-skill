@@ -1,0 +1,262 @@
+paper_id,company,year,figure_anchor,figure_title,one_based_pdf_page,figure_family,source_index
+openai-scaling-laws-2020,OpenAI,2020,1,,,,source-index.json
+openai-clip-2021,OpenAI,2021,1,,,,source-index.json
+openai-instructgpt-2022,OpenAI,2022,1,,,,source-index.json
+openai-instructgpt-2022,OpenAI,2022,2,,,,source-index.json
+anthropic-toy-superposition-2022,Anthropic,2022,Unnumbered opening sparsity/feature-vector triptych,,,,source-index.json
+anthropic-toy-superposition-2022,Anthropic,2022,Unnumbered linked weight matrices and feature norms,,,,source-index.json
+anthropic-toy-superposition-2022,Anthropic,2022,Unnumbered sparsity-relative-importance phase diagram,,,,source-index.json
+anthropic-constitutional-ai-2022,Anthropic,2022,1,,,,source-index.json
+anthropic-constitutional-ai-2022,Anthropic,2022,2,,,,source-index.json
+anthropic-constitutional-ai-2022,Anthropic,2022,3,,,,source-index.json
+anthropic-sleeper-agents-2024,Anthropic,2024,1,,,,source-index.json
+anthropic-sleeper-agents-2024,Anthropic,2024,2,,,,source-index.json
+google-transformer,Google / DeepMind,2017,1,,,,source-index.json
+google-transformer,Google / DeepMind,2017,2,,,,source-index.json
+deepmind-chinchilla,Google / DeepMind,2022,1,,,,source-index.json
+deepmind-chinchilla,Google / DeepMind,2022,3,,,,source-index.json
+google-vit,Google / DeepMind,2020,1,,,,source-index.json
+google-vit,Google / DeepMind,2020,7,,,,source-index.json
+meta-mae,Meta / FAIR,2021,1,,,,source-index.json
+meta-mae,Meta / FAIR,2021,2,,,,source-index.json
+meta-mae,Meta / FAIR,2021,3,,,,source-index.json
+meta-sam,Meta / FAIR,2023,1,,,,source-index.json
+meta-sam,Meta / FAIR,2023,4,,,,source-index.json
+meta-sam,Meta / FAIR,2023,9,,,,source-index.json
+meta-llama3,Meta / FAIR,2024,7,,,,source-index.json
+meta-llama3,Meta / FAIR,2024,27,,,,source-index.json
+deepseek-v2,DeepSeek,2024,2,,,,source-index.json
+deepseek-v2,DeepSeek,2024,3,,,,source-index.json
+deepseek-r1,DeepSeek,2025,2,,,,source-index.json
+deepseek-r1,DeepSeek,2025,3,,,,source-index.json
+hunyuanvideo,Tencent,2024,4,,,,source-index.json
+hunyuanvideo,Tencent,2024,5,,,,source-index.json
+hunyuanvideo,Tencent,2024,10,,,,source-index.json
+hunyuan3d-2,Tencent,2025,2,,,,source-index.json
+hunyuan3d-2,Tencent,2025,7,,,,source-index.json
+qwen2.5,Alibaba / Qwen,2024,2,,,,source-index.json
+qwen2.5,Alibaba / Qwen,2024,3,,,,source-index.json
+qwen2.5-vl,Alibaba / Qwen,2025,1,,,,source-index.json
+nvidia-megatron-2019,NVIDIA,2019,3,,,,source-index.json
+nvidia-megatron-2019,NVIDIA,2019,4,,,,source-index.json
+nvidia-megatron-2021,NVIDIA,2021,3,,,,source-index.json
+nvidia-megatron-2021,NVIDIA,2021,4,,,,source-index.json
+nvidia-megatron-2021,NVIDIA,2021,6,,,,source-index.json
+nvidia-nemotron-h,NVIDIA,2025,1,,,,source-index.json
+nvidia-nemotron-h,NVIDIA,2025,2,,,,source-index.json
+microsoft-resnet,Microsoft Research,2015,2,,,,source-index.json
+google-rliable,Google / DeepMind,2021,7,,,,source-index.json
+google-rliable,Google / DeepMind,2021,9,,,,source-index.json
+deepseek-v4,DeepSeek,2026,Figure 2,Overall architecture,6,,modern-source-index.json
+deepseek-v4,DeepSeek,2026,Figure 3,Compressed Sparse Attention (CSA),9,,modern-source-index.json
+deepseek-v4,DeepSeek,2026,Figure 5,Fine-grained expert-parallel communication and computation,15,,modern-source-index.json
+deepseek-v4,DeepSeek,2026,Figure 9,MRCR 8-needle performance,40,,modern-source-index.json
+qwen38-next,Alibaba / Qwen,2026,Figure 1,Qwen3.8-Flash-Next architecture,2,,modern-source-index.json
+qwen38-next,Alibaba / Qwen,2026,Figure 3,Qwen Sparse Attention,5,,modern-source-index.json
+qwen38-next,Alibaba / Qwen,2026,Figure 5,QSA architecture ablations,9,,modern-source-index.json
+qwen38-next,Alibaba / Qwen,2026,Figure 6,"Kernel-level latency, prefill and decode",9,,modern-source-index.json
+cosmos3,NVIDIA,2026,Figure 1,capability atlas,5,,modern-source-index.json
+cosmos3,NVIDIA,2026,Figure 5,architecture plus attention-mask inset,11,,modern-source-index.json
+cosmos3,NVIDIA,2026,Figure 8,curriculum matrix plus flow,20,,modern-source-index.json
+cosmos3,NVIDIA,2026,Figure 11,infrastructure flow,33,,modern-source-index.json
+harness2,Google / DeepMind,2026,Figure 1,paired result charts,1,,modern-source-index.json
+harness2,Google / DeepMind,2026,Figure 2,nested harness architecture,3,,modern-source-index.json
+harness2,Google / DeepMind,2026,Figure 3,two-level recursion storyboard,5,,modern-source-index.json
+harness2,Google / DeepMind,2026,Figure 9,case-study evidence storyboard,12,,modern-source-index.json
+deepseek-v3.2,DeepSeek,2025,Figure 2,Attention architecture: neutral backbone with a highlighted sparse-selection branch,4,,modern-source-index.json
+deepseek-v3.2,DeepSeek,2025,Figure 4,Thinking retention shown as aligned conversation-state columns,9,,modern-source-index.json
+engram,DeepSeek,2026,Figure 1,Backbone plus exploded memory mechanism with token-level evidence,3,,modern-source-index.json
+engram,DeepSeek,2026,Figure 2,Matched training and inference views with explicit host/device location,5,,modern-source-index.json
+engram,DeepSeek,2026,Figure 3,Purple–teal quantitative pair with distinct shapes and light grids,6,,modern-source-index.json
+qwen3,Alibaba / Qwen,2025,Figure 1,Training roadmap with tinted phase lanes and a serpentine flow,9,,modern-source-index.json
+qwen3,Alibaba / Qwen,2025,Figure 2,Four benchmark curves in a restrained shared grid,20,,modern-source-index.json
+qwen3-omni,Alibaba / Qwen,2025,Figure 2,Multimodal token ladder with a seven-role legend,3,,modern-source-index.json
+qwen3-omni,Alibaba / Qwen,2025,Figure 3,Vertical encoder–decoder stack with a bypass route,4,,modern-source-index.json
+qwen3-vl-embedding,Alibaba / Qwen,2026,Figure 2,Shared model comparison with a continuous backbone and distinct outputs,3,,modern-source-index.json
+qwen3-vl-embedding,Alibaba / Qwen,2026,Figure 5,Three-column training pipeline with typed nodes and edges,7,,modern-source-index.json
+hunyuan3d-2.1,Tencent,2025,Figure 2,"Hybrid pipeline mixing real outputs, latent chips and vector modules",5,,modern-source-index.json
+hunyuan3d-2.1,Tencent,2025,Figure 3,Compact DiT block with a colored latent ribbon,5,,modern-source-index.json
+hunyuan3d-2.1,Tencent,2025,Figure 4,Reference/generation branches with frozen and trainable state cues,6,,modern-source-index.json
+hunyuanvideo-1.5,Tencent,2025,Figure 1,Unequal-area training stages with concrete artifacts and evaluation outcomes,3,,modern-source-index.json
+hunyuanvideo-1.5,Tencent,2025,Figure 2,Parallel modality lanes merging into shared neutral computation,4,,modern-source-index.json
+hunyuanvideo-1.5,Tencent,2025,Figure 3,Two-stage generative pipeline with conditioning above the main spine,6,,modern-source-index.json
+hunyuanimage-3,Tencent,2025,Figure 2,Captioning pipeline with a parallel factual-grounding branch,4,,modern-source-index.json
+hunyuanimage-3,Tencent,2025,Figure 3,Three task lanes unified by one continuous transformer bar,6,,modern-source-index.json
+hunyuanimage-3,Tencent,2025,Figure 4,Paired attention masks with aligned token-block boundaries,6,,modern-source-index.json
+openai-monitoring,OpenAI,2025,Figure 1,"a vertically ordered transcript with a rounded neutral backing; coral summary strips, green reasoning excerpts, and blue code-tool framing",2,,modern-source-index.json
+openai-monitoring,OpenAI,2025,Figure 2,"a time-series composition combines light reference bars, colored/hatch-filled stacked areas, and two local intervention arrows",5,,modern-source-index.json
+openai-controllability,OpenAI,2026,Figure 1,"a wide paired-bar comparison occupies the top, with three narrow explanatory plots below",2,,modern-source-index.json
+openai-controllability,OpenAI,2026,Figure 2,two equal-width evidence cards align side by side on #F9F9F9,3,,modern-source-index.json
+vjepa2,Meta / FAIR,2025,Figure 1,an asymmetric overview maps two distinct data sources into a pretrained representation and three vertically aligned downstream branches,2,,modern-source-index.json
+vjepa2,Meta / FAIR,2025,Figure 2,"paired training diagrams share corresponding positions, block shapes, and thumbnail stacks",4,,modern-source-index.json
+vjepa21,Meta / FAIR,2026,Figure 1,"a three-row, five-column qualitative comparison keeps each input and its two feature renderings in the same column",1,,modern-source-index.json
+vjepa21,Meta / FAIR,2026,Figure 4,"two aligned encoder lanes use token chips, feature stacks, layer taps, and a predictor silhouette",5,,modern-source-index.json
+gemini25,Google / DeepMind,2025,Figure 1,"a dense cost-performance comparison uses direct labels and a stronger outline around focal models; subdued reference labels, thin guides, and a compact upper-right key establish hierarchy",3,,modern-source-index.json
+gemini25,Google / DeepMind,2025,Figure 4,"three equal-sized small multiples share plot height, grid density, blue #217BFE traces and increasing token budgets",6,,modern-source-index.json
+anthropic-aar,Anthropic,2026,Figure 1,a compact 2×2 evidence set contrasts warm peach #F8A27E with deep navy #0F3C5F and uses forest #30685C for a separate role,1,,modern-source-index.json
+anthropic-aar,Anthropic,2026,Figure 2,"a compact left-to-right method cycle uses matching stage fills and outlines—blue agent, amber monitor, green train, violet evaluator, gray leaderboard",4,,modern-source-index.json
+gpt-oss,OpenAI,2025,Figure 1,Capability benchmark small multiples,6,benchmark-small-multiples,recent-expansion-index.json
+gpt-oss,OpenAI,2025,Figure 3,Reasoning effort versus output length,8,efficiency-trajectory,recent-expansion-index.json
+monitorability,OpenAI,2025,Figure 2,Monitorable and unmonitorable trace examples,4,matched-transcript-matrix,recent-expansion-index.json
+monitorability,OpenAI,2025,Figure 8,Monitorability across token budgets and monitor scopes,17,scope-small-multiples,recent-expansion-index.json
+astra,OpenAI,2026,Figure 5,Attack success after increasing attempt budgets,20,nested-budget-bars,recent-expansion-index.json
+astra,OpenAI,2026,Figure 22,Aggregate monitorability under three observation scopes,52,paired-scope-small-multiples,recent-expansion-index.json
+healthbench,OpenAI,2025,Figure 1,"Conversation, candidate answer, and rubric alignment",2,evidence-rubric-layout,recent-expansion-index.json
+healthbench,OpenAI,2025,Figure 2,Performance versus inference cost,2,direct-label-cost-comparison,recent-expansion-index.json
+magma,Microsoft Research,2025,Figure 1,Capability overview with real examples,1,qualitative-capability-overview,recent-expansion-index.json
+magma,Microsoft Research,2025,Figure 7,Pretraining input and output lanes,8,multimodal-token-pipeline,recent-expansion-index.json
+agent-lightning,Microsoft Research,2025,Figure 1,Agent execution and RL training overview,2,two-stage-feedback-loop,recent-expansion-index.json
+agent-lightning,Microsoft Research,2025,Figure 4,Training-agent disaggregation architecture,9,client-server-feedback-diagram,recent-expansion-index.json
+phi-mini,Microsoft Research,2025,Figure 1,Multimodal architecture and modality adapters,4,typed-modality-token-lanes,recent-expansion-index.json
+phi-mini,Microsoft Research,2025,Figure 3,Multimodal conversational example,17,conversation-evidence-panel,recent-expansion-index.json
+phi-vision,Microsoft Research,2026,Figure 2,Accuracy versus time and token costs,3,paired-efficiency-scatter,recent-expansion-index.json
+phi-vision,Microsoft Research,2026,Figure 3,Mid-fusion architecture,4,two-lane-fusion,recent-expansion-index.json
+reasoning-faithfulness,Anthropic,2025,Figure 1,Faithfulness by hint type and model,2,hatch-factorial-bars,recent-expansion-index.json
+reasoning-faithfulness,Anthropic,2025,Figure 2,Matched question with and without an injected hint,3,counterfactual-case-comparison,recent-expansion-index.json
+anthropic-circuit-tracing,Anthropic,2025,Opening diagram: methods-diagram-svg,Replacement model aligned to attribution graph,,aligned-mechanism-and-graph,recent-expansion-index.json
+anthropic-circuit-tracing,Anthropic,2025,Multiplicative patching: crosscoder-patching-tutorial-svg,Baseline and intervention passes,,registered-counterfactual-mechanism,recent-expansion-index.json
+anthropic-biology,Anthropic,2025,Multi-step reasoning: dallas-capitial-big-svg,Token-to-supernode explanation,,token-grounded-attribution-graph,recent-expansion-index.json
+anthropic-biology,Anthropic,2025,Planning in poems: poems-hero-svg,Candidate planning paths tied to a text span,,text-grounded-branch-explanation,recent-expansion-index.json
+gemma3,Google / DeepMind,2025,Figure 2,Paired model-family capability radars,6,paired small multiples,recent-expansion-index.json
+gemma3,Google / DeepMind,2025,Figure 5,Model versus KV-cache memory,7,stacked resource decomposition,recent-expansion-index.json
+gemma4,Google / DeepMind,2026,Figure 1,Multi-token-prediction drafter beside the main model,3,aligned architectural comparison,recent-expansion-index.json
+alphaevolve,Google / DeepMind,2025,Figure 2,Human configuration and distributed controller loop,4,code-linked system architecture,recent-expansion-index.json
+alphaevolve,Google / DeepMind,2025,Figure 3,"Input program, sampled prompt, and proposed code modification",6,asymmetric code storyboard,recent-expansion-index.json
+alphaevolve,Google / DeepMind,2025,Figure 8,Ablation trajectories over compute budget,18,paired step plots with uncertainty,recent-expansion-index.json
+gemini-robotics,Google / DeepMind,2025,Figure 1,"Capabilities, training, and specialization overview",2,evidence-framed method overview,recent-expansion-index.json
+gemini-robotics,Google / DeepMind,2025,Figure 2,"Object, point, correspondence, and 3D grounding examples",3,qualitative capability grid,recent-expansion-index.json
+dinov3,Meta / FAIR,2025,Figure 5,Dense-feature degradation beside task trajectories,10,qualitative-quantitative diagnostic pairing,recent-expansion-index.json
+dinov3,Meta / FAIR,2025,Figure 9,Qualitative resolution comparison with an ablation table,14,image-grid and exact-lookup pairing,recent-expansion-index.json
+sam3,Meta / FAIR,2025,Figure 4,"Detector, tracker, and memory overview",4,novelty-coded recurrent architecture,recent-expansion-index.json
+sam3,Meta / FAIR,2025,Figure 10,System overview plus detector expansion,19,overview and scoped mechanism detail,recent-expansion-index.json
+perception-encoder,Meta / FAIR,2025,Figure 5,Caption fusion data engine,5,typed-data fan-in workflow,recent-expansion-index.json
+perception-encoder,Meta / FAIR,2025,Figure 8,Layer-by-task diagnostic matrix,11,semantically grouped small multiples,recent-expansion-index.json
+eupe,Meta / FAIR,2026,Figure 1,Multi-benchmark radar and feature examples,2,capability summary with qualitative evidence,recent-expansion-index.json
+eupe,Meta / FAIR,2026,Figure 2,Scale-up then scale-down distillation stages,4,multi-stage training storyboard,recent-expansion-index.json
+eupe,Meta / FAIR,2026,Figure 3,Per-teacher patch and CLS distillation flow,5,two-lane loss diagram,recent-expansion-index.json
+gr00t-n1,NVIDIA,2025,Figure 2,Dual-system VLA model overview,3,multimodal token-lane architecture,recent-expansion-index.json
+gr00t-n1,NVIDIA,2025,Figure 3,"Embodiment-aware encoders, diffusion blocks, and decoding",4,expanded recurrent model mechanism,recent-expansion-index.json
+cosmos-reason1,NVIDIA,2025,Figure 1,"Model, training, ontology, and benchmark inventory",2,parallel scope inventory,recent-expansion-index.json
+cosmos-reason1,NVIDIA,2025,Figure 6,Embodied-reasoning SFT data curation,11,concrete-example workflow,recent-expansion-index.json
+nemotron3-super,NVIDIA,2026,Figure 1,Accuracy and throughput benchmark comparison,2,split-metric grouped bars,recent-expansion-index.json
+nemotron3-super,NVIDIA,2026,Figure 3,Standard MoE versus LatentMoE,5,matched architecture comparison,recent-expansion-index.json
+nemotron-diffusion,NVIDIA,2026,Figure 1,Three inference modes and two performance tradeoffs,1,mechanism-plus-evidence triptych,recent-expansion-index.json
+nemotron-diffusion,NVIDIA,2026,Figure 3,Joint losses and attention pattern,3,token diagram paired with a block mask,recent-expansion-index.json
+nemotron-diffusion,NVIDIA,2026,Figure 5,"AR, diffusion, and self-speculation inference",7,matched token storyboard,recent-expansion-index.json
+deepseek-mhc,DeepSeek,2025,Figure 1,Matched residual-connection variants,1,architecture comparison,recent-expansion-index.json
+deepseek-mhc,DeepSeek,2025,Figure 4,Three-lane communication/computation schedule,12,execution schedule,recent-expansion-index.json
+deepseek-ocr,DeepSeek,2025,Figure 1,Compression and quality–token-cost comparison,1,paired quantitative plots,recent-expansion-index.json
+deepseek-ocr,DeepSeek,2025,Figure 3,Optical compression encoder/decoder architecture,5,typed multimodal pipeline,recent-expansion-index.json
+deepseek-ocr,DeepSeek,2025,Figure 13,"Aligned memory, vision and text degradation analogy",19,conceptual spectrum,recent-expansion-index.json
+deepseek-ocr2,DeepSeek,2026,Figure 3,Causal visual encoder with token reordering,5,token architecture,recent-expansion-index.json
+deepseek-ocr2,DeepSeek,2026,Figure 5,Bidirectional plus causal attention mask,7,mechanism matrix,recent-expansion-index.json
+deepseek-v41-flash,DeepSeek,2026,Figure 1,Benchmark bars plus historical KV-cache reduction,1,paired performance/resource plots,recent-expansion-index.json
+deepseek-v41-flash,DeepSeek,2026,Figure 3,Causal encoder/decoder with explicit reuse paths,7,nested architecture,recent-expansion-index.json
+deepseek-v41-flash,DeepSeek,2026,Figure 4,"Full, reindex and reuse operating modes",10,matched computational modes,recent-expansion-index.json
+hunyuanworld1,Tencent,2025,Figure 2,Three-stage world-generation overview,5,multimodal overview with agent trace,recent-expansion-index.json
+hunyuanworld1,Tencent,2025,Figure 3,"Typed data acquisition, filtering and annotation",6,data curation pipeline,recent-expansion-index.json
+hunyuanworld2,Tencent,2026,Figure 2,Four aligned multimodal world-generation stages,5,staged architecture storyboard,recent-expansion-index.json
+hunyuanworld2,Tencent,2026,Figure 7,Main diffusion and camera-control branches,10,parallel branches with memory,recent-expansion-index.json
+hunyuan3d25,Tencent,2025,Figure 3,Dark artifact panels with warm processing bars,3,visual asset pipeline,recent-expansion-index.json
+hunyuan3d25,Tencent,2025,Figure 5,Pipeline plus expanded multi-task attention block,4,overview plus mechanism detail,recent-expansion-index.json
+worldplay,Tencent,2025,Figure 2,Autoregressive world model above a persistent memory timeline,4,streaming memory architecture,recent-expansion-index.json
+worldplay,Tencent,2025,Figure 4,Three matched memory-index matrices,5,aligned relation matrices,recent-expansion-index.json
+worldplay,Tencent,2025,Figure 5,"Memory-aware student, teacher and score branches",5,training/distillation diagram,recent-expansion-index.json
+qwen-image,Alibaba / Qwen,2025,Figure 6,Double-stream diffusion overview and expanded block,7,overview plus mechanism detail,recent-expansion-index.json
+qwen-image,Alibaba / Qwen,2025,Figure 10,Seven-stage curation with split and rejected flows,11,data curation flow / Sankey,recent-expansion-index.json
+qwen3-vl,Alibaba / Qwen,2025,Figure 1,Variable-resolution examples and multimodal token sequence,3,tokenization architecture,recent-expansion-index.json
+qwen3-vl,Alibaba / Qwen,2025,Figure 3,Shared-scale within-range and extrapolation heatmap,25,faceted heatmap,recent-expansion-index.json
+qwen3-tts,Alibaba / Qwen,2026,Figure 2,Parallel speech-tokenizer designs with phase-specific edges,3,matched encoder/decoder pipelines,recent-expansion-index.json
+qwen3-tts,Alibaba / Qwen,2026,Figure 3,Dual-track token input and multi-token speech generation,4,streaming token architecture,recent-expansion-index.json
+qwen35-omni,Alibaba / Qwen,2026,Figure 2,Thinker/Talker with interleaved multimodal context,3,stacked multimodal token architecture,recent-expansion-index.json
+qwen35-omni,Alibaba / Qwen,2026,Figure 3,Compact audio encoder/decoder with external text-conditioning route,4,vertical encoder–decoder,recent-expansion-index.json
+paperbench,OpenAI,2025,Figure 1,Replication benchmark with executable evidence and hierarchical grading,2,method-evidence-composite,dense-expansion-index.json
+paperbench,OpenAI,2025,Figure 2,Weighted rubric tree with bottom-up score propagation,3,hierarchy-propagation,dense-expansion-index.json
+swe-lancer,OpenAI,2025,Figure 1,Individual-contributor software evaluation with parallel human test construction,2,parallel-evaluation-pipeline,dense-expansion-index.json
+swe-lancer,OpenAI,2025,Figure 2,Managerial proposal selection as a structured decision matrix,2,decision-and-evaluation,dense-expansion-index.json
+inference-robustness,OpenAI,2025,Figure 1,Six-panel overview of adversarial robustness regimes,3,mixed-evidence-small-multiples,dense-expansion-index.json
+inference-robustness,OpenAI,2025,Figure 2,Task difficulty by adversarial-goal matrix,5,factorial-heatmap-matrix,dense-expansion-index.json
+hidden-objectives,Anthropic,2025,Figure 1,Blind auditing with explicit access differences,2,parallel-experimental-protocol,dense-expansion-index.json
+hidden-objectives,Anthropic,2025,Figure 2,"Training interventions with document, behavior, and generalization examples",2,intervention-evidence-timeline,dense-expansion-index.json
+shade-arena,Anthropic,2025,Figure 1,Task taxonomy with an expanded representative environment,2,taxonomy-with-case-inset,dense-expansion-index.json
+shade-arena,Anthropic,2025,Figure 2,Agent tool loop and branched outcome monitoring,2,agent-loop-with-evaluation-branches,dense-expansion-index.json
+auditbench,Anthropic,2026,Figure 1,"Hidden behaviors, elicitation examples, and auditing tools in three comparative rows",2,behavior-tool-evidence-matrix,dense-expansion-index.json
+auditbench,Anthropic,2026,Figure 5,Two successful investigations with tool output and follow-up probes,8,evidence-linked-investigation-lanes,dense-expansion-index.json
+emergent-misalignment,Anthropic,2025,Figure 1,Aggregate onset curve with an aligned diagnostic strip,2,aggregate-and-diagnostic-time-series,dense-expansion-index.json
+emergent-misalignment,Anthropic,2025,Figure 6,Training-phase small multiples coupled to two contrasting transcripts,8,quantitative-qualitative-evidence-composite,dense-expansion-index.json
+alignment-faking,Anthropic,2024,Figure 1,Matched counterfactual conversations under a shared experimental instruction,2,counterfactual-dialogue-pair,dense-expansion-index.json
+alignment-faking,Anthropic,2024,Figure 2,"Distributional behavior comparison across prompting, fine-tuning, and RL",4,bars-to-area-distribution-composite,dense-expansion-index.json
+ufo2,Microsoft Research,2025,Figure 7,Parallel native and visual UI perception with duplicate suppression,8,multimodal-parallel-perception,dense-expansion-index.json
+ufo2,Microsoft Research,2025,Figure 11,Speculative action batch with per-step validation and early termination,10,action-state-validation-storyboard,dense-expansion-index.json
+fara,Microsoft Research,2025,Figure 2,Three task-proposal mechanisms grounded in shared seed sources,3,multi-strategy-generation-board,dense-expansion-index.json
+fara,Microsoft Research,2025,Figure 4,"Task-solving trajectory with orchestrator, browser, user continuation, and verification",5,agent-trajectory-with-handoff,dense-expansion-index.json
+rd-agent,Microsoft Research,2025,Figure 2,Time-budgeted search enclosing research and development mechanisms,4,nested-search-and-agent-system,dense-expansion-index.json
+rd-agent,Microsoft Research,2025,Figure 3,Temporal ablations tied to system components,9,temporal-ablation-companion,dense-expansion-index.json
+rd-quant,Microsoft Research,2025,Figure 3,"Five research units with schema, knowledge forest, validation pool, and adaptive scheduling",3,stacked-research-system-board,dense-expansion-index.json
+rd-quant,Microsoft Research,2025,Figure 4,Co-evolving task scheduler and implementation agent with reusable failure memory,4,bidirectional-agent-memory-mechanism,dense-expansion-index.json
+data-formulator2,Microsoft Research,2024,Figure 2,Data transformation lineage paired with derived chart views,3,data-provenance-and-visual-output,dense-expansion-index.json
+data-formulator2,Microsoft Research,2024,Figure 6,"UI specification, prompted transformation code, and chart compilation",7,spec-code-data-compiler,dense-expansion-index.json
+reward-seeking,OpenAI,2026,Figure 1,"Contrastive intervention, paired behavior, and quantitative evidence in one figure",2,intervention-example-evidence-triptych,dense-expansion-index.json
+reward-seeking,OpenAI,2026,Figure 5,Behavioral equivalence versus divergence after a belief intervention,6,counterfactual-mechanism-comparison,dense-expansion-index.json
+nested-learning,Google / DeepMind,2025,Figure 2,"Architecture flattened, unfolded, and expanded into learning levels",4,nested mechanism with conceptual closeups,dense-expansion-index.json
+nested-learning,Google / DeepMind,2025,Figure 5,Paired architectural views of HOPE and a Transformer,30,matched multilevel architecture comparison,dense-expansion-index.json
+miras,Google / DeepMind,2025,Figure 1,Design-space taxonomy connected to the memory objective,3,taxonomy plus equation-grounded mechanism,dense-expansion-index.json
+miras,Google / DeepMind,2025,Figure 2,Architecture variants beside an expanded memory block,14,architecture alternatives with component closeup,dense-expansion-index.json
+alphageometry2,Google / DeepMind,2025,Figure 4,Shared knowledge across heterogeneous proof searches,10,search topology with shared artifact,dense-expansion-index.json
+alphageometry2,Google / DeepMind,2025,Figure 14,Geometric construction with highlighted proof relationships,27,dense mathematical construction with emphasis layers,dense-expansion-index.json
+agent-scaling,Google / DeepMind,2025,Figure 1,Architecture scaling across three model families,1,aligned analytical small multiples with direct annotations,dense-expansion-index.json
+agent-scaling,Google / DeepMind,2025,Figure 3,Cost and performance with uncertainty in both dimensions,16,small-multiple bivariate error-bar comparison,dense-expansion-index.json
+titans,Google / DeepMind,2024,Figure 1,From sequential memory updates to parallelizable operations,7,compact algorithm strip with concrete sequence objects,dense-expansion-index.json
+titans,Google / DeepMind,2024,Figure 2,Memory as context with three state lifetimes,8,swimlane architecture with explicit token composition,dense-expansion-index.json
+fast-blt,Meta / FAIR,2026,Figure 1,Three successive states of block-diffusion byte generation,2,worked token execution trace,dense-expansion-index.json
+fast-blt,Meta / FAIR,2026,Figure 5,Decoder closeup linked to two attention-mask matrices,9,multiscale architecture plus explicit incidence matrices,dense-expansion-index.json
+perception-lm,Meta / FAIR,2025,Figure 5,Spatial masks tied to temporal caption intervals,6,qualitative triptychs with temporal grounding,dense-expansion-index.json
+perception-lm,Meta / FAIR,2025,Figure 6,Five task definitions shown through matched worked examples,7,task taxonomy as visual example cards,dense-expansion-index.json
+pe-av,Meta / FAIR,2025,Figure 2,Multimodal encoders with an explicit alignment-loss inventory,3,modality architecture with aligned relationship key,dense-expansion-index.json
+pe-av,Meta / FAIR,2025,Figure 13,Repeated collectives replaced by a batched communication structure,27,before-and-after distributed-computation topology,dense-expansion-index.json
+movie-gen,Meta / FAIR,2024,Figure 8,Parallelization semantics attached to a transformer and its tensor dimensions,11,architecture plus dimension ledger,dense-expansion-index.json
+movie-gen,Meta / FAIR,2024,Figure 17,Matched image crops separated by diagonal before/after seams,27,qualitative detail comparison strip,dense-expansion-index.json
+cosmos-transfer1,NVIDIA,2025,Figure 2,Layer-matched multimodal control branches,3,control architecture with repeated aligned branches,dense-expansion-index.json
+cosmos-transfer1,NVIDIA,2025,Figure 6,Spatial control masks connected to a generated scene,10,mechanism grounded in a physical-scene example,dense-expansion-index.json
+cosmos25,NVIDIA,2025,Figure 1,Dataset construction with explicit filtering and deduplication internals,5,three-column data-engine decomposition,dense-expansion-index.json
+cosmos25,NVIDIA,2025,Figure 2,Multimodal embedding extraction connected to a denoising block,10,system overview with tensor objects and internal block expansion,dense-expansion-index.json
+dreamgen,NVIDIA,2025,Figure 2,From demonstrations to generated trajectories and policy training,2,four-stage overview with repeated concrete artifacts,dense-expansion-index.json
+dreamgen,NVIDIA,2025,Figure 3,Two pseudo-action models with common frame-pair input,4,matched architecture pair with representation strips,dense-expansion-index.json
+dreamdojo,NVIDIA,2026,Figure 1,"Pretraining, embodiment transfer, distillation, and applications",3,dense system atlas with four named regions,dense-expansion-index.json
+dreamdojo,NVIDIA,2026,Figure 3,Latent-action bottleneck paired with cross-domain frame examples,6,mechanism plus qualitative correspondence grid,dense-expansion-index.json
+cosmos-policy,NVIDIA,2026,Figure 2,"Video slots extended with actions, state, and value",4,aligned multimodal sequence transformation,dense-expansion-index.json
+cosmos-policy,NVIDIA,2026,Figure 12,One latent sequence reused for three training objectives,21,aligned objective comparison with shifting conditioning boundary,dense-expansion-index.json
+janus-pro,DeepSeek,2025,Figure 3,Decoupled vision encoding with a shared autoregressive backbone,3,architecture overview,dense-expansion-index.json
+janus-pro,DeepSeek,2025,Figure 4,Capability evidence board with worked multimodal exchanges and prompt–image pairs,8,worked-example evidence board,dense-expansion-index.json
+native-sparse-attention,DeepSeek,2025,Figure 2,Three sparse-attention branches linked to their explicit masks,3,architecture plus operator masks,dense-expansion-index.json
+native-sparse-attention,DeepSeek,2025,Figure 3,Memory-aware sparse-attention kernel on a Q–K–V tile field,9,hardware kernel dataflow,dense-expansion-index.json
+deepseek-prover-v2,DeepSeek,2025,Figure 2,"Worked proof decomposition, recursive subgoal solving and synthesis",3,worked transformation and verification,dense-expansion-index.json
+deepseek-prover-v2,DeepSeek,2025,Figure 3,Exact lemma rewrite with and without preceding subgoals as premises,4,local transformation comparison,dense-expansion-index.json
+deepseek-v3,DeepSeek,2024,Figure 3,Multi-token prediction with shifted targets and explicit parameter sharing,10,parallel objectives and causal dependencies,dense-expansion-index.json
+deepseek-v3,DeepSeek,2024,Figure 4,Local computation–communication overlap timeline,12,distributed-systems micro-schedule,dense-expansion-index.json
+deepseek-v3,DeepSeek,2024,Figure 5,DualPipe device-by-time schedule with split-cell overlap states,13,distributed-systems global schedule,dense-expansion-index.json
+hunyuan-custom,Tencent,2025,Figure 2,"Multimodal customization with distinct subject, video and audio injection routes",4,multi-input architecture,dense-expansion-index.json
+hunyuan-custom,Tencent,2025,Figure 3,"Data-construction recipe with filtering, grounding, segmentation and audio alignment examples",5,data pipeline and concrete preprocessing,dense-expansion-index.json
+hunyuan-portrait,Tencent,2025,Figure 2,Portrait animation overview with two matching extractor expansions,3,architecture plus module detail,dense-expansion-index.json
+hunyuan-portrait,Tencent,2025,Figure 3,ID-aware multi-scale adapter as a focused local computation,5,expanded local operator,dense-expansion-index.json
+hunyuan-video-avatar,Tencent,2025,Figure 2,"Avatar architecture with training status, emotional control and face-masked audio injection",4,multi-condition training architecture,dense-expansion-index.json
+hunyuan-video-avatar,Tencent,2025,Figure 3,Three character-injection variants with invariant attention geometry,5,controlled architecture comparison,dense-expansion-index.json
+hunyuan-video-foley,Tencent,2025,Figure 2,"Audio-generation stack with synchronization, representation loss and an expanded multimodal block",4,architecture plus loss and operator detail,dense-expansion-index.json
+hunyuan-video-foley,Tencent,2025,Figure 4,Video-to-audio temporal evidence board with matched spectrogram rows,12,time-aligned qualitative diagnostics,dense-expansion-index.json
+worldmirror,Tencent,2025,Figure 2,Optional geometric priors merged into tokens and decoded into six output representations,4,multi-representation architecture,dense-expansion-index.json
+worldmirror,Tencent,2025,Figure 5,Controlled reconstruction comparison isolating the effect of each geometric prior,8,matched intervention evidence,dense-expansion-index.json
+wan21,Alibaba / Qwen,2025,Figure 6,Chunk-boundary feature caching with explicit padding and temporal downsampling,11,temporal dependency diagram,dense-expansion-index.json
+wan21,Alibaba / Qwen,2025,Figure 21,VACE generation overview with a two-sided context-tokenization mechanism,31,architecture plus structured preprocessing,dense-expansion-index.json
+qwen25-omni,Alibaba / Qwen,2025,Figure 2,Thinker–Talker architecture with aligned token/hidden-state tracks and streaming speech,3,multimodal autoregressive architecture,dense-expansion-index.json
+qwen25-omni,Alibaba / Qwen,2025,Figure 3,Time-aligned multimodal position encoding on image patches and audio,4,temporal and spatial indexing,dense-expansion-index.json
+qwen25-omni,Alibaba / Qwen,2025,Figure 4,Sliding-window block attention with explicit past/current/future states,5,attention-mask detail,dense-expansion-index.json
+wan-animate,Alibaba / Qwen,2025,Figure 2,"Unified animation/replacement representation with distinct body, face and relighting controls",4,multi-control latent architecture,dense-expansion-index.json
+wan-animate,Alibaba / Qwen,2025,Figure 3,Frame-wise face latent compression and attention tensor expansion,6,temporal adapter and attention geometry,dense-expansion-index.json
+wan-animate2,Alibaba / Qwen,2026,Figure 1,Dual-branch video model linked to spatiotemporal token geometry and sparse reference attention,5,overview plus representation plus operator,dense-expansion-index.json
+wan-animate2,Alibaba / Qwen,2026,Figure 2,Streaming animation with static shared conditions and recycled generated context,7,stateful chunked inference,dense-expansion-index.json
+qwen3-asr,Alibaba / Qwen,2026,Figure 2,Audio-encoder internals paired with a contextual ASR model overview,3,component plus system architecture,dense-expansion-index.json
+qwen3-asr,Alibaba / Qwen,2026,Figure 3,Forced alignment with dynamic timestamp slots and synchronous supervision,6,token-level training mechanism,dense-expansion-index.json
+ideascientist,Meta / FAIR,2026,Figure 1,"Overview, role specifications, empirical summary and worked case",2,compound-method-overview,dense-expansion-index.json
+ideascientist,Meta / FAIR,2026,Figure 2,Domain profile paired with a human-comparison interval plot,8,profile-plus-paired-comparison,dense-expansion-index.json
+skillopt,Microsoft Research,2026,Figure 2,Parallel bounded editing with held-out gating and an epoch update,4,dual-timescale-agent-optimization,dense-expansion-index.json
+skillopt,Microsoft Research,2026,Figure 3,"Train, validation-selected and test checkpoint trajectories",12,checkpoint-generalization-small-multiples,dense-expansion-index.json

@@ -1,0 +1,848 @@
+{
+  "schema_version": 1,
+  "scope": "Curated representative figure-design study, not an exhaustive literature survey, current leaderboard, or unified style guide for any company. Organizations identify historical affiliations, including joint work.",
+  "retrieval_date": "2026-10-21",
+  "page_numbering": "1-based PDF pages in the exact linked version; figures may move in other versions.",
+  "evidence_policy": "Observations describe visually inspected figures. Design lessons and cautions are our recommendations. No source artwork is included. Unnumbered figures retain descriptive anchors.",
+  "paper_count": 23,
+  "figure_anchor_count": 48,
+  "papers": [
+    {
+      "paper_id": "openai-scaling-laws-2020",
+      "organization": "OpenAI / Johns Hopkins University",
+      "title": "Scaling Laws for Neural Language Models",
+      "original_year": 2020,
+      "version": "arXiv:2001.08361v1, 23 January 2020",
+      "arxiv_version": "2001.08361v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2001.08361v1",
+      "landing_url": "https://arxiv.org/abs/2001.08361v1",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "Compute, dataset size, and parameter scaling triptych",
+          "pdf_page_1based": 3
+        }
+      ],
+      "figure_families": [
+        "scaling"
+      ],
+      "observed_structure": "Aligned plots distinguish observations, fitted laws, and learning-curve envelopes across scaling factors.",
+      "design_lesson": "Separate scale variables and distinguish measurements from fits.",
+      "caution": "Aligned panels can have different ranges; historical fits are not new evidence.",
+      "affiliation_evidence": "PDF title page names OpenAI and Johns Hopkins University.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF; checked title/version/affiliation and figure captions; rendered named pages with PyMuPDF and inspected PNGs with view_image."
+      },
+      "pdf_sha256": "a41bd7877fd1a6bcbba096b2619618bd2f90e02488f2365644903eb2f7c6a494"
+    },
+    {
+      "paper_id": "openai-clip-2021",
+      "organization": "OpenAI",
+      "title": "Learning Transferable Visual Models From Natural Language Supervision",
+      "original_year": 2021,
+      "version": "arXiv:2103.00020v1, 26 February 2021",
+      "arxiv_version": "2103.00020v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2103.00020v1",
+      "landing_url": "https://arxiv.org/abs/2103.00020v1",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "Contrastive training and zero-shot inference schematic",
+          "pdf_page_1based": 2
+        }
+      ],
+      "figure_families": [
+        "architecture",
+        "training-workflow"
+      ],
+      "observed_structure": "Training and inference panels preserve text/image colors; a similarity matrix exposes matched pairs.",
+      "design_lesson": "Carry object identity across phases and show the key computation.",
+      "caution": "Prune repeated labels when reducing to column width.",
+      "affiliation_evidence": "PDF page 1 affiliation footnote identifies OpenAI, San Francisco.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF; checked title/version/affiliation and figure captions; rendered named pages with PyMuPDF and inspected PNGs with view_image."
+      },
+      "pdf_sha256": "6478b6e571a7d6fcd846d8ef77bfd60c285f1986abb8f475eedc43de403074f5"
+    },
+    {
+      "paper_id": "openai-instructgpt-2022",
+      "organization": "OpenAI",
+      "title": "Training language models to follow instructions with human feedback",
+      "original_year": 2022,
+      "version": "arXiv:2203.02155v1, 4 March 2022",
+      "arxiv_version": "2203.02155v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2203.02155v1",
+      "landing_url": "https://arxiv.org/abs/2203.02155v1",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "Human preference by model size",
+          "pdf_page_1based": 2
+        },
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Three-stage SFT, reward modeling, and PPO workflow",
+          "pdf_page_1based": 3
+        }
+      ],
+      "figure_families": [
+        "training-workflow",
+        "uncertainty"
+      ],
+      "observed_structure": "Model-size comparisons include confidence intervals; a separate three-column workflow identifies training phases and update routes.",
+      "design_lesson": "Separate mechanism from evidence; define baseline, arrow types, and intervals.",
+      "caution": "Check miniature icons and explanations at final size.",
+      "affiliation_evidence": "PDF title page lists OpenAI; contribution note identifies OpenAI Alignment team.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF; checked title/version/affiliation and figure captions; rendered named pages with PyMuPDF and inspected PNGs with view_image."
+      },
+      "pdf_sha256": "c1984bb50a5b90fddb895fdc3a0f72e5bc977148c9f63ef6040cbe7a3e1f0d98"
+    },
+    {
+      "paper_id": "anthropic-toy-superposition-2022",
+      "organization": "Anthropic / Harvard",
+      "title": "Toy Models of Superposition",
+      "original_year": 2022,
+      "version": "arXiv:2209.10652v1, 21 September 2022; article dated 14 September 2022",
+      "arxiv_version": "2209.10652v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2209.10652v1",
+      "landing_url": "https://arxiv.org/abs/2209.10652v1",
+      "figures": [
+        {
+          "figure_id": null,
+          "descriptive_anchor": "Unnumbered opening sparsity/feature-vector triptych",
+          "pdf_page_1based": 2
+        },
+        {
+          "figure_id": null,
+          "descriptive_anchor": "Unnumbered linked weight matrices and feature norms",
+          "pdf_page_1based": 11
+        },
+        {
+          "figure_id": null,
+          "descriptive_anchor": "Unnumbered sparsity-relative-importance phase diagram",
+          "pdf_page_1based": 15
+        }
+      ],
+      "figure_families": [
+        "representation",
+        "heatmap"
+      ],
+      "observed_structure": "Linked vectors, matrices, and feature bars connect local geometry with empirical and theoretical phase diagrams.",
+      "design_lesson": "Teach one representation, then reuse it across evidence.",
+      "caution": "Unnumbered figures require descriptive anchors; toy geometry does not establish full-model geometry.",
+      "affiliation_evidence": "PDF page 1 lists Anthropic and Harvard; Anthropic research page links the paper.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF; checked title/version/affiliation and figure captions; rendered named pages with PyMuPDF and inspected PNGs with view_image."
+      },
+      "pdf_sha256": "0acd3e05e40c1b703be3aed15c8cdbd5713a1840df9738b495d2bde2e8eb1e3a"
+    },
+    {
+      "paper_id": "anthropic-constitutional-ai-2022",
+      "organization": "Anthropic",
+      "title": "Constitutional AI: Harmlessness from AI Feedback",
+      "original_year": 2022,
+      "version": "arXiv:2212.08073v1, 15 December 2022",
+      "arxiv_version": "2212.08073v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2212.08073v1",
+      "landing_url": "https://arxiv.org/abs/2212.08073v1",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "Supervised and reinforcement-learning workflow",
+          "pdf_page_1based": 2
+        },
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Helpfulness-harmlessness trade-off trajectories",
+          "pdf_page_1based": 3
+        },
+        {
+          "figure_id": "3",
+          "descriptive_anchor": "Separate helpfulness and harmlessness with uncertainty",
+          "pdf_page_1based": 4
+        }
+      ],
+      "figure_families": [
+        "training-workflow",
+        "tradeoff",
+        "uncertainty"
+      ],
+      "observed_structure": "Phase-separated workflow, annotated objective tradeoffs, and supporting uncertainty panels provide complementary views.",
+      "design_lesson": "Expose competing objectives and supply quantitative support for summaries.",
+      "caution": "Schematic frontier arcs are not measured frontiers; summary uncertainty omission is not a default.",
+      "affiliation_evidence": "PDF title page lists Anthropic.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF; checked title/version/affiliation and figure captions; rendered named pages with PyMuPDF and inspected PNGs with view_image."
+      },
+      "pdf_sha256": "9a456a07ad346e3372f9867d346f69f5b0f68b4c65f060aca0b8a13fa9d98e83"
+    },
+    {
+      "paper_id": "anthropic-sleeper-agents-2024",
+      "organization": "Anthropic and research collaborators",
+      "title": "Sleeper Agents: Training Deceptive LLMs that Persist Through Safety Training",
+      "original_year": 2024,
+      "version": "arXiv:2401.05566v3, 17 January 2024",
+      "arxiv_version": "2401.05566v3",
+      "primary_pdf_url": "https://arxiv.org/pdf/2401.05566v3",
+      "landing_url": "https://arxiv.org/abs/2401.05566v3",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "Experimental stages and conditional behavior",
+          "pdf_page_1based": 2
+        },
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Endpoint bars and full safety-training trajectories",
+          "pdf_page_1based": 4
+        }
+      ],
+      "figure_families": [
+        "training-dynamics",
+        "uncertainty"
+      ],
+      "observed_structure": "Endpoint bars and checkpoint trajectories share condition encodings; captions define bootstrapped intervals.",
+      "design_lesson": "Pair endpoints with dynamics when they answer different questions.",
+      "caution": "Constructed experimental rates do not estimate unmeasured deployment populations.",
+      "affiliation_evidence": "PDF page 1 lists Anthropic, Redwood Research, Mila Quebec AI Institute, University of Oxford, Alignment Research Center, Open Philanthropy, and Apart Research.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF; checked title/version/affiliation and figure captions; rendered named pages with PyMuPDF and inspected PNGs with view_image."
+      },
+      "pdf_sha256": "988e62785a47533775a543c78415dd0994341987f3124d57a81f46c931227bed"
+    },
+    {
+      "paper_id": "google-transformer",
+      "organization": "Google",
+      "title": "Attention Is All You Need",
+      "original_year": 2017,
+      "version": "arXiv:1706.03762v7 (2023-08-02)",
+      "arxiv_version": "1706.03762v7",
+      "primary_pdf_url": "https://arxiv.org/pdf/1706.03762v7",
+      "landing_url": "https://arxiv.org/abs/1706.03762v7",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "architecture",
+          "pdf_page_1based": 3
+        },
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "operator decomposition",
+          "pdf_page_1based": 4
+        }
+      ],
+      "figure_families": [
+        "architecture"
+      ],
+      "observed_structure": "Repeated operation blocks, bypasses, multiplicity brackets, and an expanded attention operator expose topology.",
+      "design_lesson": "Reuse module grammar and show residual and masking paths.",
+      "caution": "Verify the actual architecture; familiar silhouettes can misstate normalization or skips.",
+      "affiliation_evidence": "PDF page 1 names Google Brain/Google Research; work-at-Google footnotes.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded versioned primary arXiv PDF; extracted captions/page identity with PyMuPDF; rendered listed pages at 1.8x and inspected using view_image."
+      },
+      "pdf_sha256": "bdfaa68d8984f0dc02beaca527b76f207d99b666d31d1da728ee0728182df697"
+    },
+    {
+      "paper_id": "deepmind-chinchilla",
+      "organization": "DeepMind",
+      "title": "Training Compute-Optimal Large Language Models",
+      "original_year": 2022,
+      "version": "arXiv:2203.15556v1 (2022-03-29)",
+      "arxiv_version": "2203.15556v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2203.15556v1",
+      "landing_url": "https://arxiv.org/abs/2203.15556v1",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "scaling predictions",
+          "pdf_page_1based": 2
+        },
+        {
+          "figure_id": "3",
+          "descriptive_anchor": "IsoFLOP curves and fits",
+          "pdf_page_1based": 6
+        }
+      ],
+      "figure_families": [
+        "scaling"
+      ],
+      "observed_structure": "Log-scale measurements, fits, model markers, and budget-colored loss valleys connect data to model-size decisions.",
+      "design_lesson": "Distinguish measurements, fits, and implied decisions.",
+      "caution": "Mark extrapolation; FLOPs do not equal runtime or monetary cost.",
+      "affiliation_evidence": "PDF page 1: DeepMind copyright and deepmind.com corresponding-author emails.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded versioned primary arXiv PDF; extracted captions/page identity with PyMuPDF; rendered listed pages at 1.8x and inspected using view_image."
+      },
+      "pdf_sha256": "3fd3632a8ef48171bd25282990221d49535d75356192f068b3b2ebe08f2aedd4"
+    },
+    {
+      "paper_id": "google-vit",
+      "organization": "Google",
+      "title": "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale",
+      "original_year": 2020,
+      "version": "arXiv:2010.11929v2 (2021-06-03); ICLR 2021",
+      "arxiv_version": "2010.11929v2",
+      "primary_pdf_url": "https://arxiv.org/pdf/2010.11929v2",
+      "landing_url": "https://arxiv.org/abs/2010.11929v2",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "architecture with worked input",
+          "pdf_page_1based": 3
+        },
+        {
+          "figure_id": "7",
+          "descriptive_anchor": "representation diagnostics",
+          "pdf_page_1based": 9
+        }
+      ],
+      "figure_families": [
+        "architecture",
+        "representation"
+      ],
+      "observed_structure": "A worked image-to-token pipeline accompanies an encoder expansion and aligned representation diagnostics.",
+      "design_lesson": "Connect concrete inputs to abstract operations and diagnostic encodings.",
+      "caution": "Attention or embedding patterns alone do not establish causality.",
+      "affiliation_evidence": "PDF page 1: Google Research, Brain Team.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded versioned primary arXiv PDF; extracted captions/page identity with PyMuPDF; rendered listed pages at 1.8x and inspected using view_image."
+      },
+      "pdf_sha256": "8ce7b83971a14508ca711a27c875c9b6914c4f6767cf3150fb1ca6c07aa056d6"
+    },
+    {
+      "paper_id": "meta-mae",
+      "organization": "Facebook AI Research (FAIR; now Meta)",
+      "title": "Masked Autoencoders Are Scalable Vision Learners",
+      "original_year": 2021,
+      "version": "arXiv:2111.06377v3 (2021-12-19)",
+      "arxiv_version": "2111.06377v3",
+      "primary_pdf_url": "https://arxiv.org/pdf/2111.06377v3",
+      "landing_url": "https://arxiv.org/abs/2111.06377v3",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "minimal method schematic",
+          "pdf_page_1based": 1
+        },
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "matched reconstruction triplets",
+          "pdf_page_1based": 2
+        },
+        {
+          "figure_id": "3",
+          "descriptive_anchor": "cross-dataset reconstruction triplets",
+          "pdf_page_1based": 2
+        }
+      ],
+      "figure_families": [
+        "architecture",
+        "qualitative"
+      ],
+      "observed_structure": "A narrow visible-token path precedes token recombination; qualitative triplets repeat input, reconstruction, and target.",
+      "design_lesson": "Expose asymmetry through topology; match crops and processing across comparisons.",
+      "caution": "Schematic token counts do not establish compute; disclose example selection and compositing.",
+      "affiliation_evidence": "PDF page 1: Facebook AI Research (FAIR).",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded versioned primary arXiv PDF; extracted captions/page identity with PyMuPDF; rendered listed pages at 1.8x and inspected using view_image."
+      },
+      "pdf_sha256": "1b490443925c72a2b7c770f90dd797e248729ae34a57e1abfe9ed36751c4cc5b"
+    },
+    {
+      "paper_id": "meta-sam",
+      "organization": "Meta",
+      "title": "Segment Anything",
+      "original_year": 2023,
+      "version": "arXiv:2304.02643v1 (2023-04-05)",
+      "arxiv_version": "2304.02643v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2304.02643v1",
+      "landing_url": "https://arxiv.org/abs/2304.02643v1",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "task-model-data overview",
+          "pdf_page_1based": 1
+        },
+        {
+          "figure_id": "4",
+          "descriptive_anchor": "amortized inference architecture",
+          "pdf_page_1based": 5
+        },
+        {
+          "figure_id": "9",
+          "descriptive_anchor": "dataset differences and evaluation facets",
+          "pdf_page_1based": 9
+        }
+      ],
+      "figure_families": [
+        "architecture",
+        "benchmark",
+        "qualitative"
+      ],
+      "observed_structure": "Task/model/data views accompany encoder-decoder detail, signed dataset differences, ratings, and prompt-budget curves.",
+      "design_lesson": "Expose heterogeneous gains and losses; isolate reusable computation.",
+      "caution": "Separate oracle outputs from deployable predictions and preserve sample provenance.",
+      "affiliation_evidence": "PDF page 1: Meta AI Research, FAIR.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded versioned primary arXiv PDF; extracted captions/page identity with PyMuPDF; rendered listed pages at 1.8x and inspected using view_image."
+      },
+      "pdf_sha256": "c6ca524e47200c3e542587ca76ac1dbc89cc67340f948c819250d16fdbd90cfb"
+    },
+    {
+      "paper_id": "meta-llama3",
+      "organization": "Meta",
+      "title": "The Llama 3 Herd of Models",
+      "original_year": 2024,
+      "version": "arXiv:2407.21783v3 (2024-11-23)",
+      "arxiv_version": "2407.21783v3",
+      "primary_pdf_url": "https://arxiv.org/pdf/2407.21783v3",
+      "landing_url": "https://arxiv.org/abs/2407.21783v3",
+      "figures": [
+        {
+          "figure_id": "7",
+          "descriptive_anchor": "post-training data/model workflow",
+          "pdf_page_1based": 15
+        },
+        {
+          "figure_id": "27",
+          "descriptive_anchor": "throughput-latency tradeoff",
+          "pdf_page_1based": 54
+        }
+      ],
+      "figure_families": [
+        "training-workflow",
+        "systems-performance"
+      ],
+      "observed_structure": "Typed data/model nodes explain feedback; parallel prefill/decode plots expose configurations and batching.",
+      "design_lesson": "Distinguish artifacts from operations and separate operational phases.",
+      "caution": "Different latency definitions require hardware and batching context.",
+      "affiliation_evidence": "PDF page 1: Llama Team, AI @ Meta.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded versioned primary arXiv PDF; extracted captions/page identity with PyMuPDF; rendered listed pages at 1.8x and inspected using view_image."
+      },
+      "pdf_sha256": "481f1599468f95a07d05e97fafe55bbe786dc1624c6f881bcb4c7d14c933d083"
+    },
+    {
+      "paper_id": "deepseek-v2",
+      "organization": "DeepSeek",
+      "title": "DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model",
+      "original_year": 2024,
+      "version": "arXiv:2405.04434v1",
+      "arxiv_version": "2405.04434v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2405.04434v1",
+      "landing_url": "https://arxiv.org/abs/2405.04434v1",
+      "figures": [
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Architecture with mechanism zooms",
+          "pdf_page_1based": 5
+        },
+        {
+          "figure_id": "3",
+          "descriptive_anchor": "Aligned architecture comparison",
+          "pdf_page_1based": 7
+        }
+      ],
+      "figure_families": [
+        "architecture"
+      ],
+      "observed_structure": "A backbone links to mechanism zooms; aligned attention variants use hatching to identify cached state.",
+      "design_lesson": "Anchor detail to an overview and align invariant components.",
+      "caution": "Schematic glyph counts are not quantities; dense labels need space.",
+      "affiliation_evidence": "First page identifies DeepSeek-AI and research@deepseek.com.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded version-pinned arXiv PDF; extracted caption/page mapping with PyMuPDF; rendered listed pages with PyMuPDF at 1.6x; inspected every listed image with view_image."
+      },
+      "pdf_sha256": "e930bb96dd1f0ecbe57b47b7a27141f8c165cd4a9de41b1cc2e46f54ec96e96b"
+    },
+    {
+      "paper_id": "deepseek-r1",
+      "organization": "DeepSeek",
+      "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+      "original_year": 2025,
+      "version": "arXiv:2501.12948v1",
+      "arxiv_version": "2501.12948v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2501.12948v1",
+      "landing_url": "https://arxiv.org/abs/2501.12948v1",
+      "figures": [
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Training trajectory with external references",
+          "pdf_page_1based": 7
+        },
+        {
+          "figure_id": "3",
+          "descriptive_anchor": "Response-length diagnostic",
+          "pdf_page_1based": 8
+        }
+      ],
+      "figure_families": [
+        "training-dynamics"
+      ],
+      "observed_structure": "Training trajectories compare fixed references; response length appears as a separate diagnostic.",
+      "design_lesson": "Separate performance and behavior while retaining their units.",
+      "caution": "Sampling settings differ; the pale length region is not defined as a confidence interval in its caption.",
+      "affiliation_evidence": "First page identifies DeepSeek-AI and research@deepseek.com.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded version-pinned arXiv PDF; extracted caption/page mapping with PyMuPDF; rendered listed pages with PyMuPDF at 1.6x; inspected every listed image with view_image."
+      },
+      "pdf_sha256": "52d8ca3ac93e88cef9944e1fd03b0e04aec5954495a8250fb2fadf8fa20a4dad"
+    },
+    {
+      "paper_id": "hunyuanvideo",
+      "organization": "Tencent",
+      "title": "HunyuanVideo: A Systematic Framework For Large Video Generative Models",
+      "original_year": 2024,
+      "version": "arXiv:2412.03603v1",
+      "arxiv_version": "2412.03603v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2412.03603v1",
+      "landing_url": "https://arxiv.org/abs/2412.03603v1",
+      "figures": [
+        {
+          "figure_id": "4",
+          "descriptive_anchor": "Data filtering Sankey",
+          "pdf_page_1based": 4
+        },
+        {
+          "figure_id": "5",
+          "descriptive_anchor": "Multimodal architecture",
+          "pdf_page_1based": 5
+        },
+        {
+          "figure_id": "10",
+          "descriptive_anchor": "Scaling-law small multiples",
+          "pdf_page_1based": 9
+        }
+      ],
+      "figure_families": [
+        "data-flow",
+        "architecture",
+        "scaling"
+      ],
+      "observed_structure": "Retention/discard flows, modality lanes, and an image/video scaling grid encode distinct scientific questions.",
+      "design_lesson": "Match flow, architecture, and scaling layouts to their evidence.",
+      "caution": "Sankey widths need defensible quantities; distinguish observations, fits, and extrapolation.",
+      "affiliation_evidence": "First-page Hunyuan Foundation Model Team attribution and Tencent/HunyuanVideo repository link; official Tencent-Hunyuan repository confirms paper.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded version-pinned arXiv PDF; extracted caption/page mapping with PyMuPDF; rendered listed pages with PyMuPDF at 1.6x; inspected every listed image with view_image."
+      },
+      "pdf_sha256": "c5aea4522a926775eec39db8bdb4a9ced63a1c0a703fb7254e7b9fdc1dbe7f98",
+      "affiliation_url": "https://github.com/Tencent-Hunyuan/HunyuanVideo"
+    },
+    {
+      "paper_id": "hunyuan3d-2",
+      "organization": "Tencent",
+      "title": "Hunyuan3D 2.0: Scaling Diffusion Models for High Resolution Textured 3D Assets Generation",
+      "original_year": 2025,
+      "version": "arXiv:2501.12202v1",
+      "arxiv_version": "2501.12202v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2501.12202v1",
+      "landing_url": "https://arxiv.org/abs/2501.12202v1",
+      "figures": [
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Stage-separated architecture and outputs",
+          "pdf_page_1based": 4
+        },
+        {
+          "figure_id": "7",
+          "descriptive_anchor": "Qualitative comparison grid",
+          "pdf_page_1based": 12
+        }
+      ],
+      "figure_families": [
+        "architecture",
+        "qualitative"
+      ],
+      "observed_structure": "Named shape/texture stages accompany a method-by-input grid with consistent blue mesh rendering.",
+      "design_lesson": "Separate geometry from appearance and control qualitative comparison conditions.",
+      "caution": "Selected examples do not establish average quality; document selection and rendering.",
+      "affiliation_evidence": "First-page Hunyuan3D Team attribution and Tencent/Hunyuan3D-2 repository link; official Tencent-Hunyuan repository confirms paper.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded version-pinned arXiv PDF; extracted caption/page mapping with PyMuPDF; rendered listed pages with PyMuPDF at 1.6x; inspected every listed image with view_image."
+      },
+      "pdf_sha256": "d662351e2b5160439568543971ccb8a3638748fffad3c7946bcea8b8e4094b7b",
+      "affiliation_url": "https://github.com/Tencent-Hunyuan/Hunyuan3D-2"
+    },
+    {
+      "paper_id": "qwen2.5",
+      "organization": "Alibaba / Qwen",
+      "title": "Qwen2.5 Technical Report",
+      "original_year": 2024,
+      "version": "arXiv:2412.15115v1",
+      "arxiv_version": "2412.15115v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2412.15115v1",
+      "landing_url": "https://arxiv.org/abs/2412.15115v1",
+      "figures": [
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Context length by document depth heatmap",
+          "pdf_page_1based": 17
+        },
+        {
+          "figure_id": "3",
+          "descriptive_anchor": "Hardware-by-model latency small multiples",
+          "pdf_page_1based": 18
+        }
+      ],
+      "figure_families": [
+        "heatmap",
+        "systems-performance"
+      ],
+      "observed_structure": "A saturated retrieval field accompanies hardware-by-model latency panels with absolute times and speedup labels.",
+      "design_lesson": "Keep absolute cost beside ratios and disclose panel scales.",
+      "caution": "Declare sampling; saturation hides variation and red-green encoding limits accessibility.",
+      "affiliation_evidence": "First page names Qwen Team and Alibaba Cloud Model Studio; linked official QwenLM repository identifies Qwen team, Alibaba Cloud.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded version-pinned arXiv PDF; extracted caption/page mapping with PyMuPDF; rendered listed pages with PyMuPDF at 1.6x; inspected every listed image with view_image."
+      },
+      "pdf_sha256": "367bbeef22d21b6a11efbb114d8d4e72cdf3ebb5662c55d59bf2fa10e8c3da6c",
+      "affiliation_url": "https://github.com/QwenLM/Qwen3"
+    },
+    {
+      "paper_id": "qwen2.5-vl",
+      "organization": "Alibaba / Qwen",
+      "title": "Qwen2.5-VL Technical Report",
+      "original_year": 2025,
+      "version": "arXiv:2502.13923v1",
+      "arxiv_version": "2502.13923v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/2502.13923v1",
+      "landing_url": "https://arxiv.org/abs/2502.13923v1",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "Multimodal tokenization architecture",
+          "pdf_page_1based": 3
+        }
+      ],
+      "figure_families": [
+        "architecture"
+      ],
+      "observed_structure": "Input dimensions, video timing, colored token spans, and an encoder expansion trace representation changes.",
+      "design_lesson": "Make input-to-token transformations explicit.",
+      "caution": "Token-strip width can be schematic; dense detail needs decomposition.",
+      "affiliation_evidence": "First page explicitly states Qwen Team, Alibaba Group.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded version-pinned arXiv PDF; extracted caption/page mapping with PyMuPDF; rendered listed pages with PyMuPDF at 1.6x; inspected every listed image with view_image."
+      },
+      "pdf_sha256": "399a28f6ed79f4ece29cca93993fceb56fc304b1d779e49392aec05aff45aba5"
+    },
+    {
+      "paper_id": "nvidia-megatron-2019",
+      "organization": "NVIDIA",
+      "title": "Megatron-LM: Training Multi-Billion Parameter Language Models Using Model Parallelism",
+      "original_year": 2019,
+      "version": "arXiv:1909.08053v4 (2020-03-13)",
+      "arxiv_version": "1909.08053v4",
+      "primary_pdf_url": "https://arxiv.org/pdf/1909.08053v4",
+      "landing_url": "https://arxiv.org/abs/1909.08053v4",
+      "figures": [
+        {
+          "figure_id": "3",
+          "descriptive_anchor": "MLP and self-attention sharding",
+          "pdf_page_1based": 4
+        },
+        {
+          "figure_id": "4",
+          "descriptive_anchor": "Communication operations",
+          "pdf_page_1based": 5
+        }
+      ],
+      "figure_families": [
+        "architecture",
+        "distributed-systems"
+      ],
+      "observed_structure": "Aligned tensor-shard blocks and synchronization operators connect local computation with module-level communication.",
+      "design_lesson": "Expose boundaries that explain the bottleneck.",
+      "caution": "Define synchronization semantics; avoid illegible equations and decorative gradients.",
+      "affiliation_evidence": "PDF page 1 identifies NVIDIA.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF, verified version and affiliation, rendered listed pages with PyMuPDF, and inspected actual PNG images with view_image."
+      },
+      "pdf_sha256": "fa89e54e23c0cea5cbd9d24720db7647c61af299afdb9a170c7119160e6d207a"
+    },
+    {
+      "paper_id": "nvidia-megatron-2021",
+      "organization": "NVIDIA / Stanford / Microsoft Research",
+      "title": "Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM",
+      "original_year": 2021,
+      "version": "arXiv:2104.04473v5 (2021-08-23)",
+      "arxiv_version": "2104.04473v5",
+      "primary_pdf_url": "https://arxiv.org/pdf/2104.04473v5",
+      "landing_url": "https://arxiv.org/abs/2104.04473v5",
+      "figures": [
+        {
+          "figure_id": "3",
+          "descriptive_anchor": "GPipe timeline",
+          "pdf_page_1based": 3
+        },
+        {
+          "figure_id": "4",
+          "descriptive_anchor": "Default versus interleaved pipeline schedule",
+          "pdf_page_1based": 3
+        },
+        {
+          "figure_id": "6",
+          "descriptive_anchor": "Pipeline bubble fraction",
+          "pdf_page_1based": 5
+        }
+      ],
+      "figure_families": [
+        "distributed-systems",
+        "systems-performance"
+      ],
+      "observed_structure": "Device timelines reveal idle regions; matched schedules accompany a quantitative bubble-fraction plot.",
+      "design_lesson": "Align timing conventions and support schematic schedules quantitatively.",
+      "caution": "State timing assumptions; the source GPipe illustration assumes backward work takes twice forward work.",
+      "affiliation_evidence": "PDF page 1 explicitly lists NVIDIA, Stanford University, and Microsoft Research.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF, verified version and affiliation, rendered listed pages with PyMuPDF, and inspected actual PNG images with view_image."
+      },
+      "pdf_sha256": "7d78344f7fd322c901ad14046eeeaa9fd798416ad35190ffc6a6ecca0f7f79b0"
+    },
+    {
+      "paper_id": "nvidia-nemotron-h",
+      "organization": "NVIDIA",
+      "title": "Nemotron-H: A Family of Accurate and Efficient Hybrid Mamba-Transformer Models",
+      "original_year": 2025,
+      "version": "arXiv:2504.03624v4 (2025-09-05; PDF header 2025-09-09)",
+      "arxiv_version": "2504.03624v4",
+      "primary_pdf_url": "https://arxiv.org/pdf/2504.03624v4",
+      "landing_url": "https://arxiv.org/abs/2504.03624v4",
+      "figures": [
+        {
+          "figure_id": "1",
+          "descriptive_anchor": "Accuracy versus throughput",
+          "pdf_page_1based": 2
+        },
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Repeated hybrid layer patterns",
+          "pdf_page_1based": 3
+        }
+      ],
+      "figure_families": [
+        "tradeoff",
+        "architecture"
+      ],
+      "observed_structure": "Directly labeled quality-throughput points accompany repeated hybrid-layer patterns with multiplicities.",
+      "design_lesson": "Show resource cost with quality and disclose benchmark conditions.",
+      "caution": "Throughput depends on hardware, batching, precision, and sequence lengths; arrows do not establish universal frontiers.",
+      "affiliation_evidence": "PDF title page credits NVIDIA.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF, verified version and affiliation, rendered listed pages with PyMuPDF, and inspected actual PNG images with view_image."
+      },
+      "pdf_sha256": "14b26ba4fa89e51f884790e200d660d409e61fc86db5c8396c0627b6c0c8cd42"
+    },
+    {
+      "paper_id": "microsoft-resnet",
+      "organization": "Microsoft Research",
+      "title": "Deep Residual Learning for Image Recognition",
+      "original_year": 2015,
+      "version": "arXiv:1512.03385v1 (2015-12-10)",
+      "arxiv_version": "1512.03385v1",
+      "primary_pdf_url": "https://arxiv.org/pdf/1512.03385v1",
+      "landing_url": "https://arxiv.org/abs/1512.03385v1",
+      "figures": [
+        {
+          "figure_id": "2",
+          "descriptive_anchor": "Residual learning building block",
+          "pdf_page_1based": 2
+        }
+      ],
+      "figure_families": [
+        "architecture"
+      ],
+      "observed_structure": "A monochrome block exposes a transformation, identity bypass, addition, and mathematical labels.",
+      "design_lesson": "Explain the contribution through its smallest truthful computational unit.",
+      "caution": "Check operation ordering before reusing the residual motif.",
+      "affiliation_evidence": "PDF page 1 lists Microsoft Research under the four authors.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF, verified version and affiliation, rendered listed pages with PyMuPDF, and inspected actual PNG images with view_image."
+      },
+      "pdf_sha256": "1e0651b6810ecba34a3dbc5b5b0209226f889004607c1f203540a48d64e5a93a"
+    },
+    {
+      "paper_id": "google-rliable",
+      "organization": "Google Research / Mila, Université de Montréal",
+      "title": "Deep Reinforcement Learning at the Edge of the Statistical Precipice",
+      "original_year": 2021,
+      "version": "arXiv:2108.13264v4 (2022-01-05)",
+      "arxiv_version": "2108.13264v4",
+      "primary_pdf_url": "https://arxiv.org/pdf/2108.13264v4",
+      "landing_url": "https://arxiv.org/abs/2108.13264v4",
+      "figures": [
+        {
+          "figure_id": "7",
+          "descriptive_anchor": "Performance profiles and pointwise confidence bands",
+          "pdf_page_1based": 7
+        },
+        {
+          "figure_id": "9",
+          "descriptive_anchor": "Aggregate metrics with confidence intervals",
+          "pdf_page_1based": 8
+        }
+      ],
+      "figure_families": [
+        "uncertainty",
+        "benchmark"
+      ],
+      "observed_structure": "Performance profiles show pointwise bootstrap bands; aligned interval panels compare aggregate metrics.",
+      "design_lesson": "Make uncertainty and aggregation visible in the argument.",
+      "caution": "Resampling units and estimands depend on the task/run hierarchy; RL procedures are not universal defaults.",
+      "affiliation_evidence": "PDF page 1 lists Google Research Brain Team and MILA, Universite de Montreal.",
+      "verification": {
+        "status": "visually_inspected",
+        "date": "2026-10-21",
+        "method": "Downloaded primary PDF, verified version and affiliation, rendered listed pages with PyMuPDF, and inspected actual PNG images with view_image."
+      },
+      "pdf_sha256": "a6a5abb49e58a9e4a0be8556c8351ce8c3b52e70216bffc9fa80eac0823ec5ed"
+    }
+  ]
+}

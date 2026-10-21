@@ -1,0 +1,131 @@
+{
+  "title": "Causal cache attention",
+  "evidence_status": "Original schematic with an illustrative numerical example; no empirical claim",
+  "query_indices": [
+    9,
+    10,
+    11,
+    12
+  ],
+  "key_order": [
+    "P0",
+    "P1",
+    "S1",
+    "S2",
+    "t9",
+    "t10",
+    "t11",
+    "t12"
+  ],
+  "prefix_keys": [
+    "P0",
+    "P1"
+  ],
+  "completed_summaries": [
+    {
+      "id": "S1",
+      "covers": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "id": "S2",
+      "covers": [
+        5,
+        6,
+        7,
+        8
+      ]
+    }
+  ],
+  "local_token_indices": [
+    9,
+    10,
+    11,
+    12
+  ],
+  "excluded_summary": {
+    "id": "S3",
+    "covers": [
+      9,
+      10,
+      11,
+      12
+    ],
+    "excluded_from_queries": [
+      9,
+      10,
+      11,
+      12
+    ],
+    "eligible_after": "Chunk 3 is sealed and its summary has been finalized"
+  },
+  "mask_convention": "Additive mask: 0 for permitted, negative infinity for blocked. Rows are queries and columns are the listed key order. Local self-attention includes the current token.",
+  "dimensions": {
+    "query_count": 4,
+    "key_count": 8,
+    "key_dimension": "d_k",
+    "value_dimension": "d_v",
+    "example_value_dimension": 2
+  },
+  "example": {
+    "query": "q10",
+    "query_index": 10,
+    "allowed_keys": [
+      "P0",
+      "P1",
+      "S1",
+      "S2",
+      "t9",
+      "t10"
+    ],
+    "scaled_logits_decimal": [
+      "1.2",
+      "0.6",
+      "0.4",
+      "0.8",
+      "1.1",
+      "0.9"
+    ],
+    "value_vectors": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        -1,
+        1
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "masked_keys": [
+      "t11",
+      "t12"
+    ],
+    "masked_key_weights": [
+      0,
+      0
+    ],
+    "note": "Illustrative input values are preserved exactly. Masked logits and values are not needed for this query's output; only the permitted six-row value submatrix is instantiated. No Q/K factorization of the supplied scaled logits is asserted."
+  },
+  "caption": "Figure X. Causal cache attention (original schematic; numerical illustration). (a) Canonical slots span four query steps; future local keys are not already populated. P0/P1 and completed summaries S1/S2 are always readable. (b) The additive mask permits local key tj only when j ≤ i for query qi, including the current token. (c) The supplied q10 logits and illustrated 2D values yield o10 ≈ (0.600050, 0.730184); masked keys have zero weight. (d) S3 is withheld throughout q9–q12 and becomes eligible only after chunk sealing and summary finalization. No empirical performance claim is made.",
+  "extended_caption": "Figure X. Causal cache attention: a schematic with a numerical illustration. (a) The canonical bank contains two always-available prefix slots, P0/P1; summaries S1/S2 of completed chunks t1–t4 and t5–t8; and four local slots, t9–t12. This is a representation across four query steps, not a claim that future local keys are already populated. Each slot holds a d_k-dimensional key and a d_v-dimensional value. (b) Rows index q9–q12 and columns use the bank’s order. The additive mask is zero for permitted reads and negative infinity otherwise; the local block includes the current token. A = rowsoftmax(QKᵀ/√d_k + M) and O = AV. (c) For q10, the six supplied logits normalize over P0, P1, S1, S2, t9 and t10. The displayed two-dimensional value vectors give o10 ≈ (0.600050, 0.730184); t11/t12 have zero weight. Decimals are rounded; the formulas define the exact normalization. (d) S3 remains absent during all four reads and becomes eligible only after the chunk is sealed and its summary finalized. The dashed line marks this availability boundary. Arrows show data dependencies or ordered operations. The summarizer is unspecified; no empirical performance claim is made."
+}

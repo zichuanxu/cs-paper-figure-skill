@@ -1,0 +1,123 @@
+# Record source measurements separately from design recommendations. Null means unknown, not zero.
+figure_id: figure_1
+claim: null
+claim_bearing_operation: null
+# What can the reader reconstruct beyond the overview's module names?
+reconstructable_transformation:
+  input_artifact: null
+  governing_rule: null
+  output_artifact: null
+  observable_consequence: null
+  computed_or_conceptual: null
+figure_family: null
+information_levels: []
+# Each panel names its question, conclusion, content source, and link to other panels.
+panel_contracts: []
+cross_panel_identifiers: []
+visual_objects:
+  source_and_evidence_status: null
+  scene_or_case_ids: []
+  shared_viewport_and_scale: null
+  coordinate_or_time_units: null
+  observed_predicted_and_executed_key: null
+  intentional_data_intersections: []
+worked_instance:
+  source: null
+  selection_rule: null
+  correspondence_to_method: null
+  evidence_status: null
+audience: computer_science_researchers
+data:
+  status: null
+  source_files: []
+  source_tables_or_figures: []
+  independent_unit: null
+  sample_size: null
+  grouping_and_pairing: null
+  aggregation: null
+  uncertainty:
+    type: null
+    level: null
+    resampling_unit: null
+    pointwise_or_simultaneous: null
+  missingness_and_exclusions: null
+comparison:
+  baseline: null
+  controlled_conditions: []
+  changing_variable: null
+  direction_of_improvement: null
+encoding:
+  x_metric_and_units: null
+  y_metric_and_units: null
+  scales: null
+  normalization: null
+  semantic_key: {}
+diagram:
+  entities: []
+  operations: []
+  persistent_state: []
+  edge_types: []
+  training_inference_boundary: null
+placement:
+  template: null
+  width_mm: 85
+  height_mm: 60
+  usable_page_height_mm: null
+  caption_height_mm: null
+  artwork_caption_gap_mm: 3
+  smallest_font_pt: 7
+  outputs:
+  - pdf
+  - svg
+  - png
+inspiration:
+  source_ids: []
+  transferable_principle: null
+  selected_recipe: null
+  # Each selection names the exact version/figure and the job it performs.
+  # Jobs include composition, encoding, typography, or caution.
+  source_jobs: []
+  observation_to_adaptation: []
+caption:
+  takeaway: null
+  experimental_scope: null
+  visual_key: null
+  uncertainty_and_n: null
+  qualification: null
+open_questions: []
+qa:
+  scientific_pass: pending
+  final_size_visual_pass: pending
+  grayscale_pass: pending
+  color_vision_check: pending
+  artifact_pass: pending
+  aesthetic_reference_comparison: pending
+  connector_geometry_pass: pending
+  same_width_reference_comparison: pending
+  mechanism_and_instance_agree: pending
+  claim_bearing_operation_instantiated: pending
+visual_system:
+  reference_figure_anchors: []
+  source_measurement_evidence: {}
+  chosen_grammar: null
+  candidate_compositions: []
+  palette_roles: {}
+  font_families: {}
+  font_sizes_pt: {}
+  font_weights: {}
+  # Source typography may be unknown or merely declared. Production files must be verified.
+  font_evidence_and_substitution: {}
+  export_font_strategy: null
+  spacing_unit_mm: 2
+  panel_ratios: []
+  gutters_mm: null
+  container_padding_mm: null
+  shape_semantics: {}
+  stroke_hierarchy_pt: {}
+  ports: []
+  feedback_corridors: []
+  edge_label_clearance_mm: null
+  # Record local meanings instead of assuming dashed = optional or training-only.
+  local_line_style_key: {}
+  color_meaning_dimension: null
+  concrete_example_selection_rule: null

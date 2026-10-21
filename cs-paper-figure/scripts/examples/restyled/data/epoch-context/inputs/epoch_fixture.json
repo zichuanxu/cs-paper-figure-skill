@@ -1,0 +1,67 @@
+{
+  "title": "Epoch replay changes the next proposal",
+  "evidence_status": "DETERMINISTIC ILLUSTRATION: a constructed rule system, not a learned-model or real-agent result",
+  "split": "training_replay",
+  "selection_rule": "Four deliberately constructed cases expose improvement, regression, stable success, and persistent failure. They are not sampled from a task population.",
+  "executor_contract": "One deterministic formatter is replayed under both memory policies. Scalar and CSV formats obey the memory unit rule; a score is unchanged. The range renderer deliberately emits only the lower endpoint under both policies, modeling an unresolved parser limitation. No learned model is called.",
+  "memory_states": {
+    "M0": {"unit_mode": "header", "scalar_date": false},
+    "M1": {"unit_mode": "inline_all", "scalar_date": true}
+  },
+  "context_before": {
+    "allow_inline": ["scalar", "csv"],
+    "retain": [],
+    "protect": [],
+    "open": [],
+    "evidence": {"allow_inline": [], "retain": [], "protect": [], "open": []}
+  },
+  "cases": [
+    {
+      "id": "T08", "split": "training_replay", "format": "scalar",
+      "source": {"value": 12, "unit": "ms", "date": "2026-10-20"},
+      "required_checks": ["scalar.unit", "scalar.date"],
+      "expected_transition": "improved"
+    },
+    {
+      "id": "T11", "split": "training_replay", "format": "csv",
+      "source": {"value": 12, "unit": "ms", "field": "latency"},
+      "required_checks": ["csv.header", "csv.numeric", "csv.value"],
+      "expected_transition": "regressed"
+    },
+    {
+      "id": "T03", "split": "training_replay", "format": "score",
+      "source": {"value": 0.91},
+      "required_checks": ["score.value"],
+      "expected_transition": "unchanged"
+    },
+    {
+      "id": "T14", "split": "training_replay", "format": "range",
+      "source": {"lower": 3, "upper": 5, "unit": "ms"},
+      "required_checks": ["range.end"],
+      "expected_transition": "unchanged"
+    }
+  ],
+  "reflection_rules": [
+    {"id": "R1", "condition": "A scalar requirement changes from fail to pass in an improved case", "action": "Retain that scalar requirement and cite the case"},
+    {"id": "R2", "condition": "A numeric CSV cell changes from pass to fail in a regressed case", "action": "Remove csv from allow_inline; protect csv.numeric; cite the case"},
+    {"id": "R3", "condition": "A requirement fails in both memory states", "action": "Carry that requirement into open issues and cite the case"},
+    {"id": "R4", "condition": "All requirements pass in both memory states", "action": "Add no new context rule"}
+  ],
+  "next_request": {"id": "P04", "operation": "REPLACE", "target": "unit_placement", "value": "inline", "formats": ["scalar", "csv"]},
+  "proposal_contract": "Intersect requested formats with allow_inline. Attach retained requirements, protected contracts, unresolved issues and their evidence IDs. Emit a proposal artifact only: do not apply it or claim validation.",
+  "expected_fixture": {
+    "outputs": {
+      "T08": {"M0": "12", "M1": "12 ms | 20 Oct"},
+      "T11": {"M0": "latency_ms\n12", "M1": "latency_ms\n12 ms"},
+      "T03": {"M0": "0.91", "M1": "0.91"},
+      "T14": {"M0": "3 ms", "M1": "3 ms"}
+    },
+    "context_after": {
+      "allow_inline": ["scalar"],
+      "retain": ["scalar.unit", "scalar.date"],
+      "protect": ["csv.numeric"],
+      "open": ["range.end"],
+      "evidence": {"allow_inline": ["T11"], "retain": ["T08"], "protect": ["T11"], "open": ["T14"]}
+    }
+  }
+}
