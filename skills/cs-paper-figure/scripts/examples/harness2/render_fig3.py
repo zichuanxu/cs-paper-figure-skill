@@ -59,7 +59,7 @@ def robot(cv, x, y, c, label, s=6.2):
     png = os.path.join(ICON_DIR, f"{name}.png") if name else None
     if png and os.path.exists(png) and not NO_ICONS:
         # the illustrated set carries its role colour itself; no disc behind it
-        h = cv.image(png, x, y, s * 1.12, z=12)
+        h = cv.image(png, x, y, s * 1.15, z=12, fit="height")
     else:
         h = s * 1.24
         cv.ax.add_patch(Circle((x, y), s * 0.62, fc=c["fill"], ec=c["stroke"], lw=0.5, zorder=11))
@@ -201,7 +201,7 @@ def panel_harnessing(cv):
     cv.icon_cycle(6.4, 8.6, 2.6, color=RFL["mark"])
     cv.text(8.8, 8.6, "evolves: the library", size=6.0, color=RFL["ink"], ha="left")
     for x, c, lab in ((33.4, EXE, "executor"), (42.4, EDT, "editor /\ncomposer"), (51.2, RFL, "reflector")):
-        robot(cv, x, 16.8, c, None, s=5.0)
+        robot(cv, x, 16.8, c, None, s=6.0)
         cv.text(x, 12.0, lab, size=5.8, color=c["ink"], linespacing=0.95, va="top")
 
 

@@ -52,10 +52,12 @@ vector text; photos and screenshots are always real artefacts, never illustratio
    against the paper's definitions before generating.
 9. **Extend from a reference.** To add icons to an existing set (or keep two figures of one paper
    consistent), pass an existing icon with `--ref`; the prompt marks it as a style reference.
-10. **Place icons with `cv.image()`, never a raw `imshow`.** It resamples the 512 px icon once with
-    Lanczos to its printed size at `paperkit.RASTER_DPI` (600) and mattes off only the border-connected
-    white. Letting matplotlib shrink a 512 px icon to ~70 px itself breaks thin outlines into dashes,
-    which reads as "blurry". PNGs are exported at 600 dpi for the same reason.
+10. **Place icons with `cv.image()`, never a raw `imshow`.** Soft icons come from resampling twice and
+    from a matte that bites into the outline. `cv.image()` resamples once (Lanczos + light unsharp mask)
+    to the printed size at `paperkit.RASTER_DPI` (600), snaps the icon to the output pixel grid so the
+    PNG is a 1:1 copy, and mattes off only pure white connected to the border, so cream fills and
+    outlines stay intact. Use `fit="height"` for characters of one set so a wide prop (laptop) and a
+    tall prop (magnifier) give the same body size. Export PNGs at 600 dpi.
 11. **Check at print size.** Read the contact sheet's 48 px previews; if the prop that carries the
    meaning (laptop, pencil, magnifier) is not readable at 8 mm, simplify the subject or enlarge.
 12. **Record provenance.** `manifest.json` keeps the prompt, tool version and date; many venues ask

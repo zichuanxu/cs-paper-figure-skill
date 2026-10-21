@@ -107,7 +107,7 @@ def main():
     cv.ax.add_patch(Circle((mx, my), r, fc="white", ec=NEU["ink"], lw=1.1, zorder=4))
     if icon("model"):
         cv.text(mx, my + 6.6, "Frozen model", size=7.2, color=NEU["ink"], weight="bold")
-        cv.image(icon("model"), mx - 2.4, my - 2.0, 11.6)
+        cv.image(icon("model"), mx - 2.2, my - 1.6, 10.2)
         cv.text(mx + 6.0, my - 2.6, r"$\mathcal{M}$", size=10, color=NEU["ink"])
     else:
         cv.text(mx, my + 3.4, "Frozen model", size=7.2, color=NEU["ink"], weight="bold")
@@ -145,7 +145,7 @@ def main():
     card(cv, 98, 2, 78, 32, ORC, "Orchestration", "when work is delegated to a new agent, and how", em="orchestration")
     comp(cv, 100.5, 7.0, 49.0, 14.4, "C5", ORC)
     if icon("subagent"):
-        cv.image(icon("subagent"), 163.0, 16.2, 9.0)
+        cv.image(icon("subagent"), 163.0, 16.2, 10.0, fit="height")
     else:
         cv.icon_robot(163.0, 15.6, 6.4, color=ORC["mark"])
     cv.text(163.0, 8.4, "new agent", size=6.0, color=ORC["ink"], style="italic")
