@@ -14,7 +14,7 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | [`references/visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | The rulebook for *how it should look*: typography, role colour families, glyph vocabulary, composition patterns, connectors, density targets, chart craft, a beat-the-original protocol and an anti-pattern checklist |
 | [`references/craft-study-2026-10.md`](skills/cs-paper-figure/references/craft-study-2026-10.md) | The evidence behind those rules: readings of IdeaScientist and SkillOpt overview figures and measured fonts, colours, strokes and ink density of Gated DeltaNet, Kimi Linear, Titans, NSA, DeepSeek-V3, Hymba, BLT, Nemotron-H and others |
 | [`scripts/paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at printed size: cards, nodes, state matrices, vectors, trapezoid projections, ⊕/⊙ operators, token strips, documents, stacks, gates, icons (frozen / trainable / fixed / evolving), zoom rays, routed arrows, colour-coded equations, plus `density` and `compare` review commands |
-| `scripts/examples/` | Reference figures with their render scripts: the Transformer and MemT-1.0 redesigns and the five restyled examples below |
+| `scripts/examples/` | Reference figures with their render scripts: the Transformer, Harness² and MemT-1.0 redesigns and the five restyled examples below |
 | `references/` (other files) | A 120-paper / 261-figure corpus of 2024–2026 papers, per-lab studies, figure patterns, scientific-integrity contract, export and review checks |
 
 ## Gallery
@@ -40,6 +40,44 @@ A redesign of the most-reproduced architecture figure in deep learning ([arXiv:1
 [PDF](gallery/transformer/transformer_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/transformer/render_fig1.py)
 
 The original figure is reproduced under the paper's notice: "Provided proper attribution is provided, Google hereby grants permission to reproduce the tables and figures in this paper solely for use in journalistic or scholarly works." Source: Vaswani et al., *Attention Is All You Need*, NeurIPS 2017.
+
+### Harness² (Figures 2 and 3)
+
+Redesigns of Figures 2 and 3 of *Harness²: Recursive Agent Harnessing for an Open World* ([arXiv:2610.14224](https://arxiv.org/abs/2610.14224), pages 3 and 5). All components, files, stages and symbols come from Sections 2.1–2.3. The original Figure 2 is one of the skill's own reference figures, so this tests whether the skill can improve on a strong baseline.
+
+#### Figure 2: the eight harness components
+
+| Original (Harness² paper) | Redesigned with this skill |
+| --- | --- |
+| <img src="gallery/harness2/original/harness2_original_fig2.png" width="420"> | <img src="gallery/harness2/harness2_fig2_components.png" width="420"> |
+
+| | Original | Redesign |
+| --- | --- | --- |
+| The agent loop | Call/result arrows only; the order is left implicit | Numbered steps ① context → ② tool call → ③ plugin hook into the tool → ④ result → ⑤ trajectory and deliverable |
+| Frozen vs editable | A glowing circle | Model marked frozen (snowflake); every component drawn as an editable file with its ID, path and activation |
+| Delegation | A dashed arrow into the Orchestration box | A dashed "delegate" route into C5, which spawns a "new agent" |
+| Decoration | Soft blue glow behind the model | Removed; one quiet halo ring |
+
+[PDF](gallery/harness2/harness2_fig2_components.pdf) · [source](skills/cs-paper-figure/scripts/examples/harness2/render_fig2.py)
+
+#### Figure 3: the recursive pipeline
+
+| Original (Harness² paper) | Redesigned with this skill |
+| --- | --- |
+| <img src="gallery/harness2/original/harness2_original_fig3.png" width="420"> | <img src="gallery/harness2/harness2_fig3_pipeline.png" width="420"> |
+
+| | Original | Redesign |
+| --- | --- | --- |
+| Visual style | Mixed raster clipart, handwritten and serif fonts | One vector icon set: the executor, editor and reflector roles in fixed colours (blue, amber, violet); one serif typeface with typeset math |
+| Structure | Two boxes joined by thick arrows | Two bands forming one cycle: the task level runs left to right through numbered stages (Reference → Propose → Probe → Compose), the harnessing level runs right to left, and the library sits under the Propose stage it feeds |
+| Probe | Two rows with no outcome | Each candidate is run under the same model and environment and contrasted with e₀: mitigates / no change / regresses |
+| Compose | "Combine & Finalize" and a gauge | The four decisions from the paper (merge supported, revise conflicts, adopt one, keep current) → successor H′ → e′ |
+| Recursion forms | Not shown | ×k candidates per scope and ×k compositions (parallel); a dashed loop where H′ seeds the next step (sequential) |
+| Library update | "Update" arrow to a cylinder | D_t → reflector (keeps lessons only if supported by contrasts) → R_{t+1} = Update(R_t, H*_t, D_t); entries are a harness + EXPERIENCE.md; fixed vs evolving parts in a legend |
+
+[PDF](gallery/harness2/harness2_fig3_pipeline.pdf) · [source](skills/cs-paper-figure/scripts/examples/harness2/render_fig3.py)
+
+The original Harness² figure crops are © their authors, reproduced under the paper's [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) license.
 
 ### MemT-1.0: the paper's figures vs. this skill's
 
@@ -182,4 +220,4 @@ python scripts/paperkit.py compare original.png out/new.png side_by_side.png
 
 ## License
 
-[MIT](LICENSE), except the original figure crops in `gallery/*/original/`: MemT-1.0 (CC BY-NC-SA 4.0, © its authors) and the Transformer (reproduced under Google's permission for scholarly use, with attribution).
+[MIT](LICENSE), except the original figure crops in `gallery/*/original/`: MemT-1.0 (CC BY-NC-SA 4.0, © its authors), Harness² (CC BY 4.0, © its authors) and the Transformer (reproduced under Google's permission for scholarly use, with attribution).

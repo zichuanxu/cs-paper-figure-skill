@@ -137,7 +137,6 @@ Utilities:
 
 ```bash
 # Reference-quality redesigns built on paperkit (start here and adapt)
-python <skill-root>/scripts/examples/transformer/render_fig1.py --out figures/transformer  # Transformer Fig. 1
 python <skill-root>/scripts/examples/memt/render_fig4.py --out figures/memt   # architecture
 python <skill-root>/scripts/examples/memt/render_fig3.py --out figures/memt   # efficiency chart
 
