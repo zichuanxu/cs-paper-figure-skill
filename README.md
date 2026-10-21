@@ -56,8 +56,8 @@ Redesigns of Figures 2 and 3 of *Harness²: Recursive Agent Harnessing for an Op
 | | Original | Redesign |
 | --- | --- | --- |
 | The agent loop | Call/result arrows only | Context in, tool call through the plugin hook to the tools, result back (a cycle mark, since the loop repeats), then trajectory and deliverable out |
-| Frozen vs editable | A glowing circle | The model is drawn as the paper's robot held in an ice block, the same character as in Figure 3; every component is drawn as an editable file with its ID, path and activation |
-| Icons | Generic clipart | Six icons generated with this skill's Codex helper from one style spec, with the Figure 3 executor as a style reference: the frozen model, the new subagent, and one emblem per group header (context, plugin, tools, orchestration), each in its group colour. `--vector-icons` renders without them |
+| Frozen vs editable | A glowing circle | The model is a layered network sealed in an ice block (a model, not an agent); every component is an editable file with its ID, path and activation |
+| Icons | Generic clipart | One generated icon family from this skill's Codex helper: each component file is the same page with its own badge in its group colour (gear prompt, shield, bookmark, lightning, puzzle piece, wrench, terminal, robot head), plus the trajectory/deliverable page, the frozen model, the new subagent (the robot from Figure 3) and one emblem per group header. `--vector-icons` renders without them |
 | Delegation | A dashed arrow into the Orchestration box | A dashed "delegate" route into C5, which spawns a "new agent" |
 | Decoration | Soft blue glow behind the model | Removed; one quiet halo ring |
 

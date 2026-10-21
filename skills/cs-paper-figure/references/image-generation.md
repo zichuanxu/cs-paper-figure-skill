@@ -43,13 +43,20 @@ vector text; photos and screenshots are always real artefacts, never illustratio
    forbids letters; reject any output that has them.
 6. **Icons never replace labels and never sit on connectors.** Every icon has a text label beside it
    and lives in a header, a box corner or a gutter.
-7. **Extend from a reference.** To add icons to an existing set (or keep two figures of one paper
+7. **Many items of one type → one base, many badges.** When a figure has several items of the same
+   kind (eight harness files, five tools), generate one shared base object (the same document page) and
+   vary only a small badge and the role colour. Readers see one family, not eight styles; the base
+   keeps the noun ("an editable file") and the badge names the item (shield = guardrails).
+8. **Match the icon to what the thing is.** A model is not an agent: draw a frozen model as a network
+   block in ice, and reserve the robot character for agents (model + harness). Check every subject
+   against the paper's definitions before generating.
+9. **Extend from a reference.** To add icons to an existing set (or keep two figures of one paper
    consistent), pass an existing icon with `--ref`; the prompt marks it as a style reference.
-8. **Check at print size.** Read the contact sheet's 48 px previews; if the prop that carries the
+10. **Check at print size.** Read the contact sheet's 48 px previews; if the prop that carries the
    meaning (laptop, pencil, magnifier) is not readable at 8 mm, simplify the subject or enlarge.
-9. **Record provenance.** `manifest.json` keeps the prompt, tool version and date; many venues ask
+11. **Record provenance.** `manifest.json` keeps the prompt, tool version and date; many venues ask
    authors to disclose generated imagery, so mention it in the acknowledgements or caption notes.
-10. **Keep a vector fallback in the script.** Render scripts must still run without the PNGs
+12. **Keep a vector fallback in the script.** Render scripts must still run without the PNGs
     (`--vector-icons`, or a missing file falls back to `cv.icon_*`).
 
 ## 4. Workflow

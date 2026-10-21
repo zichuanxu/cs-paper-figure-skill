@@ -11,8 +11,9 @@ The agent produces a trajectory and a deliverable.
 
     python render_fig2.py --out <dir> [--vector-icons]
 
-Icons in icons/ (model, subagent and four group emblems) were generated with scripts/codex_icons.py,
-using the Fig. 3 executor icon as a style reference; --vector-icons draws paperkit's vector glyphs instead.
+Icons in icons/ were generated with scripts/codex_icons.py (prompts in icons/manifest_fig2*.json): the frozen
+model, the subagent, four group emblems, and one file icon per component (f_c1..f_c8, f_out: the same page with
+a role badge); --vector-icons draws paperkit's vector glyphs instead.
 """
 import argparse
 import os
@@ -65,11 +66,16 @@ def card(cv, x, y, w, h, c, title, sub, em=None):
 def comp(cv, x, y, w, h, cid, c):
     _, name, path, act = COMPONENTS[cid]
     cv.box(x, y, w, h, c, fill="white", lw=0.55, radius=1.3)
-    # folded-corner file glyph = an editable component file
-    cv.doc(x + 1.4, y + h - 6.6, 3.6, 4.6, c, lines=2, fold=1.2, lw=0.45)
-    x0, wc = cv.chip(x + 6.6, y + h - 4.3, cid, c, size=6.0, solid=True, ha="left", pad=0.7)
+    # an editable component file: generated file icon with a role badge, else the vector file glyph
+    png, tx = icon(f"f_{cid.lower()}"), x + 6.6
+    if png:
+        cv.image(png, x + 4.4, y + h - 4.8 if h > 16 else y + h / 2, 6.8)
+        tx = x + 9.0
+    else:
+        cv.doc(x + 1.4, y + h - 6.6, 3.6, 4.6, c, lines=2, fold=1.2, lw=0.45)
+    x0, wc = cv.chip(tx, y + h - 4.3, cid, c, size=6.0, solid=True, ha="left", pad=0.7)
     cv.text(x0 + wc + 1.2, y + h - 4.3, name, size=7.0, color=INK, weight="bold", ha="left")
-    cv.text(x + 6.6, y + 3.1, path, size=5.9, color="#3F4652", ha="left", family=MONO)
+    cv.text(tx, y + 3.1, path, size=5.4, color="#3F4652", ha="left", family=MONO)
     if act:
         cv.chip(x + w - 1.4, y + 3.1, act, c, size=5.9, ha="right", pad=0.7)
 
@@ -118,32 +124,32 @@ def main():
     # middleware + tool interface
     card(cv, 98, 37, 78, 47, MID, "Middleware", "hooks every tool call, outside the model's discretion", em="plugin")
     comp(cv, 99.6, 43.0, 28.4, 26.0, "C8", MID)
-    cv.chip(113.8, 58.6, "inside the tool loop", MID, size=5.9, pad=0.7)
-    cv.text(113.8, 54.6, "tool calls + turn", size=5.9, color=MID["ink"])
-    cv.text(113.8, 52.0, "boundaries", size=5.9, color=MID["ink"])
+    cv.chip(113.8, 57.4, "inside the tool loop", MID, size=5.9, pad=0.7)
+    cv.text(113.8, 53.6, "tool calls + turn", size=5.9, color=MID["ink"])
+    cv.text(113.8, 51.0, "boundaries", size=5.9, color=MID["ink"])
     cv.group(129.5, 39.5, 44.5, 33.0, TOOL, "Tool interface", size=7.0, radius=1.6, lw=0.6, band=True)
     emblem(cv, 129.5, 39.5, 44.5, 33.0, "tools", size=7.0)
     cv.text(131.3, 66.0, "what the model can call, and how", size=5.9, color=MUTED, ha="left", style="italic")
-    comp(cv, 131.0, 52.0, 41.5, 12.2, "C4", TOOL)
-    comp(cv, 131.0, 40.8, 41.5, 10.6, "C7", TOOL)
+    comp(cv, 130.8, 52.0, 42.2, 12.2, "C4", TOOL)
+    comp(cv, 130.8, 40.8, 42.2, 10.6, "C7", TOOL)
     # (2) call -> plugin hook -> (3) tool ; (4) result back
     cv.arrow([(mx + r + 0.4, my + 4.0), (99.6, my + 4.0)], color=MID["mark"], lw=0.9, head=1.3)
     cv.text(92.4, my + 6.2, "tool call", size=6.1, color=MID["ink"])
-    cv.arrow([(128.0, 48.4), (131.0, 48.4)], color=TOOL["mark"], lw=0.8, head=1.1)
-    cv.arrow([(131.0, 43.6), (128.0, 43.6)], color=TOOL["mark"], lw=0.8, head=1.1)
+    cv.arrow([(128.0, 48.4), (130.8, 48.4)], color=TOOL["mark"], lw=0.8, head=1.1)
+    cv.arrow([(130.8, 43.6), (128.0, 43.6)], color=TOOL["mark"], lw=0.8, head=1.1)
     cv.icon_cycle(92.4, my, 2.8, color=MID["mark"])
     cv.arrow([(99.6, my - 4.0), (mx + r + 0.4, my - 4.0)], color=MID["mark"], lw=0.9, head=1.3)
     cv.text(92.4, my - 6.4, "result", size=6.1, color=MID["ink"])
 
     # orchestration
     card(cv, 98, 2, 78, 32, ORC, "Orchestration", "when work is delegated to a new agent, and how", em="orchestration")
-    comp(cv, 100.5, 7.0, 46.0, 14.4, "C5", ORC)
+    comp(cv, 100.5, 7.0, 49.0, 14.4, "C5", ORC)
     if icon("subagent"):
-        cv.image(icon("subagent"), 160.0, 16.2, 9.0)
+        cv.image(icon("subagent"), 163.0, 16.2, 9.0)
     else:
-        cv.icon_robot(160.0, 15.6, 6.4, color=ORC["mark"])
-    cv.text(160.0, 8.4, "new agent", size=6.0, color=ORC["ink"], style="italic")
-    cv.arrow([(148.6, 14.2), (155.6, 14.2)], color=ORC["mark"], lw=0.7, head=1.0)
+        cv.icon_robot(163.0, 15.6, 6.4, color=ORC["mark"])
+    cv.text(163.0, 8.4, "new agent", size=6.0, color=ORC["ink"], style="italic")
+    cv.arrow([(151.4, 14.2), (157.8, 14.2)], color=ORC["mark"], lw=0.7, head=1.0)
     # delegation from the model
     cv.arrow([(mx + 6.0, my - r + 2.0), (92.0, 26.0), (92.0, 14.2), (100.5, 14.2)], color=ORC["mark"],
              lw=0.8, head=1.2, dashed=True, radius=1.4, both=True)
@@ -151,7 +157,10 @@ def main():
 
     # output
     cv.arrow([(mx - 7.0, my - (r * r - 49.0) ** 0.5), (mx - 7.0, 24.0)], color=INK, lw=0.9, head=1.3)
-    cv.doc(mx - 10.2, 11.0, 6.4, 13.0, NEU, lines=4, fold=2.0)
+    if icon("f_out"):
+        cv.image(icon("f_out"), mx - 7.0, 17.4, 9.6)
+    else:
+        cv.doc(mx - 10.2, 11.0, 6.4, 13.0, NEU, lines=4, fold=2.0)
     cv.text(mx - 2.0, 20.4, r"trajectory $\tau$", size=6.7, color=INK, ha="left")
     cv.text(mx - 2.0, 15.4, r"+ deliverable $y$", size=6.7, color=INK, ha="left")
     cv.text(mx, 5.6, r"output of $\mathcal{A}(q;\,\mathcal{M},\mathcal{H})$", size=6.2, color=MUTED)
