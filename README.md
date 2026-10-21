@@ -107,3 +107,7 @@ python scripts/paperkit.py compare original.png out/new.png side_by_side.png
 
 - The MemT figures are an independent redesign for demonstration; this project is not affiliated with the MemT-1.0 authors. See the paper for the original figures and results.
 - The paper corpus in `references/` records design observations with figure anchors; it does not redistribute other papers' artwork.
+
+## License
+
+[MIT](LICENSE)
