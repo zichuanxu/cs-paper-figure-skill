@@ -137,3 +137,7 @@ The five earlier examples, rebuilt with `paperkit` under the rules in [visual-cr
 | `render_experiment.py` | 178 × 124 mm | +6.6 pp paired effect in a hero band with all 24 seed blocks; sequential heatmap; cost curve with a +9.1 pp bracket; 2.2× / 4.2× error-ratio brackets; one SYNTHETIC DATA tag |
 | `render_scene_planning.py` | 178 × 98 mm | One camera across five scene tiles; selected lower detour as hero; swept-collision panel on a segment-parameter axis; linear cost bars with an axis break for the 100C penalty |
 | `render_epoch_context.py` | 178 × 106 mm | Case cards grouped into improved / regressed / unchanged; rule arrows into the C1 rows they cause; C0/C1 as documents with ADD/DEL chips; the next proposal aligned row by row |
+
+## Transformer redesign
+
+`scripts/examples/transformer/render_fig1.py` redesigns Figure 1 of *Attention Is All You Need* (arXiv 1706.03762) at 178 × 104 mm. The three attention kinds are the only saturated elements, and each links to its mask pattern in panel (b): encoder self-attention (blue, full), masked self-attention (violet, causal, with hatched −∞ cells) and cross-attention (teal, target × source). The figure also adds an inset of the multi-head mechanism, aligned token strips that make "shifted right" visible, and the base-model hyperparameters asserted in code. Use it as a template for any encoder–decoder or multi-branch architecture.

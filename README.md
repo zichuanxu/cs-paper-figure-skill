@@ -2,20 +2,44 @@
 
 An agent skill for designing, drawing and critiquing figures for computer-science research papers: method and architecture diagrams, agent/memory pipelines, efficiency and benchmark charts, ablations and worked examples. It is built from a close study of figures in recent papers from Google, Meta, Microsoft, NVIDIA, OpenAI, Anthropic, DeepSeek, Moonshot, Qwen/Alibaba and Tencent, and ships a small drawing library so the agent produces editable, reproducible vector figures rather than generic flowcharts.
 
-![MemT-1.0 architecture, redesigned with this skill](gallery/memt/memt_fig4_architecture.png)
+![The Transformer (Attention Is All You Need, Figure 1), redesigned with this skill](gallery/transformer/transformer_fig1.png)
+
+<sub>The Transformer from *Attention Is All You Need*, Figure 1, redesigned with this skill. See the [comparison with the original](#the-transformer-attention-is-all-you-need-figure-1).</sub>
 
 ## What is inside
 
 | Part | Purpose |
 | --- | --- |
-| [`SKILL.md`](cs-paper-figure/SKILL.md) | The workflow the agent follows: brief → references → structure → visual system → reproducible source → review → delivery |
-| [`references/visual-craft.md`](cs-paper-figure/references/visual-craft.md) | The rulebook for *how it should look*: typography, role colour families, glyph vocabulary, composition patterns, connectors, density targets, chart craft, a beat-the-original protocol and an anti-pattern checklist |
-| [`references/craft-study-2026-10.md`](cs-paper-figure/references/craft-study-2026-10.md) | The evidence behind those rules: readings of IdeaScientist and SkillOpt overview figures and measured fonts, colours, strokes and ink density of Gated DeltaNet, Kimi Linear, Titans, NSA, DeepSeek-V3, Hymba, BLT, Nemotron-H and others |
-| [`scripts/paperkit.py`](cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at printed size: cards, nodes, state matrices, vectors, trapezoid projections, ⊕/⊙ operators, token strips, documents, stacks, gates, icons (frozen / trainable / fixed / evolving), zoom rays, routed arrows, colour-coded equations, plus `density` and `compare` review commands |
-| `scripts/examples/` | Reference figures with their render scripts: the MemT-1.0 redesigns and the five restyled examples below |
+| [`skills/cs-paper-figure/SKILL.md`](skills/cs-paper-figure/SKILL.md) | The workflow the agent follows: brief → references → structure → visual system → reproducible source → review → delivery |
+| [`references/visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | The rulebook for *how it should look*: typography, role colour families, glyph vocabulary, composition patterns, connectors, density targets, chart craft, a beat-the-original protocol and an anti-pattern checklist |
+| [`references/craft-study-2026-10.md`](skills/cs-paper-figure/references/craft-study-2026-10.md) | The evidence behind those rules: readings of IdeaScientist and SkillOpt overview figures and measured fonts, colours, strokes and ink density of Gated DeltaNet, Kimi Linear, Titans, NSA, DeepSeek-V3, Hymba, BLT, Nemotron-H and others |
+| [`scripts/paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at printed size: cards, nodes, state matrices, vectors, trapezoid projections, ⊕/⊙ operators, token strips, documents, stacks, gates, icons (frozen / trainable / fixed / evolving), zoom rays, routed arrows, colour-coded equations, plus `density` and `compare` review commands |
+| `scripts/examples/` | Reference figures with their render scripts: the Transformer and MemT-1.0 redesigns and the five restyled examples below |
 | `references/` (other files) | A 120-paper / 261-figure corpus of 2024–2026 papers, per-lab studies, figure patterns, scientific-integrity contract, export and review checks |
 
 ## Gallery
+
+### The Transformer (*Attention Is All You Need*, Figure 1)
+
+A redesign of the most-reproduced architecture figure in deep learning ([arXiv:1706.03762](https://arxiv.org/abs/1706.03762), page 3). Every component and hyperparameter comes from Section 3 of the paper; the example tokens are illustrative.
+
+| Original (Vaswani et al., 2017) | Redesigned with this skill |
+| --- | --- |
+| <img src="gallery/transformer/original/transformer_original_fig1.png" width="300"> | <img src="gallery/transformer/transformer_fig1.png" width="520"> |
+
+| | Original | Redesign |
+| --- | --- | --- |
+| The three attention kinds | All three drawn in the same orange | Each kind has its own colour (encoder self-attention blue, masked self-attention violet, cross-attention teal), and those are the only saturated colours |
+| Masking and cross-attention | Only the word "Masked" and an unlabeled wire | Panel (b) draws each pattern as a 4×4 mask in the matching colour: full, causal with hatched −∞ cells, and target × source |
+| Encoder → decoder link | A wire into the middle block | A teal path labelled "encoder output → keys, values", entering the cross-attention as K, V, while Q comes from below |
+| "Shifted right" | A text label | Real token strips: `<s> die Katze saß` in, `die Katze saß </s>` out, aligned so the shift is visible |
+| Multi-head attention | A separate figure (Fig. 2) | An inset (projections → h = 8 heads → concat → W^O), plus the two equations and the base-model hyperparameters in panel (c) |
+| Stacks of N = 6 | "N×" beside the box | Offset stacked cards with an "N = 6" chip |
+| Add & Norm | Yellow boxes as heavy as the sublayers | Slim neutral bars, with residual paths in light grey |
+
+[PDF](gallery/transformer/transformer_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/transformer/render_fig1.py)
+
+The original figure is reproduced under the paper's notice: "Provided proper attribution is provided, Google hereby grants permission to reproduce the tables and figures in this paper solely for use in journalistic or scholarly works." Source: Vaswani et al., *Attention Is All You Need*, NeurIPS 2017.
 
 ### MemT-1.0: the paper's figures vs. this skill's
 
@@ -37,7 +61,7 @@ These are redesigns of Figures 3 and 4 of *MemT-1.0: Towards Memory-Native Evolu
 | Colour meaning | Green is both the state and a readout box; "inherited" blue also fills the new projections | Grey = frozen backbone, teal = state, blue = read path, violet = write path, amber = φ; panel header bands share the colour of their path |
 | Text | Subscripts at 3–3.5 pt, slogans inside the figure | Typeset STIX math at ≥ 6 pt; noun-phrase labels; narrative moved to the caption |
 
-[PDF](gallery/memt/memt_fig4_architecture.pdf) · [source](cs-paper-figure/scripts/examples/memt/render_fig4.py)
+[PDF](gallery/memt/memt_fig4_architecture.pdf) · [source](skills/cs-paper-figure/scripts/examples/memt/render_fig4.py)
 
 #### Figure 3: efficiency
 
@@ -52,7 +76,7 @@ These are redesigns of Figures 3 and 4 of *MemT-1.0: Towards Memory-Native Evolu
 | Scaling with context | 128K and 256K split into two panels | One slope chart 128K → 256K with the latency increase per method (+46 % vs +214 % vs +100 %) |
 | 1M context | "Too Large" in a hatched bar tail | "at 1M: too large", as reported, next to the Full Context waffle |
 
-[PDF](gallery/memt/memt_fig3_efficiency.pdf) · [source](cs-paper-figure/scripts/examples/memt/render_fig3.py)
+[PDF](gallery/memt/memt_fig3_efficiency.pdf) · [source](skills/cs-paper-figure/scripts/examples/memt/render_fig3.py)
 
 The original figure crops in `gallery/memt/original/` are © the MemT-1.0 authors, reproduced for comparison under the paper's [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/) license; they are not covered by this repository's MIT license.
 
@@ -72,33 +96,41 @@ Full-size PDFs: [method](gallery/after/method.pdf) · [attention](gallery/after/
 
 ## Installation
 
-Install with `npx` (Node.js 16.7 or later; nothing else is installed globally):
+Choose one of three methods.
+
+**1. Skills CLI (Claude Code, Codex and other agents)**
 
 ```bash
-npx github:zichuanxu/cs-paper-figure-skill
+npx skills@latest add zichuanxu/cs-paper-figure-skill
 ```
 
-This copies the skill to `~/.claude/skills/cs-paper-figure` for Claude Code. Options:
-
-| Flag | Installs to |
-| --- | --- |
-| *(none)* | `~/.claude/skills/cs-paper-figure` (Claude Code, all projects) |
-| `--project` | `./.claude/skills/cs-paper-figure` (Claude Code, current project only) |
-| `--codex` | `~/.codex/skills/cs-paper-figure` (Codex) |
-| `--dir <path>` | `<path>/cs-paper-figure` (any skills directory) |
-| `--force` | Replaces an existing install; the old copy is kept as a timestamped backup |
-
-For example, to install into the current project only:
+This asks which agents to install for. To install for Claude Code and Codex globally without prompts:
 
 ```bash
-npx github:zichuanxu/cs-paper-figure-skill --project
+npx skills@latest add zichuanxu/cs-paper-figure-skill -s cs-paper-figure -a claude-code -a codex -g -y
 ```
 
-Or install manually:
+**2. Claude Code plugin**
+
+```bash
+claude plugin marketplace add zichuanxu/cs-paper-figure-skill
+claude plugin install cs-paper-figure@cs-paper-figure-skill
+```
+
+Inside a Claude Code session, the same steps are `/plugin marketplace add zichuanxu/cs-paper-figure-skill` and `/plugin install cs-paper-figure@cs-paper-figure-skill`. The skill is then available as `/cs-paper-figure:cs-paper-figure`, and Claude also uses it automatically for figure tasks.
+
+**3. Codex plugin**
+
+```bash
+codex plugin marketplace add zichuanxu/cs-paper-figure-skill
+codex plugin add cs-paper-figure@cs-paper-figure-skill
+```
+
+**Manual install**
 
 ```bash
 git clone https://github.com/zichuanxu/cs-paper-figure-skill.git
-cp -R cs-paper-figure-skill/cs-paper-figure ~/.claude/skills/
+cp -R cs-paper-figure-skill/skills/cs-paper-figure ~/.claude/skills/
 ```
 
 Python requirements for the scripts: Python ≥ 3.10, `matplotlib`, `numpy` and `pillow`. Fonts are matched to the manuscript: Times New Roman when installed, otherwise the STIX fonts bundled with matplotlib. `pymupdf` and Poppler are optional, for inspecting source PDFs.
@@ -121,7 +153,8 @@ The skill states a five-second message and a hero element, picks a composition p
 Render the reference figures yourself:
 
 ```bash
-cd cs-paper-figure
+cd skills/cs-paper-figure
+python scripts/examples/transformer/render_fig1.py --out out
 python scripts/examples/memt/render_fig4.py --out out
 python scripts/examples/memt/render_fig3.py --out out
 python scripts/examples/restyled/render_attention.py --out out   # also: method, experiment, scene_planning, epoch_context
@@ -149,4 +182,4 @@ python scripts/paperkit.py compare original.png out/new.png side_by_side.png
 
 ## License
 
-[MIT](LICENSE), except the original MemT-1.0 figure crops in `gallery/memt/original/` (CC BY-NC-SA 4.0, © their authors).
+[MIT](LICENSE), except the original figure crops in `gallery/*/original/`: MemT-1.0 (CC BY-NC-SA 4.0, © its authors) and the Transformer (reproduced under Google's permission for scholarly use, with attribution).

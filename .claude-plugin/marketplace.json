@@ -1,0 +1,13 @@
+{
+  "name": "cs-paper-figure-skill",
+  "description": "Design, draw and critique figures for computer-science research papers.",
+  "owner": { "name": "zichuanxu", "url": "https://github.com/zichuanxu" },
+  "plugins": [
+    {
+      "name": "cs-paper-figure",
+      "source": "./",
+      "description": "Design, draw and critique figures for computer-science research papers.",
+      "category": "productivity"
+    }
+  ]
+}
