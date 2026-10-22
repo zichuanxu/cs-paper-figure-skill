@@ -50,39 +50,36 @@ Each redesign keeps the paper's components, values and notation; only the drawin
 
 Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-research2023-media/pubtools/1048480.pdf)) rebuilt as one series. The paper threads a six-capacity framework (Awareness, Anticipation, Agenda, Arbitration, Action, Adaptation) through nine figures but re-picks each capacity's colour per figure (Agenda is pink, purple and blue); here one palette is defined once (`paperkit.series`) and every figure imports it. Illustrations come from the skill's Codex helper as one cast with no text in the pixels; every word is vector text.
 
-**Fig. 1, proactive vs. reactive.** The left column shows what the user experiences (asked vs. unasked); the right shows how the agent gets there, five stages in their series colours with Adaptation feeding all of them.
+| | Original | Redesign |
+| --- | --- | --- |
+| **Fig. 1**, proactive vs. reactive | <img src="gallery/proactive/original/proactive_original_fig1.png" width="400"> | <img src="gallery/proactive/proactive_overview.png" width="400"> |
+| **Fig. 3**, capabilities to earned autonomy | <img src="gallery/proactive/original/proactive_original_fig3.png" width="400"> | <img src="gallery/proactive/proactive_capabilities.png" width="400"> |
+| **Fig. 4**, the reactivity–proactivity spectrum | <img src="gallery/proactive/original/proactive_original_fig4.png" width="400"> | <img src="gallery/proactive/proactive_spectrum.png" width="400"> |
+| **Fig. 5**, historical foundations | <img src="gallery/proactive/original/proactive_original_fig5.png" width="400"> | <img src="gallery/proactive/proactive_history.png" width="400"> |
+| **Fig. 6**, the six capacities | <img src="gallery/proactive/original/proactive_original_fig6.png" width="400"> | <img src="gallery/proactive/proactive_cycle.png" width="400"> |
+| **Fig. 10**, arbitration | <img src="gallery/proactive/original/proactive_original_fig10.png" width="400"> | <img src="gallery/proactive/proactive_arbitration.png" width="400"> |
 
-<img src="gallery/proactive/proactive_overview.png" width="860">
-
-**Fig. 3, from capabilities to earned autonomy.** The three examples become current → goal state pairs; the low/high grid keeps the paper's lines as speech bubbles with tails on one robot cast; autonomy is granted as the track record earns trust.
-
-<img src="gallery/proactive/proactive_capabilities.png" width="860">
-
-**Fig. 5, historical foundations.** A proportional time axis instead of evenly spaced zig-zag cards; each era is a span with a leader to its card, and its chip names what it handed on, in the colour of the capacity it prepared.
-
-<img src="gallery/proactive/proactive_history.png" width="860">
-
-| Arbitration (Fig. 10) | The six capacities (Fig. 6) |
-| --- | --- |
-| <img src="gallery/proactive/proactive_arbitration.png" width="420"> | <img src="gallery/proactive/proactive_cycle.png" width="420"> |
-
-<img src="gallery/proactive/proactive_spectrum.png" width="860">
+- Fig. 1: the left column shows what the user experiences (asked vs. unasked); the right shows how the agent gets there, five stages in their series colours with Adaptation feeding all of them.
+- Fig. 3: the three examples become current → goal state pairs; the low/high grid keeps the paper's lines as speech bubbles with tails on one robot cast; autonomy is granted as the track record earns trust.
+- Fig. 5: a proportional time axis instead of evenly spaced zig-zag cards; each era is a span with a leader to its card, and its chip names what it handed on, in the colour of the capacity it prepared.
 
 [PDFs](gallery/proactive/) · [source](skills/cs-paper-figure/scripts/examples/proactive/) · [what the studies found](skills/cs-paper-figure/references/figure-series.md)
 
 ### ReHarness, Figure 1 ([arXiv:2610.12668](https://arxiv.org/abs/2610.12668))
 
-<img src="gallery/reharness/reharness_fig1.png" width="860">
+| Original | Redesign |
+| --- | --- |
+| <img src="gallery/reharness/original/reharness_original_fig1.png" width="420"> | <img src="gallery/reharness/reharness_fig1.png" width="420"> |
 
 - Both panels share one column grid and the same sorting example, so the eye compares straight down; the revision layer exists only in (b), in its own row and colour.
 - Edge numbers sit on their edges, the typed-edge legend sits beside each panel, and the one unavoidable crossing is drawn as a bridge.
 - The outcome that changes, τ<sub>t+1</sub> going from wrong to right, is marked by the card border.
 
-[PDF](gallery/reharness/reharness_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/reharness/render_fig1.py) · compare with Fig. 1 of the paper
+[PDF](gallery/reharness/reharness_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/reharness/render_fig1.py)
 
 ### PaperBanana, Figure 5 ([arXiv:2601.23265](https://arxiv.org/abs/2601.23265))
 
-| Original (PaperBanana paper) | Redesigned with this skill |
+| Original | Redesign |
 | --- | --- |
 | <img src="gallery/paperbanana/original/paperbanana_original_fig5.png" width="420"> | <img src="gallery/paperbanana/paperbanana_fig5.png" width="420"> |
 
@@ -162,4 +159,4 @@ python scripts/codex_icons.py generate icons.json --out out/icons [--ref existin
 
 ## License
 
-[MIT](LICENSE), except the original figure crops in `gallery/*/original/`: MemT-1.0 (CC BY-NC-SA 4.0), Harness² and PaperBanana (CC BY 4.0), each © its authors, and the Transformer (reproduced under Google's permission for scholarly use with attribution). All redesigns are independent demonstrations, not affiliated with the papers' authors; originals that are not openly licensed are linked, not reproduced.
+[MIT](LICENSE), except the original figure crops in `gallery/*/original/`, each © its authors: MemT-1.0 (CC BY-NC-SA 4.0), Harness² and PaperBanana (CC BY 4.0), the Transformer (reproduced under Google's permission for scholarly use with attribution), and *Proactive AI for Superintelligent Agents* and ReHarness (reproduced for commentary and comparison; removed on request). All redesigns are independent demonstrations, not affiliated with the papers' authors.

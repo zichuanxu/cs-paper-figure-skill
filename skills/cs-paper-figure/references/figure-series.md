@@ -100,5 +100,4 @@ experiences beside how the agent works), `render_capabilities.py` (Fig. 3: low/h
 robot cast and vector dialogue), `render_history.py` (Fig. 5: proportional timeline, era spans on mirrored
 lanes, legacy chips in the capacity colours), `render_arbitration.py`, `render_cycle.py`, `render_spectrum.py`.
 `scripts/examples/reharness/render_fig1.py` (diff panels, typed-edge legend, bridged crossing) and
-`scripts/examples/paperbanana/render_fig5.py` (dumbbell centred on human parity). The original figures are not redistributed; compare against the
-paper's Figs. 4, 6 and 10.
+`scripts/examples/paperbanana/render_fig5.py` (dumbbell centred on human parity). The README gallery shows each beside the paper's original.
