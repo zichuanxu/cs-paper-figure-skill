@@ -104,8 +104,26 @@ def use_fonts(family="serif"):
     return fam[0]
 
 
-# PNG export resolution; raster icons are pre-resampled to it so they stay crisp
+# Export resolution for PNG and for images inside PDF/SVG; raster icons are pre-resampled to it so they stay crisp
 RASTER_DPI = 600
+MIN_SOURCE_DPI = 300  # below this a placed illustration is upsampled and prints soft
+
+
+def pdf_images(pdf):
+    """(width, height) in pixels of every image XObject in a PDF (soft masks included)."""
+    import re
+    b = _P(pdf).read_bytes()
+    return [(int(w), int(h)) for w, h in re.findall(rb"/Subtype /Image[^>]*?/Width (\d+)[^>]*?/Height (\d+)", b)]
+
+
+def check_embedded(pdf, rasters):
+    """Fail the export if a placed raster is missing from the PDF at its full pixel size, i.e. it was
+    resampled (to the figure dpi) or merged into a composite on the way out."""
+    have = set(pdf_images(pdf))
+    bad = [f"{os.path.basename(p)} {w}x{h}" for p, w, h in rasters if (w, h) not in have]
+    if bad:
+        raise RuntimeError(f"{pdf}: images not embedded at full resolution: {bad}; embedded sizes "
+                           f"{sorted(have)[:8]}")
 
 
 # ----------------------------------------------------------------- canvas ---
@@ -121,6 +139,7 @@ class Canvas:
         self.ax.axis("off")
         self.nodes = {}
         self.chips = []  # (x, y, w, h, label, region) of every chip, for the overlap audit
+        self.rasters = []  # (path, px wide, px high) of every placed image, checked against the PDF on save
         self._r = None
 
     def _renderer(self):
@@ -585,6 +604,10 @@ class Canvas:
             fit = "height" if im.height > im.width else "width"
         tw = max(8, round((w * im.width / im.height if fit == "height" else w) * ppm))
         th = max(8, round(tw * im.height / im.width))
+        src_dpi = im.width / (tw / ppm / 25.4)
+        if src_dpi < MIN_SOURCE_DPI:  # upsampling invents no detail: the print looks soft whatever the export does
+            print(f"[paperkit] warning: {os.path.basename(path)} has {src_dpi:.0f} source px per inch at "
+                  f"{tw / ppm:.1f} mm (< {MIN_SOURCE_DPI}); generate it larger or print it smaller")
         im = im.resize((tw, th), Image.LANCZOS).filter(ImageFilter.UnsharpMask(radius=1.0, percent=60, threshold=2))
         a = np.asarray(im).astype(float) / 255.0
         alpha = np.ones(a.shape[:2])
@@ -605,7 +628,9 @@ class Canvas:
         # snap to the output pixel grid so the export is a 1:1 copy of the resampled icon
         x0, y0 = round((cx - tw / ppm / 2) * ppm) / ppm, round((cy - th / ppm / 2) * ppm) / ppm
         w, h = tw / ppm, th / ppm
-        self.ax.imshow(np.dstack([a, alpha]), extent=(x0, x0 + w, y0, y0 + h), zorder=z, interpolation="nearest")
+        # "none" embeds these pixels unchanged in PDF/SVG; any other mode resamples them to the figure dpi (100)
+        self.ax.imshow(np.dstack([a, alpha]), extent=(x0, x0 + w, y0, y0 + h), zorder=z, interpolation="none")
+        self.rasters.append((path, tw, th))
         self.ax.set_xlim(0, self.w)
         self.ax.set_ylim(0, self.h)
         return h
@@ -756,10 +781,15 @@ class Canvas:
         out = []
         for f in formats:
             p = f"{stem}.{f}"
-            kw = {"dpi": png_dpi or RASTER_DPI} if f == "png" else {}
+            # vector formats rasterise images at the savefig dpi (default: the figure's 100 dpi) and merge
+            # neighbouring images into one composite at that dpi; both turn a 600 dpi icon into a few pixels
+            kw = {"dpi": (png_dpi or RASTER_DPI) if f == "png" else RASTER_DPI}
             if f == "pdf":
                 kw["metadata"] = {"Creator": "paperkit", "CreationDate": None}
-            self.fig.savefig(p, **kw)
+            with matplotlib.rc_context({"image.composite_image": False}):
+                self.fig.savefig(p, **kw)
+            if f == "pdf":
+                check_embedded(p, self.rasters)
             out.append(p)
         return out
 
@@ -962,6 +992,20 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
     cv.flow_chips(["Update knowledge", "Refine preferences", "Calibrate thresholds"], 84, 116, 48, "teal", size=5.6)
     assert not cv.overlaps(), cv.overlaps()
     d = tempfile.mkdtemp()
-    outs = cv.save(os.path.join(d, "smoke"))
+    from PIL import Image, ImageDraw
+    src = Image.new("RGB", (512, 512), "white")
+    ImageDraw.Draw(src).ellipse((60, 60, 452, 452), fill="#5A8BCB", outline="#333333", width=12)
+    src.save(os.path.join(d, "icon.png"))
+    cv.image(os.path.join(d, "icon.png"), 110, 10, 6)  # two neighbours: matplotlib would merge them into one composite
+    cv.image(os.path.join(d, "icon.png"), 110, 4, 5, fit="cover", h=4, radius=0.8)
+    outs = cv.save(os.path.join(d, "smoke"))  # raises if either icon left the PDF resampled
     assert all(os.path.getsize(p) > 1000 for p in outs), outs
+    for im in cv.ax.get_images():  # the old placement mode plus matplotlib's export defaults: 100 dpi, composited
+        im.set_interpolation("nearest")
+    cv.fig.savefig(os.path.join(d, "plain.pdf"))
+    try:
+        check_embedded(os.path.join(d, "plain.pdf"), cv.rasters)
+        raise AssertionError("check_embedded missed a resampled PDF")
+    except RuntimeError:
+        pass
     print("ok", outs)

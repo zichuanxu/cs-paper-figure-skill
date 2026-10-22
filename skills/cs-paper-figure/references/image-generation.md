@@ -2,7 +2,7 @@
 
 Optional stage. The skill never depends on it: `paperkit`'s vector icons (`icon_robot`, `icon_snow`, ...)
 are the fallback and are always acceptable. Use generated art only when it does a job the vector
-glyphs cannot do as well, and only if `python scripts/codex_icons.py check` exits 0.
+glyphs cannot do as well, and only if `python scripts/codex_images.py check` exits 0.
 
 ## 1. What top-lab figures actually do (study of 11 overview figures, 2026-10)
 
@@ -64,13 +64,23 @@ vector text; photos and screenshots are always real artefacts, never illustratio
    authors to disclose generated imagery, so mention it in the acknowledgements or caption notes.
 13. **Keep a vector fallback in the script.** Render scripts must still run without the PNGs
     (`--vector-icons`, or a missing file falls back to `cv.icon_*`).
+14. **Keep every generated pixel to the PDF.** Generated images used to reach the PDF at 100 dpi (a 600 dpi
+    icon became 34 x 37 px, a vignette 68 x 88 px) because matplotlib resamples images in vector exports to the
+    figure dpi and merges neighbouring images into one composite at that dpi. `cv.image` now places pixels
+    with `interpolation="none"`, `cv.save` exports PDF/SVG at 600 dpi with compositing off, and the save fails
+    if a placed image is missing from the PDF at its full size (`paperkit.check_embedded`). In your own
+    matplotlib code, use `interpolation="none"` and `savefig(..., dpi=600)` for every image.
+15. **Do not throw source pixels away.** Keep the generator's full output (1254 px squares, 1536 x 1024
+    landscapes); `tidy` no longer shrinks scenes and vignettes. `cv.image` warns when a placement has fewer
+    than 300 source px per inch, which means upsampling and a soft print: generate at the card's aspect, crop
+    less (`zoom`), or print it smaller. Ask for crisp outlines and flat cel shading, not soft focus or depth of field.
 
 ## 4. Workflow
 
 ```bash
-python scripts/codex_icons.py check                       # codex installed + logged in?
-python scripts/codex_icons.py prompt spec.json            # read the prompt before spending a run
-python scripts/codex_icons.py generate spec.json --out figs/icons [--ref figs/icons/old.png]
+python scripts/codex_images.py check                       # codex installed + logged in?
+python scripts/codex_images.py prompt spec.json            # read the prompt before spending a run
+python scripts/codex_images.py generate spec.json --out figs/icons [--ref figs/icons/old.png]
 # review figs/icons/_sheet.png, regenerate single icons with a narrower spec if one drifts
 ```
 
@@ -90,7 +100,8 @@ need it and pass a reference image.
 
 The helper runs `codex exec` in a throw-away directory with `-s workspace-write`, asks for Codex's
 built-in `image_gen` tool (no API key needed with a ChatGPT login), then flattens each PNG onto white,
-trims, pads to a square and resizes to 512 px. A Codex run for 3–6 icons takes a few minutes.
+trims, pads to a square and resizes icons to 512 px (6-9 mm at 600 dpi needs at most 213 px);
+scenes and vignettes are only flattened and keep full resolution. A Codex run for 3–6 icons takes a few minutes.
 
 Place icons with `cv.image(path, cx, cy, w)` (knocks out the white, so icons sit on tinted bands).
 Pattern used in `examples/harness2/render_fig3.py`:

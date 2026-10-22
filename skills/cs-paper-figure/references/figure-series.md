@@ -75,7 +75,7 @@ numbers, crossing curves, legends detached from their panels.
 4. **Decision cascades as gate stacks**: each test owns its failure exit inside its row; pass exits run
    straight to one AND bar, so no line crosses another.
 5. **Degrees as lightness** (`cv.spectrum`): one hue ramp for the axis and for every chip that sits on it.
-6. **Illustrated scenes** (via `codex_icons.py`, style `"scene"`): one cast described once and passed as a
+6. **Illustrated scenes** (via `codex_images.py`, style `"scene"`): one cast described once and passed as a
    reference; no text inside the pixels (blank screens, ticks and bars only); all dialogue as vector
    `cv.bubble()` with the tail on the speaker; scenes framed in light cards of equal size.
 7. **Ghost what is out of scope** (grey fill, grey text) rather than inventing another colour.
@@ -114,7 +114,7 @@ Rules for this register (14-18 continue the list above):
 
 14. **Inventory before redesign.** Write down the original's strengths and faults; carry every strength over.
     A redesign may change the layout only where the new one tells the story better, not to look cleaner.
-15. **One vignette per unit** (`codex_icons.py` style `"vignette"`, full-bleed, a shared cast reference via
+15. **One vignette per unit** (`codex_images.py` style `"vignette"`, full-bleed, a shared cast reference via
     `--ref`), placed with `cv.image(path, cx, cy, w, fit="cover", h=h, radius=r)` so it fills its card.
 16. **Solid headers, tinted bodies**: `cv.tab(..., solid=True)` or a filled band in the series colour's `mark`
     with white bold text; body fill in its `fill`; nothing important in pale outline only.

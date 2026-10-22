@@ -11,7 +11,7 @@ The agent produces a trajectory and a deliverable.
 
     python render_fig2.py --out <dir> [--vector-icons]
 
-Icons in icons/ were generated with scripts/codex_icons.py (prompts in icons/manifest_fig2*.json): the frozen
+Icons in icons/ were generated with scripts/codex_images.py (prompts in icons/manifest_fig2*.json): the frozen
 model, the subagent, four group emblems, and one file icon per component (f_c1..f_c8, f_out: the same page with
 a role badge); --vector-icons draws paperkit's vector glyphs instead.
 """

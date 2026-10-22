@@ -14,7 +14,7 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | How it should look: typography, role colours, glyph vocabulary, composition, connectors, density, charts, anti-patterns |
 | [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) plus `density`, `compare` and `parity` checks (a redesign must not come out emptier, greyer or less illustrated than its original) |
 | [`figure-series.md`](skills/cs-paper-figure/references/figure-series.md) | Figure series for surveys and frameworks: one taxonomy palette, chapter frames, running examples, gate stacks, spectra, illustrated scenes with vector dialogue |
-| [`codex_icons.py`](skills/cs-paper-figure/scripts/codex_icons.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icon sets generated with Codex CLI |
+| [`codex_images.py`](skills/cs-paper-figure/scripts/codex_images.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icons, scenes and vignettes generated with Codex CLI, embedded at full resolution |
 | `scripts/examples/`, `references/` | The gallery's render scripts; a 120-paper figure corpus, per-lab studies and review checklists |
 
 ## Gallery
@@ -139,11 +139,11 @@ python scripts/examples/harness2/render_fig2.py --out out
 python scripts/paperkit.py compare original.png out/new.png side_by_side.png
 ```
 
-**Generated icons (optional).** With [Codex CLI](https://github.com/openai/codex) installed and logged in, `scripts/codex_icons.py` generates a matched icon set from one JSON spec and records the prompt for disclosure. Without Codex the skill uses its vector icons.
+**Generated images (optional).** With [Codex CLI](https://github.com/openai/codex) installed and logged in, `scripts/codex_images.py` generates a matched set of icons, scenes or vignettes from one JSON spec and records the prompt for disclosure. Without Codex the skill uses its vector icons.
 
 ```bash
-python scripts/codex_icons.py check
-python scripts/codex_icons.py generate icons.json --out out/icons [--ref existing_icon.png]
+python scripts/codex_images.py check
+python scripts/codex_images.py generate icons.json --out out/icons [--ref existing_icon.png]
 ```
 
 ## Design rules in brief

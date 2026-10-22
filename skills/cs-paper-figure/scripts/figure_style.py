@@ -173,11 +173,13 @@ def export_figure(fig, output_stem, *, source_files=(), metadata=None, dpi=300):
            for p in paths.values() for s in sources):
         raise ValueError("An output would overwrite an input source")
     with mpl.rc_context({"pdf.fonttype": 42, "svg.fonttype": "none",
-                         "svg.hashsalt": "cs-paper-figure", "savefig.bbox": None}):
-        fig.savefig(paths["pdf"], facecolor="white", transparent=False,
+                         "svg.hashsalt": "cs-paper-figure", "savefig.bbox": None,
+                         "image.composite_image": False}):
+        # dpi also sets the resolution of heatmaps and images inside the PDF/SVG (matplotlib's default: 100)
+        fig.savefig(paths["pdf"], dpi=dpi, facecolor="white", transparent=False,
                     metadata={"Creator": "cs-paper-figure", "CreationDate": None,
                               "ModDate": None})
-        fig.savefig(paths["svg"], facecolor="white", transparent=False,
+        fig.savefig(paths["svg"], dpi=dpi, facecolor="white", transparent=False,
                     metadata={"Creator": "cs-paper-figure", "Date": None})
         fig.savefig(paths["png"], dpi=dpi, facecolor="white", transparent=False,
                     metadata={"Software": "cs-paper-figure"})

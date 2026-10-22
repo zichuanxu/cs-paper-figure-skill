@@ -1,14 +1,15 @@
-"""Generate a matched raster icon set for a paper figure with Codex CLI's built-in image tool.
+"""Generate matched raster images for a paper figure (icons, scenes, full-bleed vignettes) with Codex CLI's
+built-in image tool.
 
 Optional: everything in the skill works without it (paperkit's vector icons are the fallback).
 Use it only for illustrative nouns (agent roles, environments, objects), never for labels or data.
 
-    python codex_icons.py check                          # exit 0 if codex is installed and logged in
-    python codex_icons.py prompt SPEC.json [--ref a.png] # print the prompt only
-    python codex_icons.py generate SPEC.json --out DIR [--ref a.png ...] [--model M] [--timeout 1200]
-    python codex_icons.py tidy DIR                        # re-run post-processing on DIR/*.png
-    python codex_icons.py sheet DIR                       # DIR/_sheet.png contact sheet for review
-    python codex_icons.py selftest
+    python codex_images.py check                          # exit 0 if codex is installed and logged in
+    python codex_images.py prompt SPEC.json [--ref a.png] # print the prompt only
+    python codex_images.py generate SPEC.json --out DIR [--ref a.png ...] [--model M] [--timeout 1200]
+    python codex_images.py tidy DIR                        # re-run post-processing on DIR/*.png
+    python codex_images.py sheet DIR                       # DIR/_sheet.png contact sheet for review
+    python codex_images.py selftest
 
 SPEC.json:
     {"set": "harness2-fig3", "style": "flat-pastel",
@@ -16,8 +17,9 @@ SPEC.json:
      "icons": [{"name": "executor", "subject": "the robot typing on a laptop", "accent": "#5A8BCB"}, ...]}
 
 `character` is optional; give it when the icons are the same actor in different roles. Pass an
-existing icon with --ref to extend a set so new icons match it. Outputs are DIR/<name>.png (512 px,
-square, white background, trimmed) plus DIR/manifest.json recording the prompt for disclosure.
+existing icon with --ref to extend a set so new icons match it. Outputs are DIR/<name>.png (icons: 512 px,
+square, white background, trimmed; "scene" and "vignette": the generator's full resolution, untouched) plus
+DIR/manifest.json recording the prompt for disclosure.
 """
 import argparse
 import datetime
@@ -125,14 +127,13 @@ def build_prompt(spec, refs=()):
 
 def tidy(path, size=512, margin=0.06, scene=False):
     """Flatten onto white, trim to the ink, pad to a square with a small margin, resize.
-    Scenes keep their aspect ratio and are only flattened and resized to `size` * 2 px wide."""
+    Scenes and vignettes are only flattened: they keep the generator's full resolution (often 1254 or 1536 px),
+    because a full-bleed card can be 60 mm wide and every pixel thrown away here is upsampled back later."""
     from PIL import Image
     im = Image.open(path).convert("RGBA")
     bg = Image.new("RGBA", im.size, "white")
     im = Image.alpha_composite(bg, im).convert("RGB")
     if scene:
-        w = size * 2
-        im = im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
         im.save(path)
         return im
     gray = im.convert("L").point(lambda v: 255 if v < 240 else 0)
@@ -168,11 +169,11 @@ def sheet(out_dir, names=None):
 def generate(spec_path, out_dir, refs=(), model=None, timeout=1200):
     ok, msg = check()
     if not ok:
-        sys.exit(f"[codex_icons] {msg}")
+        sys.exit(f"[codex_images] {msg}")
     spec = load_spec(spec_path)
     prompt = build_prompt(spec, refs)
     os.makedirs(out_dir, exist_ok=True)
-    work = tempfile.mkdtemp(prefix="codex_icons_")
+    work = tempfile.mkdtemp(prefix="codex_images_")
     cmd = ["codex", "exec", "--skip-git-repo-check", "-s", "workspace-write", "-C", work]
     if model:
         cmd += ["-m", model]
@@ -185,7 +186,7 @@ def generate(spec_path, out_dir, refs=(), model=None, timeout=1200):
     names = [i["name"] for i in spec["icons"]]
     missing = [n for n in names if not os.path.exists(os.path.join(work, n + ".png"))]
     if r.returncode != 0 or missing:
-        sys.exit(f"[codex_icons] codex exit {r.returncode}, missing {missing}; see {log}. "
+        sys.exit(f"[codex_images] codex exit {r.returncode}, missing {missing}; see {log}. "
                  "Fall back to paperkit vector icons.")
     for n in names:
         dst = os.path.join(out_dir, n + ".png")
@@ -197,7 +198,7 @@ def generate(spec_path, out_dir, refs=(), model=None, timeout=1200):
                    "date": datetime.date.today().isoformat(), "refs": [os.path.basename(x) for x in refs],
                    "prompt": prompt, "icons": spec["icons"]}, f, indent=2)
     shutil.rmtree(work, ignore_errors=True)
-    print(f"[codex_icons] wrote {len(names)} icons to {out_dir}; review {sheet(out_dir, names)}")
+    print(f"[codex_images] wrote {len(names)} icons to {out_dir}; review {sheet(out_dir, names)}")
 
 
 def selftest():

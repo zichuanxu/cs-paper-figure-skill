@@ -7,7 +7,7 @@ provides (reactive response, mixed-initiative assistance, self-initiated agency)
 Kept from the original: full-colour scenes that fill their panels, one cast, a graded axis, and solid chips
 that darken along it. Fixed: the dialogue, work plan and progress update were text baked into the pixels
 (unsearchable, uneditable, blurry at print size); here they are vector bubbles and cards over text-free
-vignettes (vignettes/, generated with scripts/codex_icons.py, style "vignette", cast reference cast.jpg).
+vignettes (vignettes/, generated with scripts/codex_images.py, style "vignette", cast reference cast.jpg).
 
     python render_spectrum.py --out <dir>
 """

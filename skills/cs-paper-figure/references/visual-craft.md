@@ -89,7 +89,7 @@ pure black and never the stroke colour.
 | Decision / validation gate | `diamond()` with accept/reject coloured exits | SkillOpt: mustard gate, green accept, red dashed reject |
 | Frozen / trainable / fixed / evolving | `icon_snow`, `icon_flame`, `icon_lock`, `icon_cycle` | One icon per role, top-right of the node, 2.4 mm |
 | Agent / model | `icon_robot`, distinct colour per role | IdeaScientist: one coloured robot head per agent + a role glyph |
-| Illustrated agent roles (optional) | `image()` with a *matched* generated set (one character, role accent colours, white background knocked out) | Harness² Figs. 2–3: Codex-generated sets via `scripts/codex_icons.py` ([image-generation.md](image-generation.md)); keep `icon_robot` as the fallback; never use generated images for labels or data |
+| Illustrated agent roles (optional) | `image()` with a *matched* generated set (one character, role accent colours, white background knocked out) | Harness² Figs. 2–3: Codex-generated sets via `scripts/codex_images.py` ([image-generation.md](image-generation.md)); keep `icon_robot` as the fallback; never use generated images for labels or data |
 | Edits / operations on text | `chip()` pills: ADD / DEL / REP | |
 | Stage of a framework, chained across figures | `chapter()` with `prev` / `nxt` tabs; `series()` palette | Proactive AI Figs. 7–12 (but keep the hue fixed per stage) |
 | Decision cascade | gate stack: `badge()` per test, failure chip inside the row, pass lines into one AND bar | Proactive AI Fig. 10 |
