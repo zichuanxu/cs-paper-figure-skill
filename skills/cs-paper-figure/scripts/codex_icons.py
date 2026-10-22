@@ -39,6 +39,9 @@ STYLES = {
     # small objects or environments with gentle depth (data stores, devices, scenes)
     "soft-3d": ("soft isometric 3D object illustration, matte clay-like material, gentle ambient occlusion, "
                 "pastel colours led by the accent colour, no hard shadows on the ground, no reflections"),
+    # small narrative scenes (a person and an agent doing something), the survey/position-paper register
+    "scene": ("flat vector editorial illustration of a small scene, clean dark-grey outlines, soft pastel palette, "
+              "simple uncluttered background with a few props, gentle flat shading only, no gradients, no photo realism"),
 }
 RULES = ("Pure white (#FFFFFF) background, square 1024x1024 canvas, the subject centred with about 12% empty "
          "margin on every side. It will be printed 6-9 mm wide, so use bold outlines (about 2.5% of the canvas "
@@ -72,15 +75,26 @@ def load_spec(path):
     return spec
 
 
+SCENE_RULES = ("Landscape 1536x1024 canvas on a plain white or very light background. Absolutely no readable text: "
+               "screens, documents, signs and tablets show only blank bars, simple shapes, ticks or charts, because every "
+               "label in the figure is added later as vector text. No logos, watermarks, borders, frames or speech "
+               "bubbles. Leave a calm empty area near the top of the scene where a speech bubble can be overlaid.")
+
+
 def build_prompt(spec, refs=()):
     style = STYLES[spec.get("style", "flat-pastel")]
     n = len(spec["icons"])
-    lines = [f"Use your built-in image generation tool to create {n} separate square PNG icons that form ONE "
-             f"consistent set for a figure in a scientific paper. Make one image_gen call per icon.",
-             f"Style for every icon: {style}.", RULES]
+    if spec.get("style") == "scene":
+        lines = [f"Use your built-in image generation tool to create {n} separate landscape PNG illustrations that form "
+                 f"ONE consistent set of scenes for a figure in a scientific paper. Make one image_gen call per scene.",
+                 f"Style for every scene: {style}.", SCENE_RULES]
+    else:
+        lines = [f"Use your built-in image generation tool to create {n} separate square PNG icons that form ONE "
+                 f"consistent set for a figure in a scientific paper. Make one image_gen call per icon.",
+                 f"Style for every icon: {style}.", RULES]
     if spec.get("character"):
-        lines.append(f"Every icon shows the exact same character: {spec['character']}. Keep its proportions, "
-                     "face, line weight and colours identical across the set; only pose, props and accent change.")
+        lines.append(f"Every image shows the exact same character(s): {spec['character']}. Keep proportions, "
+                     "faces, clothing, line weight and colours identical across the set; only pose, props and setting change.")
     for k, ref in enumerate(refs, 1):
         lines.append(f"Image {k} ({os.path.basename(ref)}) is a STYLE REFERENCE from the same figure set, not an "
                      "edit target: match its character design, outline weight, fill treatment and margin.")
@@ -93,12 +107,18 @@ def build_prompt(spec, refs=()):
     return "\n".join(lines)
 
 
-def tidy(path, size=512, margin=0.06):
-    """Flatten onto white, trim to the ink, pad to a square with a small margin, resize."""
+def tidy(path, size=512, margin=0.06, scene=False):
+    """Flatten onto white, trim to the ink, pad to a square with a small margin, resize.
+    Scenes keep their aspect ratio and are only flattened and resized to `size` * 2 px wide."""
     from PIL import Image
     im = Image.open(path).convert("RGBA")
     bg = Image.new("RGBA", im.size, "white")
     im = Image.alpha_composite(bg, im).convert("RGB")
+    if scene:
+        w = size * 2
+        im = im.resize((w, round(im.height * w / im.width)), Image.LANCZOS)
+        im.save(path)
+        return im
     gray = im.convert("L").point(lambda v: 255 if v < 240 else 0)
     box = gray.getbbox()
     if box:
@@ -154,7 +174,7 @@ def generate(spec_path, out_dir, refs=(), model=None, timeout=1200):
     for n in names:
         dst = os.path.join(out_dir, n + ".png")
         shutil.copy(os.path.join(work, n + ".png"), dst)
-        tidy(dst)
+        tidy(dst, scene=spec.get("style") == "scene")
     ver = subprocess.run(["codex", "--version"], capture_output=True, text=True).stdout.strip()
     with open(os.path.join(out_dir, "manifest.json"), "w") as f:
         json.dump({"set": spec.get("set"), "generator": f"{ver} built-in image_gen",

@@ -1,0 +1,16 @@
+{
+  "set": "proactive-fig1",
+  "generator": "codex-cli 0.163.0 built-in image_gen",
+  "date": "2026-10-22",
+  "refs": [
+    "mixed.png"
+  ],
+  "prompt": "Use your built-in image generation tool to create 1 separate landscape PNG illustrations that form ONE consistent set of scenes for a figure in a scientific paper. Make one image_gen call per scene.\nStyle for every scene: flat vector editorial illustration of a small scene, clean dark-grey outlines, soft pastel palette, simple uncluttered background with a few props, gentle flat shading only, no gradients, no photo realism.\nLandscape 1536x1024 canvas on a plain white or very light background. Absolutely no readable text: screens, documents, signs and tablets show only blank bars, simple shapes, ticks or charts, because every label in the figure is added later as vector text. No logos, watermarks, borders, frames or speech bubbles. Leave a calm empty area near the top of the scene where a speech bubble can be overlaid.\nEvery image shows the exact same character(s): (a) a woman in her thirties with shoulder-length dark brown hair, a mustard-yellow sweater and dark trousers; (b) the friendly white robot from the reference image (rounded head, dark face screen with two round eyes, small antenna, blue accents). Keep proportions, faces, clothing, line weight and colours identical across the set; only pose, props and setting change.\nImage 1 (mixed.png) is a STYLE REFERENCE from the same figure set, not an edit target: match its character design, outline weight, fill treatment and margin.\nIcons:\n(1) reactive_ask.png: the woman sits at her office desk with a laptop, turned toward the robot and asking it a question with a slightly worried look, hand raised; the robot stands idle beside the desk holding a blank tablet, waiting to be told what to do, accent colour #7C8C99.\nCopy each final image into the current directory with exactly those file names, overwrite nothing else, do not edit the images afterwards, then list the directory.",
+  "icons": [
+    {
+      "name": "reactive_ask",
+      "subject": "the woman sits at her office desk with a laptop, turned toward the robot and asking it a question with a slightly worried look, hand raised; the robot stands idle beside the desk holding a blank tablet, waiting to be told what to do",
+      "accent": "#7C8C99"
+    }
+  ]
+}

@@ -59,6 +59,19 @@ LINE = "#4A4F57"     # default connector ink
 HAIR = "#C9CED6"     # hairlines / grid
 
 
+# Hue order for taxonomy series: maximally distinct neighbours, colour-blind-safe enough with labels.
+SERIES_ORDER = ("memory", "blue", "purple", "amber", "coral", "teal", "rose", "frozen")
+
+
+def series(names, roles=None):
+    """One colour family per taxonomy item, defined once and imported by every figure of the paper,
+    so 'Agenda' is the same hue in the overview, the cycle, its chapter figure and the evaluation figure.
+    Surveys that re-pick colours per figure (a common failure) make the reader relearn the legend."""
+    roles = roles or SERIES_ORDER
+    assert len(names) <= len(roles), "more items than distinct hues; group items or add roles"
+    return {n: ROLE[r] for n, r in zip(names, roles)}
+
+
 def role(r):
     return ROLE[r] if isinstance(r, str) else r
 
@@ -81,7 +94,9 @@ def use_fonts(family="serif"):
         matplotlib.rcParams.update({"font.family": "serif", "font.serif": fam,
                                     "mathtext.fontset": "stix"})
     else:
-        fam = [n for n in ("Helvetica", "Arial", "Liberation Sans", "DejaVu Sans") if n in names]
+        # only families that ship a real bold weight (macOS Helvetica.ttc is regular-only, so bold silently fails)
+        bold = {f.name for f in fm.fontManager.ttflist if f.weight in (600, 700, "bold", "semibold")}
+        fam = [n for n in ("Helvetica", "Arial", "Liberation Sans", "DejaVu Sans") if n in names and n in bold]
         matplotlib.rcParams.update({"font.family": "sans-serif", "font.sans-serif": fam,
                                     "mathtext.fontset": "stixsans"})
     matplotlib.rcParams.update({"pdf.fonttype": 42, "ps.fonttype": 42, "svg.fonttype": "none",
@@ -213,6 +228,93 @@ class Canvas:
                           lw=0.5, ec=c["stroke"], fc=c["mark"] if solid else c["soft"], zorder=z))
         self.text(x0 + w / 2, y, s, size=size, color="white" if solid else c["ink"], z=z + 1)
         return x0, w
+
+    # ---- figure-series and narrative devices ----------------------------------
+    def badge(self, x, y, k, r="neutral", d=3.0, z=12, size=None):
+        """Numbered disc for steps or sub-mechanisms (solid role mark, white numeral)."""
+        c = role(r)
+        self.ax.add_patch(Circle((x, y), d / 2, fc=c["mark"], ec="white", lw=0.5, zorder=z))
+        self.text(x, y - 0.05, str(k), size=size or d * 2.0, color="white", weight="bold", z=z + 1)
+
+    def tab(self, x, y, w, h, r="neutral", text="", size=None, rotate=False, solid=False, z=6, radius=None):
+        """Rounded tab; rotate=True sets the label vertically (a side tab such as "To Action")."""
+        c = role(r)
+        rad = radius if radius is not None else min(w, h) * 0.3
+        self.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={rad}",
+                          lw=0.6, ec=c["stroke"], fc=c["mark"] if solid else c["soft"], zorder=z))
+        self.text(x + w / 2, y + h / 2, text, size=size or self.size, weight="bold",
+                  color="white" if solid else c["ink"], rotation=90 if rotate else 0, z=z + 1, linespacing=1.0)
+
+    def chapter(self, x, y, w, h, r, title, prev=None, nxt=None, tab_w=7.0, size=None):
+        """Chapter frame for one item of a taxonomy series: a tinted panel titled in the item's ink,
+        an input tab on the left in the previous item's colour and a "To <next>" tab on the right in
+        the next item's colour, so consecutive figures read as one chain. prev / nxt are (name, role).
+        Returns the inner content rectangle (x, y, w, h)."""
+        c = role(r)
+        x0, x1 = x, x + w
+        if prev:
+            self.tab(x, y + h * 0.18, tab_w, h * 0.64, prev[1], prev[0], rotate=True, size=size)
+            self.arrow([(x + tab_w + 0.2, y + h / 2), (x + tab_w + 2.6, y + h / 2)], color=role(prev[1])["mark"], head=1.1)
+            x0 = x + tab_w + 2.8
+        if nxt:
+            self.tab(x + w - tab_w, y + h * 0.18, tab_w, h * 0.64, nxt[1], "To " + nxt[0], rotate=True, size=size)
+            self.arrow([(x + w - tab_w - 2.6, y + h / 2), (x + w - tab_w - 0.2, y + h / 2)], color=c["mark"], head=1.1)
+            x1 = x + w - tab_w - 2.8
+        self.ax.add_patch(FancyBboxPatch((x0, y), x1 - x0, h, boxstyle="round,pad=0,rounding_size=2.4",
+                          lw=0.8, ec=c["stroke"], fc=c["fill"], zorder=1))
+        s = (size or self.size) + 2.4
+        self.text((x0 + x1) / 2, y + h - 3.2, title, size=s, weight="bold", color=c["ink"], z=3)
+        return x0 + 2.0, y + 2.0, x1 - x0 - 4.0, h - 8.0
+
+    def bubble(self, cx, cy, text, tail=None, r="neutral", size=None, w=None, h=None, fill="white", z=14,
+               italic=False, left=None):
+        """Speech bubble centred at (cx, cy) (or with its left edge at `left`), sized from its text, with
+        vector text (never bake dialogue into a generated image). tail = (tx, ty), the point the tail aims
+        at, e.g. the speaker's head; it leaves from the side of the bubble that faces that point."""
+        c = role(r)
+        size = size or self.size - 0.4
+        lines = text.split("\n")
+        w = w or max(self.text_width(t, size) for t in lines) + 3.2
+        h = h or len(lines) * size * 0.41 + 2.2
+        if left is not None:
+            cx = left + w / 2
+        x, y = cx - w / 2, cy - h / 2
+        self.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={min(h, w) * 0.3}",
+                          lw=0.55, ec=c["stroke"], fc=fill, zorder=z))
+        if tail:
+            tx, ty = tail
+            if x <= tx <= x + w or y <= ty <= y + h and x <= tx <= x + w:
+                side = "bottom" if ty < y else "top"
+            else:
+                side = "left" if tx < x else "right"
+            if side in ("bottom", "top"):
+                bx, by = min(max(tx, x + 2.4), x + w - 2.4), (y if side == "bottom" else y + h)
+                base = [(bx - 1.1, by), (bx + 1.1, by)]
+                inner = (bx, by + (0.6 if side == "bottom" else -0.6))
+            else:
+                bx, by = (x if side == "left" else x + w), min(max(ty, y + 1.6), y + h - 1.6)
+                base = [(bx, by - 0.9), (bx, by + 0.9)]
+                inner = (bx + (0.6 if side == "left" else -0.6), by)
+            self.ax.add_patch(Polygon([base[0], (tx, ty), base[1]], closed=True, fc=fill, ec=c["stroke"], lw=0.55,
+                                      zorder=z - 0.1))
+            # hide the bubble outline where the tail joins it
+            self.ax.add_patch(Polygon([base[0], base[1], inner], closed=True, fc=fill, ec="none", zorder=z + 0.05))
+        self.text(cx, cy, text, size=size, color=c["ink"], z=z + 1, style="italic" if italic else "normal",
+                  linespacing=1.15)
+        return x, y, w, h
+
+    def spectrum(self, x0, x1, y, c0, c1, labels=(), lw=1.4, head=1.8, size=None, z=6):
+        """Graded axis (light -> dark) for a degree, e.g. reactive -> proactive; labels at the ends.
+        Sequential lightness, not hue, carries 'more of the same thing'."""
+        n = 60
+        for k in range(n):
+            a, b = x0 + (x1 - head - x0) * k / n, x0 + (x1 - head - x0) * (k + 1) / n
+            self.ax.plot([a, b], [y, y], color=mix(c0, c1, k / (n - 1)), lw=lw, zorder=z, solid_capstyle="butt")
+        self.ax.add_patch(Polygon([(x1 - head * 1.4, y + head * 0.55), (x1, y), (x1 - head * 1.4, y - head * 0.55)],
+                                  closed=True, fc=c1, ec="none", zorder=z))
+        if labels:
+            self.text(x0, y + 2.4, labels[0], size=size or self.size, color=mix(c0, "#1F2430", 0.4), ha="left", z=z)
+            self.text(x1, y + 2.4, labels[-1], size=size or self.size, color=c1, ha="right", z=z)
 
     # ---- glyphs -----------------------------------------------------------
     def op(self, x, y, sym="+", r="neutral", d=3.0, lw=0.6, z=9, fill="white"):
@@ -384,7 +486,8 @@ class Canvas:
         softens edges). knockout_white mattes off only the pure-white background connected to the
         border (cream or pastel fills inside the outline stay opaque), with a 1 px soft rim.
         fit="height" makes w the icon's height instead of its width, so characters of one set with
-        different props (a wide laptop, a tall magnifier) come out at the same body size.
+        different props (a wide laptop, a tall magnifier) come out at the same body size; fit="box"
+        makes w the longer side, for object icons of mixed aspect.
         Returns the placed height in mm."""
         from PIL import Image, ImageDraw, ImageFilter
         im = Image.open(path).convert("RGBA")
@@ -396,6 +499,8 @@ class Canvas:
                 im = im.crop((max(box[0] - pad, 0), max(box[1] - pad, 0),
                               min(box[2] + pad, im.width), min(box[3] + pad, im.height)))
         ppm = RASTER_DPI / 25.4  # output pixels per mm
+        if fit == "box":  # w bounds the longer side: mixed wide/tall icons of one set stay in one footprint
+            fit = "height" if im.height > im.width else "width"
         tw = max(8, round((w * im.width / im.height if fit == "height" else w) * ppm))
         th = max(8, round(tw * im.height / im.width))
         im = im.resize((tw, th), Image.LANCZOS).filter(ImageFilter.UnsharpMask(radius=1.0, percent=60, threshold=2))
@@ -430,6 +535,17 @@ class Canvas:
                 for b in (a + 0.7, a - 0.7):
                     self.ax.plot([bx, bx + sgn * s * 0.17 * math.cos(b)], [by, by + sgn * s * 0.17 * math.sin(b)],
                                  color=color, lw=lw * 0.8, zorder=z, solid_capstyle="round")
+
+    def icon_check(self, x, y, s, color=LINE, lw=0.8, z=12):
+        """Tick drawn as vectors (font-independent ✓)."""
+        self.ax.plot([x - s * 0.45, x - s * 0.1, x + s * 0.5], [y, y - s * 0.38, y + s * 0.42], color=color, lw=lw,
+                     zorder=z, solid_capstyle="round", solid_joinstyle="round")
+
+    def icon_cross(self, x, y, s, color=LINE, lw=0.8, z=12):
+        """Cross drawn as vectors (font-independent ✗)."""
+        for sg in (1, -1):
+            self.ax.plot([x - s * 0.4, x + s * 0.4], [y - sg * s * 0.4, y + sg * s * 0.4], color=color, lw=lw,
+                         zorder=z, solid_capstyle="round")
 
     def icon_flame(self, x, y, s, color="#E0702A", z=12):
         """Flame = trainable."""
@@ -484,10 +600,14 @@ class Canvas:
 
     # ---- connectors ---------------------------------------------------------
     def arrow(self, pts, color=LINE, lw=0.7, head=1.4, dashed=False, radius=1.2, z=8, both=False,
-              start_dot=False):
+              start_dot=False, halo=False):
         """Polyline arrow with rounded elbows and a filled head (head in mm).
-        Route orthogonally; end exactly on the target border."""
+        Route orthogonally; end exactly on the target border. halo=True lays a white casing under the
+        line so an unavoidable crossing reads as a bridge over the other wire (draw it with a higher z)."""
         pts = [tuple(p) for p in pts]
+        if halo:
+            self.ax.add_patch(PathPatch(_rounded_path(pts[:-1] + [pts[-1]], radius), fc="none", ec="white",
+                                        lw=lw + 2.6, zorder=z - 0.05, capstyle="butt"))
         style = f"{'<|-|>' if both else '-|>'},head_length={head * 0.95},head_width={head * 0.42}"
         a = FancyArrowPatch(path=_rounded_path(pts, radius), arrowstyle=style, mutation_scale=PT_PER_MM,
                             lw=lw, color=color, zorder=z, linestyle=(0, (3.2, 1.8)) if dashed else "-",
@@ -638,6 +758,46 @@ def compare(original, new, out, width=1600):
     return out
 
 
+def swatches(pngs, out, k=8, height=260):
+    """Series check: the figures side by side, each with its k most-used saturated colours underneath.
+    A taxonomy item whose swatch changes between figures is a palette drift to fix (Proactive AI's 6A)."""
+    from PIL import Image, ImageDraw
+    tiles, palettes = [], []
+    for p in pngs:
+        im = Image.open(p).convert("RGB")
+        im.thumbnail((10_000, height))
+        tiles.append(im)
+        # sample only saturated pixels: pale fills and thin coloured strokes would otherwise lose to white
+        a = np.asarray(im.convert("HSV")).reshape(-1, 3)
+        sat = a[(a[:, 1] > 70) & (a[:, 2] > 60)]
+        rgb = np.asarray(im).reshape(-1, 3)[(a[:, 1] > 70) & (a[:, 2] > 60)]
+        cols = []
+        if len(rgb):
+            strip = Image.fromarray(rgb[None, :, :].astype("uint8"))
+            q = strip.quantize(colors=24, method=Image.Quantize.MEDIANCUT)
+            pal = q.getpalette()
+            for n, i in sorted(q.getcolors(), reverse=True):
+                hexc = "#%02X%02X%02X" % tuple(pal[3 * i:3 * i + 3])
+                if all(sum(abs(int(hexc[j:j + 2], 16) - int(c[j:j + 2], 16)) for j in (1, 3, 5)) > 60 for c in cols):
+                    cols.append(hexc)
+                if len(cols) == k:
+                    break
+        palettes.append(cols)
+    W = sum(t.width for t in tiles) + 20 * (len(tiles) + 1)
+    sheet = Image.new("RGB", (W, height + 110), "white")
+    d = ImageDraw.Draw(sheet)
+    x = 20
+    for t, cols, p in zip(tiles, palettes, pngs):
+        sheet.paste(t, (x, 10))
+        for j, c in enumerate(cols):
+            d.rectangle([x + j * 34, height + 22, x + j * 34 + 28, height + 50], fill=c)
+            d.text((x + j * 34, height + 54), c[1:], fill="#333333")
+        d.text((x, height + 80), os.path.basename(p), fill="#333333")
+        x += t.width + 20
+    sheet.save(out)
+    return out, palettes
+
+
 if __name__ == "__main__" and len(__import__("sys").argv) > 1:
     import sys
     cmd, args = sys.argv[1], sys.argv[2:]
@@ -646,8 +806,13 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
             print(p, "white/tint/ink %", density(p))
     elif cmd == "compare":
         print(compare(*args[:3]))
+    elif cmd == "swatches":
+        out, pals = swatches(args[:-1], args[-1])
+        for p, c in zip(args[:-1], pals):
+            print(os.path.basename(p), " ".join(c))
+        print(out)
     else:
-        sys.exit("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT]")
+        sys.exit("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | swatches PNG... OUT]")
 elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to export
     import tempfile
     cv = Canvas(120, 60)

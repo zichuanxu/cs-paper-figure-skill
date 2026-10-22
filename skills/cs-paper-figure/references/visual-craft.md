@@ -91,6 +91,17 @@ pure black and never the stroke colour.
 | Agent / model | `icon_robot`, distinct colour per role | IdeaScientist: one coloured robot head per agent + a role glyph |
 | Illustrated agent roles (optional) | `image()` with a *matched* generated set (one character, role accent colours, white background knocked out) | Harness² Figs. 2–3: Codex-generated sets via `scripts/codex_icons.py` ([image-generation.md](image-generation.md)); keep `icon_robot` as the fallback; never use generated images for labels or data |
 | Edits / operations on text | `chip()` pills: ADD / DEL / REP | |
+| Stage of a framework, chained across figures | `chapter()` with `prev` / `nxt` tabs; `series()` palette | Proactive AI Figs. 7–12 (but keep the hue fixed per stage) |
+| Decision cascade | gate stack: `badge()` per test, failure chip inside the row, pass lines into one AND bar | Proactive AI Fig. 10 |
+| Degree / spectrum | `spectrum()` axis + chips on the same lightness ramp | Proactive AI Fig. 4 |
+| Dialogue, behaviour | `bubble()` with the tail on the speaker; never text in generated pixels | Proactive AI Fig. 3 |
+| Stage label, state tag | `tab(..., solid=True)` overlapping the container border | PlugMem Figs. 2–4, StudentSim Fig. 6 |
+| Pass / fail, verdict | `icon_check()` / `icon_cross()` (vector, font-independent) | StudentSim Fig. 4 |
+| Method = baseline + one layer | diff panels on one grid, same toy example, new layer in its own row and colour | ReHarness Fig. 1 |
+| Numbered edges | badge on the edge + typed-edge legend beside the panel | ReHarness Figs. 1, 3 |
+| Unavoidable crossing | `arrow(..., halo=True)` bridge | — |
+| Comparison to a human / oracle level | axis centred on the reference, losing side shaded, dumbbells with gap labels | PaperBanana Fig. 5 (redesigned) |
+| Mixed-aspect icon set | `image(..., fit="box")` keeps one footprint | — |
 | Scores, traces, curves | mini plot inside the card | SkillOpt trace cards carry a tiny line plot and a score |
 | Time / turns / epochs | columns t−1 · t · t+1, or a strip with write arrows between | Promote time to a panel when evolution is the claim |
 

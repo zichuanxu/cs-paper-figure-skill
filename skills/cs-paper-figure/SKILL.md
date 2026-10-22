@@ -24,6 +24,7 @@ Make the scientific argument visible and give it an intentional visual form. Opt
 | **How to make it look good**: diagnosis, typography, role colours, glyph vocabulary, composition patterns, connectors, density targets, chart craft, beat-the-original protocol | [visual-craft.md](references/visual-craft.md) |
 | Evidence behind those rules: IdeaScientist/SkillOpt readings, measured architecture figures (Gated DeltaNet, Kimi Linear, Titans, NSA, DeepSeek-V3, Hymba, BLT, …), MemT critique | [craft-study-2026-10.md](references/craft-study-2026-10.md) |
 | Drawing primitives in mm: role palette, cards, nodes, matrices, vectors, trapezoids, operators, tokens, docs, icons, zoom rays, routed arrows, rich math, density/compare checks | [scripts/paperkit.py](scripts/paperkit.py) |
+| **Figure series** for surveys, frameworks and system reports: one taxonomy palette for every figure, chapter frames with "To next" tabs, running examples, gate stacks, spectra, timelines, illustrated scenes with vector dialogue, diff panels, typed-edge legends, a palette-drift check (studies of *Proactive AI*, PlugMem, StudentSim, PaperBanana, ReHarness) | [figure-series.md](references/figure-series.md), [scripts/examples/proactive/](scripts/examples/proactive/) |
 | Optional generated icon sets with Codex CLI: when to use them, rules from 11 top-lab figures, prompt anatomy, helper | [image-generation.md](references/image-generation.md), [scripts/codex_icons.py](scripts/codex_icons.py) |
 | Reference-quality redesigns (architecture + efficiency chart) | [scripts/examples/memt/](scripts/examples/memt/), [advanced-examples.md](references/advanced-examples.md#memt-10-redesigns) |
 | Rich multi-level figures; system, mechanism, instance and evidence | [dense-composition.md](references/dense-composition.md) |
@@ -130,6 +131,8 @@ Use real font weights and verify the exported font program, not just its family 
 
 Use white child cards inside tinted groups only when the nesting expresses real scope. Permit icons, token strips, record stacks, insets and light backgrounds when they explain the method. Avoid adding decorative detail that has no scientific role. Use raster images for real image/video/spatial data; use vector objects for exact topology and labels.
 
+**Figure series.** When several figures explain one framework, define its palette once with `paperkit.series(names)` in a module every figure imports, chain stage figures with `cv.chapter(..., prev=, nxt=)`, carry one running example through the stages, and keep dialogue and labels as vector text (`cv.bubble`, `cv.tab`). See [figure-series.md](references/figure-series.md).
+
 **Generated icons (optional).** When the figure has actors, roles, tools or stages the reader must tell apart, and `scripts/codex_icons.py check` succeeds, a matched set of 3–7 illustrated icons may replace the vector glyphs: one style spec, one Codex run, each icon tinted with its role colour, a text label beside every icon, no text inside the pixels, and a vector fallback kept in the render script. Use real photos or screenshots, not generated pictures, for data, inputs or environments. Follow [image-generation.md](references/image-generation.md); without Codex, use paperkit's vector icons and continue.
 
 ### 5. Implement precise, reproducible source
@@ -145,6 +148,15 @@ python <skill-root>/scripts/examples/memt/render_fig3.py --out figures/memt   # 
 python <skill-root>/scripts/examples/transformer/render_fig1.py --out figures/transformer
 python <skill-root>/scripts/examples/harness2/render_fig2.py --out figures/harness2   # [--vector-icons]
 python <skill-root>/scripts/examples/harness2/render_fig3.py --out figures/harness2   # [--vector-icons]
+python <skill-root>/scripts/examples/proactive/render_arbitration.py --out figures/proactive  # chapter + gate stack
+python <skill-root>/scripts/examples/proactive/render_cycle.py --out figures/proactive        # taxonomy loop
+python <skill-root>/scripts/examples/proactive/render_spectrum.py --out figures/proactive     # scenes + spectrum
+python <skill-root>/scripts/examples/proactive/render_overview.py --out figures/proactive     # Fig. 1 redesign
+python <skill-root>/scripts/examples/proactive/render_capabilities.py --out figures/proactive # Fig. 3 redesign
+python <skill-root>/scripts/examples/proactive/render_history.py --out figures/proactive      # Fig. 5 timeline
+python <skill-root>/scripts/examples/reharness/render_fig1.py --out figures/reharness         # diff panels
+python <skill-root>/scripts/examples/paperbanana/render_fig5.py --out figures/paperbanana     # dumbbell chart
+python <skill-root>/scripts/paperkit.py swatches fig1.png fig2.png series_check.png          # palette drift
 
 # Optional generated icon sets via Codex CLI (only if `check` exits 0; see references/image-generation.md)
 python <skill-root>/scripts/codex_icons.py check
