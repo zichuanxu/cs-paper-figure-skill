@@ -133,6 +133,8 @@ Use white child cards inside tinted groups only when the nesting expresses real 
 
 **Figure series.** When several figures explain one framework, define its palette once with `paperkit.series(names)` in a module every figure imports, chain stage figures with `cv.chapter(..., prev=, nxt=)`, carry one running example through the stages, and keep dialogue and labels as vector text (`cv.bubble`, `cv.tab`). See [figure-series.md](references/figure-series.md).
 
+**Match the register before "cleaning up".** Method and results figures reward restraint; illustrated survey, position-paper and overview figures do not. There the pictures carry the argument (each stage shows the agent *doing* it), headers are solid colour with white bold text, and titles are large. Redesigning such a figure means keeping all of that and fixing its real faults (colour drift, text inside pixels, crossings, uneven type), never stripping it to outlined boxes: that reads as emptier and loses. Before drawing, list what the original does well and carry each strength over; fill every card edge to edge (`codex_icons.py` style `"vignette"`, placed with `cv.image(..., fit="cover", h=, radius=)`); and run `paperkit.py parity original.png new.png`, which fails a redesign that is emptier, greyer or less illustrated at the same width. Lay chips out with `cv.flow_chips` (never hand-picked x positions) and end each script with `assert not cv.overlaps() and not cv.text_overlaps()`.
+
 **Generated icons (optional).** When the figure has actors, roles, tools or stages the reader must tell apart, and `scripts/codex_icons.py check` succeeds, a matched set of 3–7 illustrated icons may replace the vector glyphs: one style spec, one Codex run, each icon tinted with its role colour, a text label beside every icon, no text inside the pixels, and a vector fallback kept in the render script. Use real photos or screenshots, not generated pictures, for data, inputs or environments. Follow [image-generation.md](references/image-generation.md); without Codex, use paperkit's vector icons and continue.
 
 ### 5. Implement precise, reproducible source
@@ -173,6 +175,7 @@ python <skill-root>/scripts/examples/restyled/render_epoch_context.py --out figu
 python <skill-root>/scripts/paperkit.py
 python <skill-root>/scripts/paperkit.py density figures/memt/memt_fig4_architecture.png
 python <skill-root>/scripts/paperkit.py compare original.png figures/new.png review.png
+python <skill-root>/scripts/paperkit.py parity original.png figures/new.png   # exit 1 if emptier/greyer/less illustrated
 
 # Legacy component/contract demos (plain style; use for contracts and checks, not for looks)
 # Original modern demonstrations, including a routed diagram and empirical panels
@@ -222,7 +225,7 @@ Build diagrams with `paperkit.Canvas` (mm coordinates = printed size). Draw the 
 
 **Scientific review:** trace values and edges to evidence. Check units, denominators, intervals, aggregation, controlled conditions, omissions and caption scope. Respect pairing/clustering, and distinguish measured nondominated points from unmeasured frontier interpolation.
 
-**Craft review:** open the PNG and walk the [anti-pattern checklist](references/visual-craft.md#11-anti-patterns-checklist); run `paperkit.py density` against the targets in visual-craft §7; for a redesign run `paperkit.py compare` and follow the beat-the-original protocol (§10). Fix clipped labels, text over wires, and band/label collisions before anything else; they are the most common defects in a first render.
+**Craft review:** open the PNG and walk the [anti-pattern checklist](references/visual-craft.md#11-anti-patterns-checklist); run `paperkit.py density` against the targets in visual-craft §7; for a redesign run `paperkit.py compare` and `paperkit.py parity`, and follow the beat-the-original protocol (§10); a redesign that loses on parity needs a stated reason, not a cleaner-looking excuse. Fix clipped labels, text over wires, and band/label collisions before anything else; they are the most common defects in a first render.
 
 **Design review:** inspect the actual PDF at final physical size and compare it with the selected visual references. Confirm meaningful shape/color hierarchy, specific mechanism detail, coherent typography, balanced information density, deliberate whitespace and readable legends. Check unchanged landmarks align in comparison panels, modality colors persist through transformations, and repeated conditions share scales when their values are being compared. Give dashed lines a local definition. A generic box arrangement or a technically valid default plot still needs redesign if it misses the visual brief.
 

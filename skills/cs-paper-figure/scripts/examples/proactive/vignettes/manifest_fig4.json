@@ -1,0 +1,23 @@
+{
+  "set": "proactive-v2-fig4",
+  "generator": "codex-cli 0.163.0 built-in image_gen",
+  "date": "2026-10-22",
+  "refs": [
+    "cast.png"
+  ],
+  "prompt": "Use your built-in image generation tool to create 3 separate PNG illustrations that form ONE consistent set of vignettes for a figure in a scientific paper. Make one image_gen call per vignette.\nStyle for every vignette: detailed flat editorial illustration with soft cel shading and warm natural light, rich but calm colours, a complete environment (room, furniture, window, props) filling the whole frame, crisp dark outlines, no photo realism.\nFull-bleed landscape 1536x1024 canvas: the scene fills the frame edge to edge with no white margin and no border; the main subject is large and fills most of the frame. Absolutely no readable text: screens, documents, signs and tablets show only blank bars, simple shapes, ticks, charts or pictograms, because every label is added later as vector text. No speech bubbles, logos or watermarks.\nEvery image shows the exact same character(s): (a) the friendly white humanoid robot from the reference: round glossy white head, black visor face with two glowing blue oval eyes, small blue ear discs, slim white body with light-grey joints; (b) Maya from the reference: long wavy dark-brown hair, mustard-yellow cardigan over a white top, dark trousers; (c) Sam from the reference: short black hair, round glasses, navy sweater. Only draw the characters each vignette names. Keep proportions, faces, clothing, line weight and colours identical across the set; only pose, props and setting change.\nImage 1 (cast.png) is a STYLE REFERENCE from the same figure set, not an edit target: match its character design, outline weight, fill treatment and margin.\nIcons:\n(1) sc_reactive.png: Maya sits at an office desk pointing at her monitor and giving step-by-step instructions while the robot kneels beside an open office printer following them; a red warning triangle on the printer.\n(2) sc_mixed.png: Maya and the robot sit side by side at a desk with laptops in a city office with tall windows; the robot turns a tablet towards her showing a checklist of blank lines and ticks, she considers it, chin on hand.\n(3) sc_proactive.png: Maya relaxes in an armchair by a big window overlooking the sea holding a coffee mug, while the robot stands beside her holding a tablet showing a progress list with green ticks and a rising chart.\nCopy each final image into the current directory with exactly those file names, overwrite nothing else, do not edit the images afterwards, then list the directory.",
+  "icons": [
+    {
+      "name": "sc_reactive",
+      "subject": "Maya sits at an office desk pointing at her monitor and giving step-by-step instructions while the robot kneels beside an open office printer following them; a red warning triangle on the printer"
+    },
+    {
+      "name": "sc_mixed",
+      "subject": "Maya and the robot sit side by side at a desk with laptops in a city office with tall windows; the robot turns a tablet towards her showing a checklist of blank lines and ticks, she considers it, chin on hand"
+    },
+    {
+      "name": "sc_proactive",
+      "subject": "Maya relaxes in an armchair by a big window overlooking the sea holding a coffee mug, while the robot stands beside her holding a tablet showing a progress list with green ticks and a rising chart"
+    }
+  ]
+}

@@ -1,103 +1,135 @@
 """Redesign of Fig. 10 of "Proactive AI for Superintelligent Agents" (Yang et al., Google / UIUC):
 Arbitration, the gate between a worthwhile goal and a warranted intervention.
 
-Content from the source figure: a candidate action from Agenda passes four tests in order (uncertainty &
+Content from the source figure: a candidate action from Agenda is tested on four criteria (uncertainty &
 confidence, value vs. cost, timing, risk & reversibility); each failure has its own fallback; only when
 all four pass is the agent licensed to intervene, which hands over to Action.
+
+Kept from the original (its strengths): large title, a solid numbered header per test, solid fallback chips,
+a solid licence column and "To Action" tab. Fixed: the four tests no longer take four unrelated hues (they
+are one capacity, so one hue and a number), Agenda / Action carry their series colours, each fallback sits
+inside its own row so no pass line runs past another test's failure, and every label is at least 6.6 pt.
 
     python render_arbitration.py --out <dir>
 """
 import argparse
-import math
 import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sixa import SIXA  # noqa: E402
-from paperkit import Canvas, INK, MUTED  # noqa: E402
-from matplotlib.patches import Arc, Polygon  # noqa: E402
+from paperkit import Canvas, INK, mix  # noqa: E402
+from matplotlib.patches import Arc, Circle, FancyBboxPatch, Polygon  # noqa: E402
 
 ARB, AGD, ACT = SIXA["Arbitration"], SIXA["Agenda"], SIXA["Action"]
-PASS = dict(fill="#EAF4EE", soft="#D3E9DB", stroke="#4E9166", ink="#1E5B36", mark="#2E8B57")
-FAIL = dict(fill="#FBEEEC", soft="#F4D9D4", stroke="#C98B7E", ink="#7E2E22", mark="#B5523F")
-GATES = [  # (title, question, failure label, fallback)
-    ("Uncertainty & confidence", "Is the belief about the user's need confident enough?", "Low confidence", "clarify or seek more information"),
-    ("Value vs. cost", "Does the expected value of acting outweigh the cost?", "Low net value", "suppress, defer or re-plan"),
-    ("Timing", "When in the flow of events should it happen?", "Bad moment", "wait for a task boundary"),
-    ("Risk & reversibility", "Is it safe enough given the chance of being wrong?", "Unsafe / unauthorized", "safer fallback, approval, escalation or refusal"),
+# pass = the proactive indigo, fail = warm grey: neither borrows a capacity hue (green is Awareness, red Action)
+PASS = dict(fill="#EEEFF8", soft="#D9DAEE", stroke="#9EA1CC", ink="#2B2F6E", mark="#2B2F6E")
+FAIL = dict(fill="#F5F1EE", soft="#E6DDD6", stroke="#CDBFB5", ink="#5A4A40", mark="#7D6A5E")
+GATES = [  # (title, question, failure label, fallback) as in the source figure
+    ("Uncertainty & Confidence", "Is the agent's belief about the user's need\nconfident enough?", "LOW CONFIDENCE", "clarify or seek\nmore information"),
+    ("Value vs. Cost", "Does the expected value of acting\noutweigh the cost?", "LOW NET VALUE", "suppress, defer\nor re-plan"),
+    ("Timing", "When within the flow of events should\nthe intervention occur?", "BAD MOMENT", "wait or reschedule\nfor a task boundary"),
+    ("Risk & Reversibility", "Is the action safe enough given\nthe chance of being wrong?", "UNSAFE / UNAUTHORIZED", "safer fallback, approval,\nescalation or refusal"),
 ]
-W, H = 178, 84
+W, H = 178, 96
 
 
-def glyph(cv, k, x, y, c):
-    """Small vector glyph per test: gauge, balance, clock, shield."""
-    col, lw = c["stroke"], 0.6
+def rbox(cv, x, y, w, h, fc, ec="none", lw=0.0, r=1.6, z=5):
+    cv.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={r}", fc=fc, ec=ec, lw=lw, zorder=z))
+
+
+def glyph(cv, k, x, y, col, lw=0.9):
+    """Line glyph per test (question cloud, balance, clock, shield), 8 mm, in the Arbitration ink."""
     if k == 0:
-        cv.ax.add_patch(Arc((x, y - 0.8), 5.0, 5.0, theta1=0, theta2=180, ec=col, lw=lw, zorder=12))
-        a = math.radians(55)
-        cv.line([(x, y - 0.8), (x + 2.0 * math.cos(a), y - 0.8 + 2.0 * math.sin(a))], color=col, lw=lw)
-        cv.dot(x, y - 0.8, color=col, d=0.7)
+        for dx, dy, d in ((-1.6, -0.4, 3.6), (1.4, -0.2, 3.8), (0.0, 1.4, 4.2), (-0.2, -1.4, 3.8)):
+            cv.ax.add_patch(Circle((x + dx, y + dy), d / 2, fc="white", ec=col, lw=lw, zorder=11))
+        cv.ax.add_patch(Circle((x, y), 2.0, fc="white", ec="none", zorder=11.5))
+        cv.text(x, y, "?", size=10, weight="bold", color=col, z=12)
     elif k == 1:
-        cv.line([(x, y - 2.0), (x, y + 1.6)], color=col, lw=lw)
-        cv.line([(x - 2.4, y + 1.0), (x + 2.4, y + 1.6)], color=col, lw=lw)
-        for bx, by in ((x - 2.4, y + 1.0), (x + 2.4, y + 1.6)):
-            cv.ax.add_patch(Arc((bx, by - 1.2), 2.0, 1.4, theta1=180, theta2=360, ec=col, lw=lw, zorder=12))
-        cv.line([(x - 1.0, y - 2.0), (x + 1.0, y - 2.0)], color=col, lw=lw)
+        cv.line([(x, y - 3.0), (x, y + 2.6)], color=col, lw=lw)
+        cv.line([(x - 3.4, y + 1.8), (x + 3.4, y + 1.8)], color=col, lw=lw)
+        for bx in (x - 3.4, x + 3.4):
+            cv.line([(bx, y + 1.8), (bx - 1.3, y - 0.6)], color=col, lw=lw * 0.7)
+            cv.line([(bx, y + 1.8), (bx + 1.3, y - 0.6)], color=col, lw=lw * 0.7)
+            cv.ax.add_patch(Arc((bx, y - 0.6), 2.8, 1.8, theta1=180, theta2=360, ec=col, lw=lw, zorder=12))
+        cv.line([(x - 1.6, y - 3.0), (x + 1.6, y - 3.0)], color=col, lw=lw)
     elif k == 2:
-        cv.icon_clock(x, y, 4.6, color=col)
+        cv.ax.add_patch(Circle((x, y), 3.3, fc="white", ec=col, lw=lw, zorder=11))
+        cv.line([(x, y), (x, y + 2.2)], color=col, lw=lw, z=12)
+        cv.line([(x, y), (x + 1.6, y - 0.9)], color=col, lw=lw, z=12)
     else:
-        pts = [(x - 2.0, y + 1.8), (x, y + 2.4), (x + 2.0, y + 1.8), (x + 1.8, y - 0.6), (x, y - 2.4), (x - 1.8, y - 0.6)]
-        cv.ax.add_patch(Polygon(pts, closed=True, fc="none", ec=col, lw=lw, zorder=12, joinstyle="round"))
-        cv.text(x, y + 0.1, "!", size=6.2, color=col, weight="bold")
+        pts = [(x - 3.0, y + 2.4), (x, y + 3.4), (x + 3.0, y + 2.4), (x + 2.7, y - 0.8), (x, y - 3.4), (x - 2.7, y - 0.8)]
+        cv.ax.add_patch(Polygon(pts, closed=True, fc="white", ec=col, lw=lw, zorder=12, joinstyle="round"))
+        cv.text(x, y + 0.1, "!", size=9, color=col, weight="bold", z=13)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out")
     a = ap.parse_args()
-    cv = Canvas(W, H, family="sans", size=7.0)
-    ix, iy, iw, ih = cv.chapter(2, 2, W - 4, H - 4, ARB, "Arbitration", prev=("Agenda", AGD), nxt=("Action", ACT), tab_w=7.5)
-    cv.text(ix + iw / 2, iy + ih + 0.6, "a worthwhile goal is not yet a warranted intervention", size=6.6,
-            color=MUTED, style="italic")
-    # gate column: four tests in order
-    gx, gw, rh, gap = ix + 1.0, 112.0, 13.6, 2.6
-    top = iy + ih - 3.6
-    cv.chip(gx + 0.4, top - 0.4, "candidate action", AGD, size=6.2, ha="left", pad=0.9)
-    bar_x, bar_w = gx + gw + 9.0, 15.0
-    ys = []
+    cv = Canvas(W, H, family="sans", size=7.6)
+    # Arbitration chapter: tinted field, big title in its ink
+    px, pw = 29.0, 121.0
+    rbox(cv, px, 1.0, pw, H - 2.0, ARB["fill"], ARB["stroke"], 0.8, r=3.0, z=1)
+    cv.text(px + pw / 2, H - 6.0, "Arbitration", size=15, weight="bold", color=ARB["ink"])
+    cv.text(px + pw / 2, H - 11.2, "a worthwhile goal is not yet a warranted intervention", size=7.4,
+            color=mix(ARB["ink"], "white", 0.15), style="italic")
+    # gate rows
+    gx, gw, rh, gap = px + 3.0, 86.0, 17.6, 2.4
+    top = H - 15.0
+    ys, pys = [], []
     for k, (title, q, fl, fb) in enumerate(GATES):
-        y = top - 2.6 - (k + 1) * rh - k * gap
+        y = top - (k + 1) * rh - k * gap
         ys.append(y + rh / 2)
-        cv.box(gx, y, gw, rh, ARB, fill="white", lw=0.6, radius=1.6)
-        cv.badge(gx + 4.0, y + rh / 2, k + 1, ARB, d=3.6)
-        glyph(cv, k, gx + 11.0, y + rh / 2, ARB)
-        cv.text(gx + 16.5, y + rh / 2 + 2.6, title, size=7.4, weight="bold", color=ARB["ink"], ha="left")
-        cv.text(gx + 16.5, y + rh / 2 - 2.4, q, size=6.4, color=INK, ha="left")
-        # failure exit stays inside the gate's row, so pass lines never cross it
-        fx = gx + 74.0
-        cv.box(fx, y + 1.6, gw - 75.6, rh - 3.2, FAIL, lw=0.5, radius=1.2)
-        lines = [fb] if len(fb) <= 34 else [fb[:fb.rfind(",", 0, 34) + 1], fb[fb.rfind(",", 0, 34) + 2:]]
-        ly = y + rh / 2 + (2.9 if len(lines) == 2 else 1.8)
-        cv.icon_cross(fx + 2.4, ly, 1.8, color=FAIL["mark"], lw=0.8)
-        cv.text(fx + 4.4, ly, fl.upper(), size=5.9, weight="bold", color=FAIL["mark"], ha="left")
-        for j, t in enumerate(lines):
-            cv.text(fx + 1.6, ly - 3.4 - j * 2.7, t, size=6.1, color=FAIL["ink"], ha="left")
-        # pass exit: into the AND bar
-        cv.arrow([(gx + gw, y + rh / 2), (bar_x, y + rh / 2)], color=PASS["mark"], lw=0.8, head=1.1)
-        cv.icon_check(gx + gw + 2.6, y + rh / 2 + 1.7, 1.6, color=PASS["mark"], lw=0.8)
-        cv.text(gx + gw + 3.8, y + rh / 2 + 1.6, "pass", size=5.9, color=PASS["mark"], weight="bold", ha="left")
-        # sequence: next test only after this one passes
-        if k < 3:
-            cv.arrow([(gx + 4.0, y), (gx + 4.0, y - gap)], color=ARB["stroke"], lw=0.6, head=0.9)
-    # AND bar = licence to intervene
-    y0, y1 = ys[-1] - rh / 2, ys[0] + rh / 2
-    cv.box(bar_x, y0, bar_w, y1 - y0, PASS, lw=0.8, radius=2.0)
-    cv.text(bar_x + bar_w / 2, (y0 + y1) / 2 + 9.0, "all four", size=6.4, color=PASS["ink"])
-    cv.text(bar_x + bar_w / 2, (y0 + y1) / 2 + 5.8, "pass", size=6.4, color=PASS["ink"])
-    cv.text(bar_x + bar_w / 2, (y0 + y1) / 2 - 1.0, "Licence", size=7.6, weight="bold", color=PASS["ink"])
-    cv.text(bar_x + bar_w / 2, (y0 + y1) / 2 - 4.4, "to", size=7.6, weight="bold", color=PASS["ink"])
-    cv.text(bar_x + bar_w / 2, (y0 + y1) / 2 - 7.8, "intervene", size=7.6, weight="bold", color=PASS["ink"])
-    cv.arrow([(bar_x + bar_w, (y0 + y1) / 2), (ix + iw + 1.6, (y0 + y1) / 2)], color=PASS["mark"], lw=0.9, head=1.2)
+        rbox(cv, gx, y, gw, rh, mix(ARB["soft"], "white", 0.45), ARB["stroke"], 0.6, r=2.0, z=4)
+        glyph(cv, k, gx + 7.0, y + rh / 2 - 1.6, ARB["ink"])
+        # solid numbered header tab
+        tw = cv.text_width(title, 8.6, "bold") + 12.0
+        rbox(cv, gx + 14.0, y + rh - 7.0, tw, 5.6, ARB["mark"], r=2.8, z=6)
+        cv.ax.add_patch(Circle((gx + 17.2, y + rh - 4.2), 1.9, fc="white", ec="none", zorder=7))
+        cv.text(gx + 17.2, y + rh - 4.25, str(k + 1), size=7.4, weight="bold", color=ARB["mark"], z=8)
+        cv.text(gx + 20.4, y + rh - 4.2, title, size=8.6, weight="bold", color="white", ha="left", z=8)
+        cv.text(gx + 14.6, y + 5.0, q, size=7.4, color=INK, ha="left", va="center", linespacing=1.1)
+        # failure exit: solid chip beside the row, below the pass line (as in the source, but never crossed)
+        fx, fw, fh = gx + gw + 4.4, 25.0, rh - 5.4
+        rbox(cv, fx, y, fw, fh, FAIL["mark"], r=1.8, z=6)
+        two = len(fl) >= 16
+        cv.text(fx + fw / 2, y + fh - (3.0 if two else 2.3), fl.replace(" / ", " /\n") if two else fl,
+                size=6.3 if two else 6.8, weight="bold", color="white", z=8, linespacing=1.0)
+        cv.text(fx + fw / 2, y + (3.2 if two else 3.6), fb, size=6.4, color="white", z=8, linespacing=1.05)
+        cv.arrow([(gx + gw, y + fh / 2), (fx - 0.3, y + fh / 2)], color=FAIL["mark"], lw=0.9, head=1.1)
+        cv.text(gx + gw - 1.4, y + fh / 2 + 2.2, "FAIL", size=6.6, weight="bold", color=FAIL["mark"], ha="right")
+        # pass exit along the top of the row, above the failure chip
+        pys.append(y + rh - 2.4)
+        cv.text(gx + gw - 1.4, y + rh - 2.4, "PASS", size=6.6, weight="bold", color=PASS["mark"], ha="right", z=8)
+    # licence column (solid) = all four pass
+    lx, lw_ = px + pw + 2.6, 14.4
+    y0, y1 = 1.0, H - 1.0
+    for y in pys:
+        cv.arrow([(gx + gw, y), (lx - 0.3, y)], color=PASS["mark"], lw=1.0, head=1.3)
+    rbox(cv, lx, y0, lw_, y1 - y0, PASS["mark"], r=2.4, z=5)
+    mid = (ys[0] + ys[-1]) / 2
+    cv.text(lx + lw_ / 2, mid + 8.0, "ALL\nFOUR\nPASS", size=8.6, weight="bold", color="white", linespacing=1.05)
+    cv.line([(lx + 3.0, mid + 1.0), (lx + lw_ - 3.0, mid + 1.0)], color="white", lw=0.6)
+    cv.text(lx + lw_ / 2, mid - 6.5, "licence\nto\nintervene", size=8.0, color="white", linespacing=1.1)
+    # To Action tab, Action colour
+    ax_ = lx + lw_ + 2.4
+    cv.arrow([(lx + lw_, mid), (ax_ - 0.2, mid)], color=PASS["mark"], lw=1.1, head=1.3)
+    rbox(cv, ax_, y0, W - ax_ - 1.0, y1 - y0, ACT["mark"], r=3.0, z=5)
+    cv.text(ax_ + (W - ax_ - 1.0) / 2, mid, "To Action", size=11, weight="bold", color="white", rotation=-90)
+    # candidate action from Agenda feeds every test
+    cx, cw = 1.0, 21.0
+    rbox(cv, cx, y0, cw, y1 - y0, AGD["mark"], r=2.4, z=5)
+    cv.image(os.path.join(os.path.dirname(os.path.abspath(__file__)), "vignettes", "f1_agenda.jpg"), cx + cw / 2,
+             mid + 14.0, cw - 2.4, fit="cover", h=24.0, radius=1.4, focus=(0.5, 0.42), zoom=1.15, z=6)
+    cv.text(cx + cw / 2, mid - 4.0, "Candidate\naction", size=9.0, weight="bold", color="white", linespacing=1.05)
+    cv.text(cx + cw / 2, mid - 11.4, "from Agenda", size=7.4, color="white")
+    bus = px - 3.0
+    cv.line([(cx + cw, mid), (bus, mid)], color=AGD["mark"], lw=1.0)
+    cv.line([(bus, ys[-1]), (bus, ys[0])], color=AGD["mark"], lw=1.0)
+    for y in ys:
+        cv.arrow([(bus, y), (gx - 0.3, y)], color=AGD["mark"], lw=1.0, head=1.2)
+    assert not cv.overlaps() and not cv.text_overlaps(), cv.overlaps() + cv.text_overlaps()
     print("\n".join(cv.save(os.path.join(a.out, "proactive_arbitration"))))
 
 

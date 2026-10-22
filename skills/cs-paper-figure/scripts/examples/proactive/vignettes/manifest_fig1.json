@@ -1,0 +1,43 @@
+{
+  "set": "proactive-v2-fig1",
+  "generator": "codex-cli 0.163.0 built-in image_gen",
+  "date": "2026-10-22",
+  "refs": [
+    "cast.png"
+  ],
+  "prompt": "Use your built-in image generation tool to create 8 separate PNG illustrations that form ONE consistent set of vignettes for a figure in a scientific paper. Make one image_gen call per vignette.\nStyle for every vignette: detailed flat editorial illustration with soft cel shading and warm natural light, rich but calm colours, a complete environment (room, furniture, window, props) filling the whole frame, crisp dark outlines, no photo realism.\nFull-bleed square 1024x1024 canvas: the scene fills the frame edge to edge with no white margin and no border; the main subject is large and fills most of the frame. Absolutely no readable text: screens, documents, signs and tablets show only blank bars, simple shapes, ticks, charts or pictograms, because every label is added later as vector text. No speech bubbles, logos or watermarks.\nEvery image shows the exact same character(s): (a) the friendly white humanoid robot from the reference: round glossy white head, black visor face with two glowing blue oval eyes, small blue ear discs, slim white body with light-grey joints; (b) Maya from the reference: long wavy dark-brown hair, mustard-yellow cardigan over a white top, dark trousers; (c) Sam from the reference: short black hair, round glasses, navy sweater. Only draw the characters each vignette names. Keep proportions, faces, clothing, line weight and colours identical across the set; only pose, props and setting change.\nImage 1 (cast.png) is a STYLE REFERENCE from the same figure set, not an edit target: match its character design, outline weight, fill treatment and margin.\nIcons:\n(1) f1_reactive.png: Maya at her office desk with a laptop turns to ask the robot a question; the robot stands beside the desk waiting for instructions, hands at its sides.\n(2) f1_aware.png: the robot sits at a desk watching two monitors full of small charts and gauges, attentive, a plant beside it.\n(3) f1_anticipate.png: the robot stands with one hand on its chin, thinking; a large empty thought cloud floats above it containing a small rising line chart and a small warning triangle.\n(4) f1_agenda.png: the robot holds a clipboard with a checklist of blank lines and tick boxes, ticking one item with a pen.\n(5) f1_arbitrate.png: the robot stands beside a large brass balance scale, weighing a green tick token against a red stop token, hand raised thoughtfully.\n(6) f1_act.png: the robot holds a tablet towards the viewer showing a checklist of blank lines with green ticks and a progress bar, confidently delivering finished work.\n(7) f1_adapt.png: the robot holds a tablet beside a small stack of database discs and a circular refresh arrow sign, reviewing what worked.\n(8) f1_outcome.png: Maya smiles and clasps her hands at her desk, delighted; her laptop shows a finished report with a rising green bar chart; the robot stands beside her with a thumbs up; small envelope and calendar pictograms float near the screen.\nCopy each final image into the current directory with exactly those file names, overwrite nothing else, do not edit the images afterwards, then list the directory.",
+  "icons": [
+    {
+      "name": "f1_reactive",
+      "subject": "Maya at her office desk with a laptop turns to ask the robot a question; the robot stands beside the desk waiting for instructions, hands at its sides"
+    },
+    {
+      "name": "f1_aware",
+      "subject": "the robot sits at a desk watching two monitors full of small charts and gauges, attentive, a plant beside it"
+    },
+    {
+      "name": "f1_anticipate",
+      "subject": "the robot stands with one hand on its chin, thinking; a large empty thought cloud floats above it containing a small rising line chart and a small warning triangle"
+    },
+    {
+      "name": "f1_agenda",
+      "subject": "the robot holds a clipboard with a checklist of blank lines and tick boxes, ticking one item with a pen"
+    },
+    {
+      "name": "f1_arbitrate",
+      "subject": "the robot stands beside a large brass balance scale, weighing a green tick token against a red stop token, hand raised thoughtfully"
+    },
+    {
+      "name": "f1_act",
+      "subject": "the robot holds a tablet towards the viewer showing a checklist of blank lines with green ticks and a progress bar, confidently delivering finished work"
+    },
+    {
+      "name": "f1_adapt",
+      "subject": "the robot holds a tablet beside a small stack of database discs and a circular refresh arrow sign, reviewing what worked"
+    },
+    {
+      "name": "f1_outcome",
+      "subject": "Maya smiles and clasps her hands at her desk, delighted; her laptop shows a finished report with a rising green bar chart; the robot stands beside her with a thumbs up; small envelope and calendar pictograms float near the screen"
+    }
+  ]
+}

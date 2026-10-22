@@ -120,6 +120,7 @@ class Canvas:
         self.ax.set_aspect("equal")
         self.ax.axis("off")
         self.nodes = {}
+        self.chips = []  # (x, y, w, h, label, region) of every chip, for the overlap audit
         self._r = None
 
     def _renderer(self):
@@ -217,17 +218,77 @@ class Canvas:
                 self.text(tx, y + h - 1.4, title, size=s, weight="bold", color=color or c["ink"],
                           ha="left" if title_pos == "tl" else "center", va="top", z=z + 0.3)
 
-    def chip(self, x, y, s, r="amber", size=None, h=None, pad=0.9, solid=False, z=8, ha="center"):
-        """Pill badge; width measured from the rendered text. Returns (x0, w)."""
+    def chip(self, x, y, s, r="amber", size=None, h=None, pad=0.9, solid=False, z=8, ha="center", region=None):
+        """Pill badge; width measured from the rendered text. Returns (x0, w). Every chip is recorded for
+        cv.overlaps(); pass region=(x0, y0, x1, y1) when it must stay inside a card, band or cloud."""
         c = role(r)
         size = size or self.size - 0.8
         h = h or size * 0.55
         w = self.text_width(s, size) + 2 * pad
         x0 = x - w / 2 if ha == "center" else (x if ha == "left" else x - w)
+        self.chips.append((x0, y - h / 2, w, h, s, region))
         self.ax.add_patch(FancyBboxPatch((x0, y - h / 2), w, h, boxstyle=f"round,pad=0,rounding_size={h/2}",
                           lw=0.5, ec=c["stroke"], fc=c["mark"] if solid else c["soft"], zorder=z))
         self.text(x0 + w / 2, y, s, size=size, color="white" if solid else c["ink"], z=z + 1)
         return x0, w
+
+    def flow_chips(self, items, x0, x1, ytop, r="amber", size=None, h=None, pad=0.9, gap=1.0, row_gap=0.8,
+                   solid=False, z=8, align="center", region=None):
+        """Lay chips out like words in a paragraph: measured widths, wrapped into rows that fit [x0, x1],
+        rows centred (or left-aligned) and stacked down from ytop. Never place a row of chips at hand-picked
+        x positions: widths change with the font and the chips collide or spill out of their container.
+        Returns the bottom y of the last row."""
+        size = size or self.size - 0.8
+        h = h or size * 0.55
+        widths = [self.text_width(s, size) + 2 * pad for s in items]
+        rows, cur = [], []
+        for s, w in zip(items, widths):
+            if cur and sum(cw for _, cw in cur) + gap * len(cur) + w > x1 - x0:
+                rows.append(cur)
+                cur = []
+            cur.append((s, w))
+        rows.append(cur)
+        region = region or (x0, ytop - len(rows) * (h + row_gap) - 0.1, x1, ytop + 0.1)
+        y = ytop - h / 2
+        for row in rows:
+            rw = sum(w for _, w in row) + gap * (len(row) - 1)
+            x = x0 + ((x1 - x0 - rw) / 2 if align == "center" else 0.0)
+            for s, w in row:
+                self.chip(x, y, s, r, size=size, h=h, pad=pad, solid=solid, z=z, ha="left", region=region)
+                x += w + gap
+            y -= h + row_gap
+        return ytop - len(rows) * h - (len(rows) - 1) * row_gap
+
+    def overlaps(self, tol=0.05):
+        """Layout audit: chips that overlap each other or leave their declared region. Empty list = clean.
+        End every figure script with `assert not cv.overlaps(), cv.overlaps()`."""
+        bad = []
+        for i, (x, y, w, h, s, reg) in enumerate(self.chips):
+            if reg and (x < reg[0] - tol or y < reg[1] - tol or x + w > reg[2] + tol or y + h > reg[3] + tol):
+                bad.append(f"'{s}' leaves its region")
+            for x2, y2, w2, h2, s2, _ in self.chips[i + 1:]:
+                if x < x2 + w2 - tol and x2 < x + w - tol and y < y2 + h2 - tol and y2 < y + h - tol:
+                    bad.append(f"'{s}' overlaps '{s2}'")
+        return bad
+
+    def text_overlaps(self, tol=0.15):
+        """Layout audit for all text: pairs of labels whose rendered boxes overlap, and labels cut by the
+        canvas edge. Empty list = clean. Complements overlaps() (chips) for bubbles, cards and captions."""
+        r = self._renderer()
+        inv = self.ax.transData.inverted()
+        boxes = []
+        for tx in self.ax.texts:
+            if not tx.get_text().strip() or not tx.get_visible():
+                continue
+            (x0, y0), (x1, y1) = inv.transform(tx.get_window_extent(r).get_points())
+            boxes.append((x0, y0, x1, y1, tx.get_text().replace("\n", " ")[:28]))
+        bad = [f"'{s}' is cut by the canvas edge" for x0, y0, x1, y1, s in boxes
+               if x0 < -tol or y0 < -tol or x1 > self.w + tol or y1 > self.h + tol]
+        for i, (a0, b0, a1, b1, s) in enumerate(boxes):
+            for c0, d0, c1, d1, s2 in boxes[i + 1:]:
+                if a0 < c1 - tol and c0 < a1 - tol and b0 < d1 - tol and d0 < b1 - tol:
+                    bad.append(f"'{s}' overlaps '{s2}'")
+        return bad
 
     # ---- figure-series and narrative devices ----------------------------------
     def badge(self, x, y, k, r="neutral", d=3.0, z=12, size=None):
@@ -477,7 +538,8 @@ class Canvas:
         self.ax.set_ylim(0, self.h)
         return im
 
-    def image(self, path, cx, cy, w, z=12, knockout_white=True, crop=True, fit="width"):
+    def image(self, path, cx, cy, w, z=12, knockout_white=True, crop=True, fit="width", h=None, radius=0.0,
+              focus=(0.5, 0.5), zoom=1.0):
         """Place a raster icon/illustration centred at (cx, cy) with width w mm (height from aspect).
         Use only for illustrative content (agent mascots, scene photos), never for labels or data.
         The icon is resampled exactly once, with Lanczos plus a light unsharp mask, to its printed size
@@ -487,11 +549,31 @@ class Canvas:
         border (cream or pastel fills inside the outline stay opaque), with a 1 px soft rim.
         fit="height" makes w the icon's height instead of its width, so characters of one set with
         different props (a wide laptop, a tall magnifier) come out at the same body size; fit="box"
-        makes w the longer side, for object icons of mixed aspect.
+        makes w the longer side, for object icons of mixed aspect. fit="cover" fills a w x h card edge to
+        edge (full-bleed vignettes): the source is cropped to the card's aspect around `focus` (fractions of
+        width, height; 0.5, 0.35 keeps faces), never letterboxed, with `radius` mm rounded corners; zoom > 1
+        crops tighter around `focus` so a small subject (a robot in a room) fills a thumbnail cell.
         Returns the placed height in mm."""
         from PIL import Image, ImageDraw, ImageFilter
         im = Image.open(path).convert("RGBA")
         im = Image.alpha_composite(Image.new("RGBA", im.size, "white"), im).convert("RGB")
+        if fit == "cover":
+            assert h, "fit='cover' needs the card height h"
+            crop, knockout_white = False, False
+            if im.width / im.height > w / h:  # too wide: crop the sides
+                cw = round(im.height * w / h)
+                x = round(min(max(focus[0] * im.width - cw / 2, 0), im.width - cw))
+                im = im.crop((x, 0, x + cw, im.height))
+            else:
+                ch = round(im.width * h / w)
+                y = round(min(max(focus[1] * im.height - ch / 2, 0), im.height - ch))
+                im = im.crop((0, y, im.width, y + ch))
+            if zoom > 1:
+                zw, zh = round(im.width / zoom), round(im.height / zoom)
+                x = round(min(max(focus[0] * im.width - zw / 2, 0), im.width - zw))
+                y = round(min(max(focus[1] * im.height - zh / 2, 0), im.height - zh))
+                im = im.crop((x, y, x + zw, y + zh))
+            fit = "width"
         if crop:
             box = im.convert("L").point(lambda v: 255 if v < 245 else 0).getbbox()
             if box:
@@ -515,6 +597,11 @@ class Canvas:
             soft = np.clip((1.0 - a.min(axis=2)) / 0.25, 0.0, 1.0)
             alpha = np.where(outside, 0.0, np.where(rim, soft, 1.0))
             a = np.clip((a - (1.0 - alpha[..., None])) / np.maximum(alpha, 1e-3)[..., None], 0.0, 1.0)
+        if radius > 0:  # rounded card corners, antialiased by 4x supersampling
+            r4 = round(radius * ppm * 4)
+            m = Image.new("L", (tw * 4, th * 4), 0)
+            ImageDraw.Draw(m).rounded_rectangle((0, 0, tw * 4 - 1, th * 4 - 1), r4, fill=255)
+            alpha = alpha * np.asarray(m.resize((tw, th), Image.LANCZOS), float) / 255.0
         # snap to the output pixel grid so the export is a 1:1 copy of the resampled icon
         x0, y0 = round((cx - tw / ppm / 2) * ppm) / ppm, round((cy - th / ppm / 2) * ppm) / ppm
         w, h = tw / ppm, th / ppm
@@ -758,6 +845,39 @@ def compare(original, new, out, width=1600):
     return out
 
 
+def visual_stats(png, width=1600):
+    """At a fixed pixel width: empty % (16 px blocks that are flat white), colour % (saturated pixels),
+    picture % (blocks with illustration-like texture: many distinct tones)."""
+    from PIL import Image
+    im = Image.open(png).convert("RGB")
+    im = im.resize((width, round(im.height * width / im.width)))
+    g = np.asarray(im.convert("L"), float)
+    hsv = np.asarray(im.convert("HSV"), float)
+    b = 16
+    H, W = (g.shape[0] // b) * b, (g.shape[1] // b) * b
+    blk = g[:H, :W].reshape(H // b, b, W // b, b).swapaxes(1, 2).reshape(-1, b * b)
+    empty = ((blk.min(axis=1) >= 245) & (blk.std(axis=1) < 2)).mean()
+    tones = np.array([len(np.unique((r // 12).astype(int))) for r in blk])
+    picture = ((tones >= 9) & (blk.std(axis=1) > 14)).mean()
+    colour = ((hsv[..., 1] > 60) & (hsv[..., 2] > 60)).mean()
+    return {"empty": round(100 * empty, 1), "colour": round(100 * colour, 1), "picture": round(100 * picture, 1)}
+
+
+def parity(original, new):
+    """Redesign parity check: a redesign must not be emptier, greyer or less illustrated than the original
+    it claims to beat unless the brief says so. 'Cleaner' that is really 'emptier' is the most common way a
+    redesign of an illustrated survey figure loses (Proactive AI, first attempt). Returns (stats, warnings)."""
+    o, n = visual_stats(original), visual_stats(new)
+    warn = []
+    if n["empty"] > o["empty"] + 8:
+        warn.append(f"emptier: {n['empty']}% empty blocks vs {o['empty']}% (fill cards, enlarge content, cut canvas)")
+    if n["colour"] < 0.6 * o["colour"]:
+        warn.append(f"greyer: {n['colour']}% saturated vs {o['colour']}% (solid headers, filled chips, vignettes)")
+    if n["picture"] < 0.6 * o["picture"]:
+        warn.append(f"less illustrated: {n['picture']}% picture vs {o['picture']}% (keep what the pictures taught)")
+    return {"original": o, "redesign": n}, warn
+
+
 def swatches(pngs, out, k=8, height=260):
     """Series check: the figures side by side, each with its k most-used saturated colours underneath.
     A taxonomy item whose swatch changes between figures is a palette drift to fix (Proactive AI's 6A)."""
@@ -806,13 +926,20 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
             print(p, "white/tint/ink %", density(p))
     elif cmd == "compare":
         print(compare(*args[:3]))
+    elif cmd == "parity":
+        stats, warn = parity(*args[:2])
+        print("            empty  colour  picture")
+        for k, v in stats.items():
+            print(f"{k:<10} {v['empty']:>6} {v['colour']:>7} {v['picture']:>8}")
+        print("\n".join("WARN " + w for w in warn) or "ok: not emptier, greyer or less illustrated")
+        sys.exit(1 if warn else 0)
     elif cmd == "swatches":
         out, pals = swatches(args[:-1], args[-1])
         for p, c in zip(args[:-1], pals):
             print(os.path.basename(p), " ".join(c))
         print(out)
     else:
-        sys.exit("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | swatches PNG... OUT]")
+        sys.exit("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | parity ORIGINAL NEW | swatches PNG... OUT]")
 elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to export
     import tempfile
     cv = Canvas(120, 60)
@@ -832,6 +959,8 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
     cv.block_arrow(6, 10, 30, 10, 3.5); cv.icon_lock(40, 10, 3); cv.icon_cycle(48, 10, 3.2)
     cv.icon_robot(56, 10, 4); cv.icon_clock(64, 10, 3); cv.brace(74, 6, 14, "right")
     cv.label(80, 13, "a", "Label")
+    cv.flow_chips(["Update knowledge", "Refine preferences", "Calibrate thresholds"], 84, 116, 48, "teal", size=5.6)
+    assert not cv.overlaps(), cv.overlaps()
     d = tempfile.mkdtemp()
     outs = cv.save(os.path.join(d, "smoke"))
     assert all(os.path.getsize(p) > 1000 for p in outs), outs

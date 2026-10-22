@@ -1,0 +1,13 @@
+{
+  "set": "proactive-v2-cast",
+  "generator": "codex-cli 0.163.0 built-in image_gen",
+  "date": "2026-10-22",
+  "refs": [],
+  "prompt": "Use your built-in image generation tool to create 1 separate PNG illustrations that form ONE consistent set of vignettes for a figure in a scientific paper. Make one image_gen call per vignette.\nStyle for every vignette: detailed flat editorial illustration with soft cel shading and warm natural light, rich but calm colours, a complete environment (room, furniture, window, props) filling the whole frame, crisp dark outlines, no photo realism.\nFull-bleed landscape 1536x1024 canvas: the scene fills the frame edge to edge with no white margin and no border; the main subject is large and fills most of the frame. Absolutely no readable text: screens, documents, signs and tablets show only blank bars, simple shapes, ticks, charts or pictograms, because every label is added later as vector text. No speech bubbles, logos or watermarks.\nEvery image shows the exact same character(s): (a) a friendly white humanoid robot: round glossy white head, a black visor face with two glowing blue oval eyes, small blue ear discs, slim white body with light-grey joints; (b) Maya, a woman in her thirties with long wavy dark-brown hair, a mustard-yellow cardigan over a white top and dark trousers; (c) Sam, a young man with short black hair, round glasses and a navy sweater. Keep proportions, faces, clothing, line weight and colours identical across the set; only pose, props and setting change.\nIcons:\n(1) cast.png: a character reference sheet: the robot, Maya and Sam standing side by side facing the viewer, full bodies visible, in a bright plain studio with a soft light-grey floor and wall.\nCopy each final image into the current directory with exactly those file names, overwrite nothing else, do not edit the images afterwards, then list the directory.",
+  "icons": [
+    {
+      "name": "cast",
+      "subject": "a character reference sheet: the robot, Maya and Sam standing side by side facing the viewer, full bodies visible, in a bright plain studio with a soft light-grey floor and wall"
+    }
+  ]
+}

@@ -1,12 +1,17 @@
 """Redesign of Fig. 5 of "Proactive AI for Superintelligent Agents": historical foundations.
 
 Content from the source figure: seven traditions with their decades and one-sentence summaries, ending in
-proactive AI agents and the six capacities. Changes: a proportional time axis (the source spaces decades
-evenly and zig-zags), each era drawn as a span on its own lane with a leader line to its card, and a
-legacy chip per era coloured like the capacity it prepared. The era -> capacity reading follows the
-caption's four themes (future consequences -> Anticipation, persistent goals -> Agenda, changing
-context -> Awareness, value of intervention -> Arbitration); feedback control -> Adaptation and
-foundation models -> all six are our reading, stated in the notes.
+proactive AI agents and the six capacities.
+
+Kept from the original: one illustrated card per tradition (the pictures carry each era: a control
+console, a 1970s terminal, a phone in the street), numbered titles, and the hero card with the six
+capacities, read in one pass. Fixed: the zig-zag spine spaced decades evenly and repeated "2000s-2010s"
+twice with no sign that the eras overlap; here a span chart on a proportional axis shows when each tradition
+was active (numbers match the cards, which stay in reading order), and every card ends in a legacy chip
+coloured like the capacity it prepared. The era -> capacity reading follows the caption's four themes
+(future consequences -> Anticipation, persistent goals -> Agenda, changing context -> Awareness, value of
+intervention -> Arbitration); feedback control -> Adaptation and foundation models -> all six are our
+reading, stated in the notes.
 
     python render_history.py --out <dir>
 """
@@ -19,91 +24,105 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from sixa import NAMES, SIXA  # noqa: E402
 from paperkit import Canvas, INK, MUTED  # noqa: E402
+from matplotlib.patches import FancyBboxPatch  # noqa: E402
 
-ART = os.path.join(HERE, "art")
+VIG = os.path.join(HERE, "vignettes")
 NEU = dict(fill="#F3F4F6", soft="#E4E7EB", stroke="#8F98A4", ink="#353C47", mark="#5B6577")
-ERAS = [  # key, decades, (start, end), title, summary, legacy text, capacity, row, slot
-    ("control", "1940s–1950s", (1940, 1960), "Control and Cybernetics",
-     "Feedback control and cybernetic principles laid the foundation for self-regulating systems.", "feedback", "Adaptation", "top", 0),
-    ("planning", "1960s–1970s", (1960, 1980), "Planning and World Models",
-     "Planning and world models let machines reason about future states and actions.", "future states", "Anticipation", "bottom", 0),
-    ("bdi", "1980s–1990s", (1980, 2000), "BDI and Agent Theory",
-     "Belief-desire-intention models formalized how agents reason and act toward goals.", "goals & intentions", "Agenda", "top", 1),
-    ("ubiquitous", "1990s–2000s", (1990, 2010), "Ubiquitous and Context-Aware Computing",
-     "Computing embedded in everyday life: systems that sense context and adapt.", "context", "Awareness", "bottom", 1),
-    ("mixed", "2000s–2010s", (2000, 2020), "Mixed-Initiative Interaction",
-     "User input combined with agent suggestions and actions for better decisions.", "when to step in", "Arbitration", "top", 2),
-    ("goals", "2000s–2010s", (2000, 2020), "Goal Reasoning and Intrinsic Motivation",
-     "How agents generate goals, prioritize, and pursue what matters.", "self-set goals", "Agenda", "bottom", 2),
-    ("foundation", "2010s–2020s", (2010, 2025), "Foundation Models and Tool-Using Agents",
-     "LLMs and tools enabled flexible reasoning and execution across real-world tasks.", "all six", None, "top", 3),
+PRO = "#2B2F6E"
+ERAS = [  # vignette, decades, (start, end), title, summary, legacy text, capacity, (unused)
+    ("e_control", "1940s–1950s", (1940, 1960), "Control and Cybernetics",
+     "Feedback control and cybernetic principles laid the foundation for self-regulating systems.", "feedback", "Adaptation", "top"),
+    ("e_planning", "1960s–1970s", (1960, 1980), "Planning and World Models",
+     "Planning and world models let machines reason about future states and actions.", "future states", "Anticipation", "bottom"),
+    ("e_bdi", "1980s–1990s", (1980, 2000), "BDI and Agent Theory",
+     "Belief-desire-intention models formalized how agents reason and act toward goals.", "goals & intentions", "Agenda", "top"),
+    ("e_ubiquitous", "1990s–2000s", (1990, 2010), "Ubiquitous and Context-Aware Computing",
+     "Computing embedded in everyday life: systems that sense context and adapt.", "context", "Awareness", "bottom"),
+    ("e_mixed", "2000s–2010s", (2000, 2020), "Mixed-Initiative Interaction",
+     "User input combined with agent suggestions and actions for better decisions.", "when to step in", "Arbitration", "top"),
+    ("e_goals", "2000s–2010s", (2000, 2020), "Goal Reasoning and Intrinsic Motivation",
+     "How agents generate goals, prioritize, and pursue what matters.", "self-set goals", "Agenda", "bottom"),
+    ("e_foundation", "2010s–2020s", (2010, 2025), "Foundation Models and Tool-Using Agents",
+     "LLMs and tools enabled flexible reasoning and execution across real-world tasks.", "all six", None, "top"),
 ]
-W, H = 178, 100
-AX0, AX1, Y0, Y1 = 6.0, 150.0, 1940, 2025
+SHORT = ["Control & cybernetics", "Planning & world models", "BDI & agent theory", "Ubiquitous & context-aware",
+         "Mixed-initiative interaction", "Goal reasoning & motivation", "Foundation models"]
+LANE = [0, 0, 0, 1, 0, 2, 1]
+FOCUS = {"e_planning": (0.5, 0.2), "e_ubiquitous": (0.5, 0.18)}  # keep the people's heads in the crop  # span-chart lane per era, so overlapping eras never share a lane
+CW, CH, GH = 42.5, 44.0, 22.0
+W, H = 178, 1.0 + GH + 3.0 + 2 * CH + 2.0 + 1.0
+Y0, Y1, TX0, TX1 = 1940, 2032, 5.0, 176.0
 
 
 def xs(year):
-    return AX0 + (year - Y0) * (AX1 - AX0) / (Y1 - Y0)
+    return TX0 + (year - Y0) / (Y1 - Y0) * (TX1 - TX0)
+
+
+def rbox(cv, x, y, w, h, fc, ec="none", lw=0.0, r=1.4, z=5):
+    cv.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={r}", fc=fc, ec=ec, lw=lw, zorder=z))
+
+
+def era_card(cv, x, y, k, era):
+    vig, dec, _, title, summ, leg, cap, _ = era
+    c = SIXA[cap] if cap else NEU
+    rbox(cv, x, y, CW, CH, "white", c["stroke"], 0.6, r=1.8, z=3)
+    vh = 19.0
+    cv.image(os.path.join(VIG, vig + ".jpg"), x + CW / 2, y + CH - 0.8 - vh / 2, CW - 1.6, fit="cover", h=vh,
+             radius=1.2, focus=FOCUS.get(vig, (0.5, 0.5)), z=5)
+    x0, _ = cv.chip(x + 1.6, y + CH - 3.4, f"{k}  ·  {dec}", c, size=6.6, h=3.8, pad=1.0, solid=True, z=8, ha="left")
+    ty = y + CH - vh - 2.8
+    lines = textwrap.wrap(title, 28, break_on_hyphens=False)
+    cv.text(x + 1.6, ty, "\n".join(lines), size=7.6, weight="bold", color=c["ink"], ha="left", va="top", linespacing=1.05)
+    sy = ty - len(lines) * 3.1 - 0.9
+    cv.text(x + 1.6, sy, "\n".join(textwrap.wrap(summ, 37, break_on_hyphens=False)), size=6.5, color=INK, ha="left", va="top", linespacing=1.12)
+    cv.chip(x + 1.6, y + 3.0, "→ " + leg, c, size=6.6, h=3.8, pad=1.0, solid=True, z=8, ha="left")
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out")
     a = ap.parse_args()
-    cv = Canvas(W, H, family="sans", size=7.0)
-    axis_y = 52.0
-    cv.line([(AX0, axis_y), (AX1 + 2.0, axis_y)], color="#4B5563", lw=0.9)
-    for yr in range(1940, 2030, 10):
-        cv.line([(xs(yr), axis_y - 0.9), (xs(yr), axis_y + 0.9)], color="#4B5563", lw=0.6)
-        cv.text(xs(yr), axis_y - 7.6, str(yr), size=5.9, color=MUTED)
-    # top-row eras draw their spans above the axis, bottom-row eras below, so leaders never cross a bar;
-    # each leader lands at a year inside its span, clear of the decade labels
-    lane = {"control": 0, "bdi": 0, "mixed": 0, "foundation": 1, "planning": 0, "ubiquitous": 0, "goals": 1}
-    land = {"control": 1948, "bdi": 1988, "mixed": 2005, "foundation": 2018, "planning": 1968, "ubiquitous": 1994,
-            "goals": 2014}
-    card_w, card_h, gap = 34.0, 31.0, 2.67
-    for key, dec, (s, e), title, summary, legacy, cap, row, slot in ERAS:
-        c = SIXA[cap] if cap else NEU
-        top = row == "top"
-        ly = axis_y + (2.4 + lane[key] * 2.4) * (1 if top else -1)
-        cv.ax.plot([xs(s) + 0.6, xs(e) - 0.6], [ly, ly], color=c["mark"], lw=4.0, solid_capstyle="round", zorder=7)
-        x = AX0 + slot * (card_w + gap) + (0 if top else 17.0)
-        y = 66.0 if top else 4.0
-        cv.box(x, y, card_w, card_h, "neutral", fill="white", stroke=c["stroke"], lw=0.7, radius=1.8)
-        p = os.path.join(ART, f"era_{key}.png")
-        if os.path.exists(p):
-            cv.image(p, x + 4.8, y + card_h - 5.2, 7.4, fit="box")
-        cv.text(x + 9.8, y + card_h - 2.8, dec, size=5.9, color=MUTED, ha="left")
-        tl = textwrap.wrap(title, 19)
-        for j, t in enumerate(tl):
-            cv.text(x + 9.8, y + card_h - 5.8 - j * 2.8, t, size=6.7, weight="bold", color=c["ink"], ha="left")
-        sy = y + card_h - 5.8 - max(len(tl), 2) * 2.8 - 1.8
-        for j, t in enumerate(textwrap.wrap(summary, 34)):
-            cv.text(x + 1.8, sy - j * 2.6, t, size=5.9, color=INK, ha="left")
-        cv.chip(x + 1.8, y + 3.2, "→ " + legacy, c, size=6.0, ha="left", pad=0.9)
-        lx, cx = xs(land[key]), x + card_w / 2
-        if top:
-            cv.line([(cx, y), (cx, 62.5), (lx, 62.5), (lx, ly + 1.0)], color=c["stroke"], lw=0.55, radius=0.8)
-        else:
-            cv.line([(cx, y + card_h), (cx, 39.0), (lx, 39.0), (lx, ly - 1.0)], color=c["stroke"], lw=0.55, radius=0.8)
-    # hero: what these traditions add up to
-    hx, hw = 154.0, 22.0
-    cv.arrow([(AX1 + 2.0, axis_y), (hx - 0.6, axis_y)], color="#4B5563", lw=0.9, head=1.3)
-    cv.box(hx, 4.0, hw, 93.0, "neutral", fill="#F7F8FB", stroke="#5A5FA8", lw=0.9, radius=2.2)
-    cv.text(hx + hw / 2, 8.6, "chip colour =", size=5.9, color=MUTED, style="italic")
-    cv.text(hx + hw / 2, 6.2, "capacity it prepared", size=5.9, color=MUTED, style="italic")
-    cv.text(hx + hw / 2, 91.0, "Proactive", size=8.0, weight="bold", color="#2B2F6E")
-    cv.text(hx + hw / 2, 87.4, "AI agents", size=8.0, weight="bold", color="#2B2F6E")
-    cv.text(hx + hw / 2, 83.6, "2020s", size=6.0, color=MUTED)
-    for k, name in enumerate(NAMES):
-        c = SIXA[name]
-        yy = 77.0 - k * 11.6
-        icon = {"Awareness": "aware", "Anticipation": "anticipate", "Agenda": "agenda", "Arbitration": "arbitrate",
-                "Action": "act", "Adaptation": "adapt"}[name]
-        p = os.path.join(ART, icon + ".png")
-        if os.path.exists(p):
-            cv.image(p, hx + hw / 2, yy + 1.8, 6.4, fit="box")
-        cv.chip(hx + hw / 2, yy - 3.6, name, c, size=6.2, pad=0.9)
+    cv = Canvas(W, H, family="sans", size=7.2)
+    # ---- span chart: when each tradition was active (overlaps read directly, no leaders) ----------------
+    gy = H - 1.0 - GH
+    rbox(cv, 1.0, gy, W - 2.0, GH, "#F6F7F9", "#D5D9DF", 0.5, r=1.8, z=1)
+    base = gy + 4.6
+    for yr in range(1940, 2031, 10):
+        cv.line([(xs(yr), base - 0.6), (xs(yr), gy + GH - 1.2)], color="#DDE1E6", lw=0.4, z=2)
+        cv.text(xs(yr), base - 2.2, str(yr), size=6.2, color=MUTED)
+    lh = 5.0
+    for k, (era, short, lane) in enumerate(zip(ERAS, SHORT, LANE)):
+        c = SIXA[era[6]] if era[6] else NEU
+        s, e = era[2]
+        y = base + 0.6 + (2 - lane) * (lh + 0.6)
+        rbox(cv, xs(s) + 0.3, y, xs(e) - xs(s) - 0.6, lh, c["mark"], r=lh / 2, z=4)
+        cv.text(xs(s) + 2.0, y + lh / 2, f"{k + 1}  {short}", size=6.4, weight="bold", color="white", ha="left", z=6)
+    y = base + 0.6 + 2 * (lh + 0.6)
+    rbox(cv, xs(2021) + 0.3, y, xs(2032) - xs(2021) - 0.9, lh, PRO, r=lh / 2, z=4)
+    cv.text((xs(2021) + xs(2032)) / 2, y + lh / 2, "8  Proactive AI", size=6.4, weight="bold", color="white", z=6)
+    # ---- cards in reading order 1-7, then the hero ---------------------------------------------------
+    gap = (W - 2.0 - 4 * CW) / 3
+    for k, era in enumerate(ERAS):
+        r, col = divmod(k, 4)
+        x = 1.0 + col * (CW + gap)
+        y = gy - 3.0 - (r + 1) * CH - r * 2.0
+        era_card(cv, x, y, k + 1, era)
+    x, y = 1.0 + 3 * (CW + gap), gy - 3.0 - 2 * CH - 2.0
+    rbox(cv, x, y, CW, CH, "#EEEEF7", "#9EA1CC", 0.7, r=1.8, z=3)
+    vh = 19.0
+    cv.image(os.path.join(VIG, "e_hero.jpg"), x + CW / 2, y + CH - 0.8 - vh / 2, CW - 1.6, fit="cover", h=vh,
+             radius=1.2, focus=(0.5, 0.4), z=5)
+    cv.chip(x + 1.6, y + CH - 3.4, "8  ·  2020s", dict(mark=PRO, stroke=PRO, soft=PRO, ink=PRO), size=6.6, h=3.8, pad=1.0,
+            solid=True, z=8, ha="left")
+    cv.text(x + 1.6, y + CH - vh - 2.8, "Proactive AI agents", size=7.6, weight="bold", color=PRO, ha="left", va="top")
+    cv.text(x + 1.6, y + CH - vh - 6.6, "inherit all six capacities:", size=6.5, color=INK, ha="left", va="top")
+    cw2 = (CW - 4.2) / 2
+    for i, n in enumerate(NAMES):
+        cx = x + 1.6 + (i % 2) * (cw2 + 1.0)
+        cy = y + 13.4 - (i // 2) * 4.6
+        rbox(cv, cx, cy - 1.9, cw2, 3.8, SIXA[n]["mark"], r=1.9, z=5)
+        cv.text(cx + cw2 / 2, cy, n, size=6.4, weight="bold", color="white", z=6)
+    assert not cv.overlaps() and not cv.text_overlaps(), cv.overlaps() + cv.text_overlaps()
     print("\n".join(cv.save(os.path.join(a.out, "proactive_history"))))
 
 

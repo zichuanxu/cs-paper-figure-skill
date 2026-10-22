@@ -93,11 +93,49 @@ numbers, crossing curves, legends detached from their panels.
 13. **Stage labels as inverse tabs** (`cv.tab(..., solid=True)`) that overlap the container border, so the
    label belongs to the container.
 
-## 3. Worked examples
+## 3. Register: redesigning an illustrated survey figure
 
-`scripts/examples/proactive/`: `sixa.py` (the shared palette), `render_overview.py` (Fig. 1: what the user
-experiences beside how the agent works), `render_capabilities.py` (Fig. 3: low/high grid with one generated
-robot cast and vector dialogue), `render_history.py` (Fig. 5: proportional timeline, era spans on mirrored
-lanes, legacy chips in the capacity colours), `render_arbitration.py`, `render_cycle.py`, `render_spectrum.py`.
+The first redesigns of *Proactive AI* (2026-10) lost to the originals on six of six figures, although each
+fixed a real fault. Side by side at the same width they were emptier (Fig. 4: 58 % empty blocks vs 31 %),
+greyer (Fig. 10: 6 % saturated pixels vs 30 %) and less illustrated (Fig. 6: pictures in 21 % of blocks vs
+36 %); text sat at 6-7 pt in large white cards. The method-figure rules (restraint, pale fills, hairline
+outlines, words instead of decoration) had been applied to a figure whose register is illustration. What the
+originals did well, and a redesign must keep:
+
+- **Pictures carry the content.** Every stage, era or example has its own vignette of the agent *doing* that
+  thing (watching dashboards, weighing a scale, cooking dinner); the label only names it.
+- **Cards are full.** Each card is filled edge to edge by its vignette, list or chips; no empty interior.
+- **Solid colour for structure.** Headers, numbered tabs and verdict chips are saturated fills with white bold
+  text; tints are kept for the card body.
+- **Large type.** Titles 10-14 pt and body 7-8 pt at the printed width, larger than the method-figure scale.
+- **Narrative layout.** Left to right (reactive → proactive), a cycle, a spine: the shape tells the story.
+
+Rules for this register (14-18 continue the list above):
+
+14. **Inventory before redesign.** Write down the original's strengths and faults; carry every strength over.
+    A redesign may change the layout only where the new one tells the story better, not to look cleaner.
+15. **One vignette per unit** (`codex_icons.py` style `"vignette"`, full-bleed, a shared cast reference via
+    `--ref`), placed with `cv.image(path, cx, cy, w, fit="cover", h=h, radius=r)` so it fills its card.
+16. **Solid headers, tinted bodies**: `cv.tab(..., solid=True)` or a filled band in the series colour's `mark`
+    with white bold text; body fill in its `fill`; nothing important in pale outline only.
+17. **Type at the original's scale or larger**, measured at the same printed width.
+18. **Parity gate**: `paperkit.py parity original.png new.png` must pass (not emptier by > 8 points, not below
+    60 % of the original's colour or picture coverage) unless the brief asks for a sparser figure.
+19. **No hand-placed chip rows.** Chips laid over a band or a picture (a thought cloud, a list strip) go through
+    `cv.flow_chips(items, x0, x1, ytop, region=...)`, which measures and wraps them; for a cloud or screen
+    inside a vignette, measure its free area from the pixels first (`render_cycle.white_region`). End every
+    script with `assert not cv.overlaps() and not cv.text_overlaps()`; the second-version Fig. 1 and Fig. 6 shipped
+    with chips that overlapped each other and spilled out of the cloud because their x positions were guessed.
+
+## 4. Worked examples
+
+`scripts/examples/proactive/` (second version, after the register lesson in §3): `sixa.py` (the shared
+palette), `vignettes/` (41 full-bleed vignettes of one cast, generated from `cast.jpg` with `--ref`, prompts in
+the `manifest_*.json` files), `render_overview.py` (Fig. 1: reactive scene, five illustrated stages with solid
+headers, Adaptation bar, result), `render_capabilities.py` (Fig. 3: current -> goal pairs, low/high grid with
+vector dialogue, earned autonomy), `render_spectrum.py` (Fig. 4: scenes with vector dialogue and plan/progress
+cards), `render_history.py` (Fig. 5: illustrated era cards around a proportional axis), `render_cycle.py`
+(Fig. 6: the ring with the running example as vector chips), `render_arbitration.py` (Fig. 10: solid gate
+headers, fallbacks beside each test, licence column). All six pass `paperkit.py parity` against the originals.
 `scripts/examples/reharness/render_fig1.py` (diff panels, typed-edge legend, bridged crossing) and
 `scripts/examples/paperbanana/render_fig5.py` (dumbbell centred on human parity). The README gallery shows each beside the paper's original.

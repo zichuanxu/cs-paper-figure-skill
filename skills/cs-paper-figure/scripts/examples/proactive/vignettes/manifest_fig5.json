@@ -1,0 +1,43 @@
+{
+  "set": "proactive-v2-fig5",
+  "generator": "codex-cli 0.163.0 built-in image_gen",
+  "date": "2026-10-22",
+  "refs": [
+    "cast.png"
+  ],
+  "prompt": "Use your built-in image generation tool to create 8 separate PNG illustrations that form ONE consistent set of vignettes for a figure in a scientific paper. Make one image_gen call per vignette.\nStyle for every vignette: detailed flat editorial illustration with soft cel shading and warm natural light, rich but calm colours, a complete environment (room, furniture, window, props) filling the whole frame, crisp dark outlines, no photo realism.\nFull-bleed square 1024x1024 canvas: the scene fills the frame edge to edge with no white margin and no border; the main subject is large and fills most of the frame. Absolutely no readable text: screens, documents, signs and tablets show only blank bars, simple shapes, ticks, charts or pictograms, because every label is added later as vector text. No speech bubbles, logos or watermarks.\nEvery image shows the exact same character(s): (a) the friendly white humanoid robot from the reference: round glossy white head, black visor face with two glowing blue oval eyes, small blue ear discs, slim white body with light-grey joints; (b) Maya from the reference: long wavy dark-brown hair, mustard-yellow cardigan over a white top, dark trousers; (c) Sam from the reference: short black hair, round glasses, navy sweater. Only draw the characters each vignette names. Keep proportions, faces, clothing, line weight and colours identical across the set; only pose, props and setting change.\nImage 1 (cast.png) is a STYLE REFERENCE from the same figure set, not an edit target: match its character design, outline weight, fill treatment and margin.\nIcons:\n(1) e_control.png: a 1950s analogue control console with round dials, toggle switches and a block-diagram feedback loop chart pinned above it, warm vintage tones.\n(2) e_planning.png: Maya at a 1970s beige computer terminal studying a network graph of connected nodes on the screen, a globe on the desk.\n(3) e_bdi.png: three linked thought bubbles labelled only with pictograms (an eye, a target, a hand) floating over a 1980s workstation.\n(4) e_ubiquitous.png: Sam walking in a city street looking at a smartphone showing blank notification cards, wifi waves, a map pin.\n(5) e_mixed.png: a computer window with two blank chat boxes and a tick box, and the robot's hand pointing at one of them, early-2000s desktop.\n(6) e_goals.png: a notebook with a checklist of blank lines and one ticked box next to a glowing star in a thought cloud.\n(7) e_foundation.png: the robot at a laptop surrounded by floating tool pictograms: a code bracket, a database cylinder, a globe and a cloud.\n(8) e_hero.png: the robot standing confidently at the centre of a calm office, surrounded by floating app pictograms: mail, calendar, chart, folder, globe.\nCopy each final image into the current directory with exactly those file names, overwrite nothing else, do not edit the images afterwards, then list the directory.",
+  "icons": [
+    {
+      "name": "e_control",
+      "subject": "a 1950s analogue control console with round dials, toggle switches and a block-diagram feedback loop chart pinned above it, warm vintage tones"
+    },
+    {
+      "name": "e_planning",
+      "subject": "Maya at a 1970s beige computer terminal studying a network graph of connected nodes on the screen, a globe on the desk"
+    },
+    {
+      "name": "e_bdi",
+      "subject": "three linked thought bubbles labelled only with pictograms (an eye, a target, a hand) floating over a 1980s workstation"
+    },
+    {
+      "name": "e_ubiquitous",
+      "subject": "Sam walking in a city street looking at a smartphone showing blank notification cards, wifi waves, a map pin"
+    },
+    {
+      "name": "e_mixed",
+      "subject": "a computer window with two blank chat boxes and a tick box, and the robot's hand pointing at one of them, early-2000s desktop"
+    },
+    {
+      "name": "e_goals",
+      "subject": "a notebook with a checklist of blank lines and one ticked box next to a glowing star in a thought cloud"
+    },
+    {
+      "name": "e_foundation",
+      "subject": "the robot at a laptop surrounded by floating tool pictograms: a code bracket, a database cylinder, a globe and a cloud"
+    },
+    {
+      "name": "e_hero",
+      "subject": "the robot standing confidently at the centre of a calm office, surrounded by floating app pictograms: mail, calendar, chart, folder, globe"
+    }
+  ]
+}

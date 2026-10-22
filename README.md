@@ -12,7 +12,7 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | --- | --- |
 | [`SKILL.md`](skills/cs-paper-figure/SKILL.md) | The workflow: brief → references → structure → visual system → reproducible source → review |
 | [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | How it should look: typography, role colours, glyph vocabulary, composition, connectors, density, charts, anti-patterns |
-| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) plus `density` and `compare` checks |
+| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) plus `density`, `compare` and `parity` checks (a redesign must not come out emptier, greyer or less illustrated than its original) |
 | [`figure-series.md`](skills/cs-paper-figure/references/figure-series.md) | Figure series for surveys and frameworks: one taxonomy palette, chapter frames, running examples, gate stacks, spectra, illustrated scenes with vector dialogue |
 | [`codex_icons.py`](skills/cs-paper-figure/scripts/codex_icons.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icon sets generated with Codex CLI |
 | `scripts/examples/`, `references/` | The gallery's render scripts; a 120-paper figure corpus, per-lab studies and review checklists |
@@ -48,7 +48,7 @@ Each redesign keeps the paper's components, values and notation; only the drawin
 
 ### A figure series: *Proactive AI for Superintelligent Agents*
 
-Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-research2023-media/pubtools/1048480.pdf)) rebuilt as one series. The paper threads a six-capacity framework (Awareness, Anticipation, Agenda, Arbitration, Action, Adaptation) through nine figures but re-picks each capacity's colour per figure (Agenda is pink, purple and blue); here one palette is defined once (`paperkit.series`) and every figure imports it. Illustrations come from the skill's Codex helper as one cast with no text in the pixels; every word is vector text.
+Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-research2023-media/pubtools/1048480.pdf)) rebuilt as one series. The originals are illustrated figures, and their pictures, solid headers and large type are what make them work, so the redesigns keep all of that and fix the faults: each capacity's colour now stays the same in every figure (the paper paints Agenda pink, purple and blue), text baked into the illustrations becomes editable vector text, and overlapping eras, crossings and uneven type are cleaned up. The 41 illustrations come from the skill's Codex helper as one cast; every redesign passes `paperkit.py parity` (not emptier, greyer or less illustrated than its original).
 
 | | Original | Redesign |
 | --- | --- | --- |
@@ -59,9 +59,9 @@ Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-res
 | **Fig. 6**, the six capacities | <img src="gallery/proactive/original/proactive_original_fig6.png" width="400"> | <img src="gallery/proactive/proactive_cycle.png" width="400"> |
 | **Fig. 10**, arbitration | <img src="gallery/proactive/original/proactive_original_fig10.png" width="400"> | <img src="gallery/proactive/proactive_arbitration.png" width="400"> |
 
-- Fig. 1: the left column shows what the user experiences (asked vs. unasked); the right shows how the agent gets there, five stages in their series colours with Adaptation feeding all of them.
-- Fig. 3: the three examples become current → goal state pairs; the low/high grid keeps the paper's lines as speech bubbles with tails on one robot cast; autonomy is granted as the track record earns trust.
-- Fig. 5: a proportional time axis instead of evenly spaced zig-zag cards; each era is a span with a leader to its card, and its chip names what it handed on, in the colour of the capacity it prepared.
+- Fig. 4: the dialogue, work plan and progress update were pixels inside the paintings; here they are vector bubbles and cards over text-free scenes.
+- Fig. 5: illustrated era cards stay, but sit around a proportional time axis, so the two 2000s–2010s traditions read as overlapping spans; each card's chip names the capacity it prepared.
+- Fig. 6 and Fig. 10: one hue per capacity instead of a new colour per box; the household example becomes vector chips inside the robot's thought cloud, and each failed test's fallback sits beside it, so no pass line crosses a failure.
 
 [PDFs](gallery/proactive/) · [source](skills/cs-paper-figure/scripts/examples/proactive/) · [what the studies found](skills/cs-paper-figure/references/figure-series.md)
 
@@ -156,6 +156,7 @@ python scripts/codex_icons.py generate icons.json --out out/icons [--ref existin
 6. Charts: direct labels, visible ratios, area-true encodings.
 7. Every number comes from the inputs and is asserted in code.
 8. Icons, if any: one matched set, labelled, never carrying text or data.
+9. Match the register: method figures reward restraint; an illustrated survey figure stays illustrated, with full cards, solid headers and large type.
 
 ## License
 

@@ -42,7 +42,13 @@ STYLES = {
     # small narrative scenes (a person and an agent doing something), the survey/position-paper register
     "scene": ("flat vector editorial illustration of a small scene, clean dark-grey outlines, soft pastel palette, "
               "simple uncluttered background with a few props, gentle flat shading only, no gradients, no photo realism"),
+    # full-bleed vignettes that ARE the content of a card (one per stage / era / example), the register of
+    # illustrated survey figures; the card is filled edge to edge, so the figure never looks empty
+    "vignette": ("detailed flat editorial illustration with soft cel shading and warm natural light, rich but calm "
+                 "colours, a complete environment (room, furniture, window, props) filling the whole frame, crisp "
+                 "dark outlines, no photo realism"),
 }
+CANVAS = {"square": "square 1024x1024", "landscape": "landscape 1536x1024", "portrait": "portrait 1024x1536"}
 RULES = ("Pure white (#FFFFFF) background, square 1024x1024 canvas, the subject centred with about 12% empty "
          "margin on every side. It will be printed 6-9 mm wide, so use bold outlines (about 2.5% of the canvas "
          "width), large simple shapes and few small details; it must stay clear at 64x64 px. No text, letters, numbers, logos, "
@@ -72,6 +78,7 @@ def load_spec(path):
     assert len(set(names)) == len(names), f"duplicate icon names: {names}"
     assert all(n.replace("-", "").replace("_", "").isalnum() for n in names), "names must be file-safe"
     assert spec.get("style", "flat-pastel") in STYLES, f"style must be one of {sorted(STYLES)}"
+    assert spec.get("canvas", "square") in CANVAS, f"canvas must be one of {sorted(CANVAS)}"
     return spec
 
 
@@ -84,7 +91,16 @@ SCENE_RULES = ("Landscape 1536x1024 canvas on a plain white or very light backgr
 def build_prompt(spec, refs=()):
     style = STYLES[spec.get("style", "flat-pastel")]
     n = len(spec["icons"])
-    if spec.get("style") == "scene":
+    if spec.get("style") == "vignette":
+        canvas = CANVAS[spec.get("canvas", "square")]
+        lines = [f"Use your built-in image generation tool to create {n} separate PNG illustrations that form ONE "
+                 f"consistent set of vignettes for a figure in a scientific paper. Make one image_gen call per vignette.",
+                 f"Style for every vignette: {style}.",
+                 f"Full-bleed {canvas} canvas: the scene fills the frame edge to edge with no white margin and no "
+                 "border; the main subject is large and fills most of the frame. Absolutely no readable text: screens, "
+                 "documents, signs and tablets show only blank bars, simple shapes, ticks, charts or pictograms, because "
+                 "every label is added later as vector text. No speech bubbles, logos or watermarks."]
+    elif spec.get("style") == "scene":
         lines = [f"Use your built-in image generation tool to create {n} separate landscape PNG illustrations that form "
                  f"ONE consistent set of scenes for a figure in a scientific paper. Make one image_gen call per scene.",
                  f"Style for every scene: {style}.", SCENE_RULES]
@@ -174,7 +190,7 @@ def generate(spec_path, out_dir, refs=(), model=None, timeout=1200):
     for n in names:
         dst = os.path.join(out_dir, n + ".png")
         shutil.copy(os.path.join(work, n + ".png"), dst)
-        tidy(dst, scene=spec.get("style") == "scene")
+        tidy(dst, scene=spec.get("style") in ("scene", "vignette"))
     ver = subprocess.run(["codex", "--version"], capture_output=True, text=True).stdout.strip()
     with open(os.path.join(out_dir, "manifest.json"), "w") as f:
         json.dump({"set": spec.get("set"), "generator": f"{ver} built-in image_gen",
@@ -189,6 +205,8 @@ def selftest():
     spec = {"style": "line", "character": "a robot", "icons": [{"name": "a", "subject": "x", "accent": "#123456"}]}
     p = build_prompt(spec, ["ref.png"])
     assert "No text" in p and "a.png" in p and "STYLE REFERENCE" in p and "#123456" in p
+    v = build_prompt({"style": "vignette", "canvas": "portrait", "icons": spec["icons"]})
+    assert "Full-bleed portrait" in v and "no readable text" in v
     d = tempfile.mkdtemp()
     im = Image.new("RGB", (1024, 1024), (252, 252, 250))  # off-white noise like real generations
     ImageDraw.Draw(im).ellipse((100, 300, 500, 600), fill="#5A8BCB")
