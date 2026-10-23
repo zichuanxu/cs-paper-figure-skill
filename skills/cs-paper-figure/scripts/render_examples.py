@@ -67,7 +67,7 @@ def curves(out):
     caption = ("Illustrative synthetic data. Each tool budget has eight independent synthetic runs; "
                "points show their mean and bands in (a) show plus/minus one sample standard deviation, "
                "not confidence intervals. Panel (b) pairs the same means with invented relative compute "
-               "values; lines connect ordered budgets within a method. No empirical or inferential claim.")
+               "values; lines connect ordered budgets within a method.")
     return save(fig, out, "01_budget_and_tradeoff",
                 {"tool_budget": budget.tolist(), "success_samples_pct": {k: v.tolist() for k,v in samples.items()},
                  "relative_compute": {k: v.tolist() for k,v in compute.items()}}, caption)
@@ -186,8 +186,8 @@ def method(out):
     caption = ("Original illustrative architecture, not an implemented or evaluated system. "
                "A query enters the controller; stored context is read before generating an answer. "
                "Tool calls return observations through a distinct dashed feedback path. New evidence "
-               "passes through a versioned update rule before records are written. Colored node labels "
-               "are redundant with their text; arrow styles distinguish feedback from task/data flow.")
+               "passes through a versioned update rule before records are written. Dashed arrows "
+               "mark feedback; solid arrows, task and data flow.")
     data = {"nodes":[{"label":n[4],"x":n[0],"y":n[1],"width":n[2],"height":n[3]} for n in nodes],
             "edges":[["query","controller","input"],["controller","answer","output"],
                      ["controller","tools","call"],["tools","controller","observation"],

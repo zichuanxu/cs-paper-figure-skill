@@ -61,7 +61,9 @@ vector text; photos and screenshots are always real artefacts, never illustratio
 11. **Check at print size.** Read the contact sheet's 48 px previews; if the prop that carries the
    meaning (laptop, pencil, magnifier) is not readable at 8 mm, simplify the subject or enlarge.
 12. **Record provenance.** `manifest.json` keeps the prompt, tool version and date; many venues ask
-   authors to disclose generated imagery, so mention it in the acknowledgements or caption notes.
+   authors to disclose generated imagery, so state it once where the venue asks (acknowledgements or an
+   AI-use statement). Never in the caption or a figure note: the reader needs what the picture shows, not
+   which tool drew it or that it was recoloured.
 13. **Keep a vector fallback in the script.** Render scripts must still run without the PNGs
     (`--vector-icons`, or a missing file falls back to `cv.icon_*`).
 14. **Keep every generated pixel to the PDF.** Generated images used to reach the PDF at 100 dpi (a 600 dpi

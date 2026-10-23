@@ -111,6 +111,15 @@ Use this order, omitting inapplicable parts:
 4. Aggregation and interval method; distinguish pointwise bands.
 5. Qualifications, excluded/missing outcomes, and schematic/illustrative status.
 
+**What stays out.** Every sentence must change how the reader reads a mark or a value; delete the rest or move it
+to the methods text. Never in a caption or figure note: how the artwork was made (generators such as Codex CLI,
+recolouring, drawing software, fonts); how marks are placed (dodging, nudging, offsets, label repulsion), unless
+a position deliberately departs from its value, and then say which value is exact in a few words; procedure
+details the methods already give (sampling schedules, draws fixed in advance, seeds, prompts); and disclaimers that
+change no reading ("the names are illustrative"). Synthetic or illustrative *data* is the exception: say so once.
+Disclose generated imagery where the venue asks for it (acknowledgements or an AI-use statement), not under the
+figure. Check with `python scripts/paperkit.py caption caption.txt` (exit 1 lists the phrases to cut).
+
 For a diagram, explain node/edge semantics and the boundary of the schematic. Use panel letters consistently with the manuscript. A caption should explain enough to interpret the figure without searching the main text for units or uncertainty meaning.
 
 Preserve source paths or stable dataset IDs, hashes where practical, table/row mappings for transcriptions, processing code, and the final plot specification. Keep provenance precise without exposing private paths or sensitive inputs in a public caption.

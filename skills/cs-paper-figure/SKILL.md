@@ -239,7 +239,7 @@ Fix the most consequential issue and inspect again. Stop once the content, visua
 
 ### 7. Deliver and explain the visual decisions
 
-For creation/redesign, deliver requested formats, editable source and inputs, a manuscript-ready caption, concise alt text, and specific design decisions: palette roles, font hierarchy, layout choice, important routing, and any remaining limits. Default to vector PDF, editable SVG and PNG preview when compatible with the task. Follow the host's file-saving rules.
+For creation/redesign, deliver requested formats, editable source and inputs, a manuscript-ready caption (each sentence changes how a value is read; no tools, no mark-placement mechanics, no protocol details the methods already give, no disclaimers; `paperkit.py caption` exits 0), concise alt text, and specific design decisions: palette roles, font hierarchy, layout choice, important routing, and any remaining limits. Default to vector PDF, editable SVG and PNG preview when compatible with the task. Follow the host's file-saving rules.
 
 For critique, prioritize concrete defects and fixes. Point to the affected region or connector. Distinguish inspected facts from interpretation. Attribute borrowed design principles and identify copied/adapted artwork accurately.
 
@@ -247,7 +247,7 @@ Verify that every delivered file exists, opens, and uses the final filename. A p
 
 ## Completion gates
 
-- Data, topology and caption agree; illustrative content is unmistakable.
+- Data, topology and caption agree; illustrative content is unmistakable; the caption says what is shown, not how it was made.
 - The figure has a recognizable visual hierarchy and task-specific mechanism detail.
 - A visible hero carries the five-second message; key state, projections and operators are drawn as objects, not text boxes; no anti-pattern from visual-craft §11 remains.
 - Colors, fonts, shapes, spacing and line styles form a consistent system.

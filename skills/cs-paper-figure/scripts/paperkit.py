@@ -948,6 +948,31 @@ def swatches(pngs, out, k=8, height=260):
     return out, palettes
 
 
+# ------------------------------------------------------------ caption check ---
+NOTE_NOISE = [  # (what the reader does not need, pattern): a caption says what is shown, not how it was made
+    ("how the artwork was made",
+     r"\b(generated|drawn|created|made|produced|rendered|illustrated)\s+(with|by|using|in)\b[^.;]{0,30}"
+     r"\b(codex|chatgpt|dall-?e|midjourney|stable diffusion|gpt-image|image[- ]generation)|\brecolou?red by\b"
+     r"|\b(icons?|illustrations?|images?|artwork|drawings?|vignettes?|pictures?)\s+(were|was|are|is)\s+"
+     r"(generated|drawn|created|made|produced|rendered)\b"),
+    ("how marks are drawn",
+     r"\b(offset|nudged|jittered|dodged|moved apart|spread apart)\b[^.;:]{0,40}\b(marks?|markers?|points?|labels?|dots?)\b"
+     r"|\b(marks?|markers?|points?|labels?|dots?)\b[^.;:]{0,40}\b(offset|nudged|jittered|dodged|moved apart|spread apart)\b"
+     r"|\bleast amount\b"),
+    ("procedure that belongs in the methods",
+     r"\bbefore any (model )?(call|run|experiment|evaluation)s?\b|\bfixed (in advance|beforehand|before)\b"),
+    ("disclaimer that changes no reading",
+     r"\b(names?|examples?|people|persons?|users?|personas?|characters?)\s+(are|is)\s+"
+     r"(illustrative|fictional|fictitious|invented|made[- ]up|hypothetical)\b"),
+]
+
+
+def note_issues(text):
+    """Phrases in a caption or note that narrate production, drawing mechanics or protocol instead of content."""
+    import re
+    return [(why, m.group(0)) for why, pat in NOTE_NOISE for m in re.finditer(pat, text, re.I)]
+
+
 if __name__ == "__main__" and len(__import__("sys").argv) > 1:
     import sys
     cmd, args = sys.argv[1], sys.argv[2:]
@@ -956,6 +981,12 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
             print(p, "white/tint/ink %", density(p))
     elif cmd == "compare":
         print(compare(*args[:3]))
+    elif cmd == "caption":  # paperkit.py caption caption.txt|"text": exit 1 if it narrates production
+        text = " ".join(_P(a).read_text() if os.path.isfile(a) else a for a in args)
+        hits = note_issues(text)
+        for why, phrase in hits:
+            print(f"cut ({why}): {phrase!r}")
+        sys.exit(1 if hits else 0)
     elif cmd == "parity":
         stats, warn = parity(*args[:2])
         print("            empty  colour  picture")
@@ -1008,4 +1039,6 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
         raise AssertionError("check_embedded missed a resampled PDF")
     except RuntimeError:
         pass
+    assert note_issues("The icons were generated with Codex CLI and recoloured by the authors.")
+    assert not note_issues("Points: mean over 8 seeds; bars: 95% intervals. Claude Sonnet 5.5 as reader.")
     print("ok", outs)

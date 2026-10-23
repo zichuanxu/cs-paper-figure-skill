@@ -230,9 +230,8 @@ def architecture(out, fonts):
     caption=('Original schematic of a tool-using agent with a versioned memory update loop. A query enters the controller, '
              'which reads records from memory, calls tools, receives their observations, and returns an answer. '
              'A distinct feedback path supplies evidence to an update rule, whose resolve and version operations precede a write to memory. '
-             'The observation route leaves the top of Tools, travels through a reserved upper corridor, and enters a separate upper controller port; '
-             'it does not lie on the Tools border. Solid arrows indicate data flow and dashed arrows indicate feedback. '
-             'The record and version miniatures are constructed explanatory examples. This is an illustrative architecture, not an implemented or evaluated system.')
+             'Solid arrows indicate data flow and dashed arrows indicate feedback. '
+             'This is an illustrative architecture, not an implemented or evaluated system.')
     alt=('A blue runtime region contains a query at left, a purple-outlined controller at center, tools at right, and an answer above. '
          'A solid lower arrow sends calls to tools. A separate dashed purple observation route exits the top of tools, rises, turns left, '
          'and enters the upper-right controller port. Below, a green memory store contains a record/provenance miniature; an amber update rule '
@@ -327,7 +326,7 @@ def empirical(out, fonts):
           'derived_annotations':{'delta_versioned_minus_base_at_budget16_pp':delta,'first_sampled_compute_at_80pct':first},
           'fonts':fonts[2],'palette':P,'physical_size_mm':[W,H]}
     caption=('Illustrative synthetic study of three named conditions. (a) Each marker is the mean of eight independent synthetic runs '
-             'at the stated tool-call budget; shaded bands are mean ± one sample standard deviation (ddof=1), not confidence intervals. '
+             'at the stated tool-call budget; shaded bands are mean ± one sample standard deviation, not confidence intervals. '
              'The budget axis is logarithmic with explicit observed values. (b) The same means are paired with constructed relative compute '
              'values; lines connect successive measured budget settings within each synthetic condition and do not estimate a Pareto frontier. '
              'The dashed 80% reference identifies the first sampled setting at or above that level; the annotation compares Versioned memory '
