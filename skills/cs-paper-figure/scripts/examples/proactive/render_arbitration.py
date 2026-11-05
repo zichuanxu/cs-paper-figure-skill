@@ -130,6 +130,7 @@ def main():
     for y in ys:
         cv.arrow([(bus, y), (gx - 0.3, y)], color=AGD["mark"], lw=1.0, head=1.2)
     assert not cv.overlaps() and not cv.text_overlaps(), cv.overlaps() + cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "proactive_arbitration"))))
 
 

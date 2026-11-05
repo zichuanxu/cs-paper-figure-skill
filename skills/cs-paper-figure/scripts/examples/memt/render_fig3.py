@@ -34,8 +34,8 @@ def fmt(v):
 
 
 def panel_latency(cv):
-    cv.group(2, 2, 76, 62, "neutral", "(a) End-to-end latency", band=True, size=7.6, radius=2.0, lw=0.6,
-             fill="white")
+    cv.section(2, 2, 76, 62, "blue", "(a) End-to-end latency", tab="corner", size=7.6, radius=2.0, lw=0.7,
+               fill="white")
     cv.text(4.0, 54.6, "history preparation + 128-token response", size=6.2, color=MUTED, ha="left", style="italic")
     x0, x1, y0, hh = 21.0, 45.0, 11.5, 38.0
     lo, hi = 10, 3000
@@ -62,12 +62,14 @@ def panel_latency(cv):
             cv.ax.add_patch(Circle((x, Y(v)), 1.05 if hero else 0.8, fc=c, ec="white", lw=0.6, zorder=6))
         cv.text(x0 - 1.6, Y(a), fmt(a), size=6.2, color=ink, ha="right", weight="bold" if hero else "normal",
                 bbox=dict(fc="white", ec="none", pad=0.4))
-        cv.text(x1 + 1.6, Y(b), fmt(b), size=6.4, color=ink, ha="left", weight="bold" if hero else "normal")
+        cv.text(x1 + 1.6, Y(b), fmt(b), size=6.4, color=ink, ha="left", weight="bold" if hero else "normal",
+                bbox=dict(fc="white", ec="none", pad=0.4))
 
     def mid(m):
         return Y(math.sqrt(LAT[m]["128K"] * LAT[m]["256K"]))
     cv.text((x0 + x1) / 2, mid("Temp-LoRA") + 2.6, "Temp-LoRA", size=6.6, color=COL["Temp-LoRA"])
-    cv.text((x0 + x1) / 2, mid("Full Context") + 2.6, "Full Context", size=6.6, color=COL["Full Context"])
+    cv.text((x0 + x1) / 2 - 3.0, mid("Full Context") + 2.8, "Full Context", size=6.6, color=COL["Full Context"],
+            bbox=dict(fc="white", ec="none", pad=0.4))
     cv.text((x0 + x1) / 2, mid("MemT-1.0-Nano") - 2.9, "MemT-1.0-Nano", size=6.8, color=HERO["ink"], weight="bold")
     # ratio brackets at 256K
     m, fc, tl = LAT["MemT-1.0-Nano"]["256K"], LAT["Full Context"]["256K"], LAT["Temp-LoRA"]["256K"]
@@ -82,8 +84,8 @@ def panel_latency(cv):
     g = {k: LAT[k]["256K"] / LAT[k]["128K"] for k in LAT}
     pct = {k: round(100 * (v - 1)) for k, v in g.items()}
     cv.rich(40.0, 5.0, [("128K→256K latency:  ", MUTED), (f"MemT +{pct['MemT-1.0-Nano']}%", HERO["ink"], "bold"),
-                        ("  ·  Full Context ", MUTED), (f"+{pct['Full Context']}%", COL["Full Context"]),
-                        ("  ·  Temp-LoRA ", MUTED), (f"+{pct['Temp-LoRA']}%", COL["Temp-LoRA"])], size=5.9,
+                        ("  ·  Full Context  ", MUTED), (f"+{pct['Full Context']}%", COL["Full Context"]),
+                        ("  ·  Temp-LoRA  ", MUTED), (f"+{pct['Temp-LoRA']}%", COL["Temp-LoRA"])], size=5.9,
             ha="center")
     return g
 
@@ -103,8 +105,8 @@ def waffle(cv, x, y, n, cols, cell, gap, fc, ec, z=5):
 
 
 def panel_storage(cv):
-    cv.group(81, 2, 87, 62, "neutral", "(b) Persistent storage per trajectory", band=True, size=7.6,
-             radius=2.0, lw=0.6, fill="white")
+    cv.section(81, 2, 87, 62, "blue", "(b) Persistent storage per trajectory", tab="corner", size=7.6,
+               radius=2.0, lw=0.7, fill="white")
     cv.text(83.0, 54.6, "area to scale:", size=6.2, color=MUTED, ha="left", style="italic")
     cv.ax.add_patch(Rectangle((99.6, 53.5), 2.2, 2.2, fc=HERO["mark"], ec="none", zorder=6))
     cv.text(102.6, 54.6, "= 40 MiB (one MemT-1.0-Nano memory)", size=6.2, color=MUTED, ha="left", style="italic")
@@ -143,6 +145,9 @@ def main():
     assert f"{LAT['Full Context']['256K'] / LAT['MemT-1.0-Nano']['256K']:.2f}" == "3.99"
     assert round(LAT["Temp-LoRA"]["256K"] / LAT["MemT-1.0-Nano"]["256K"]) == 59
     assert round(r_fc) == 130 and abs(r_tl - 4.31) < 0.01 and abs(g["MemT-1.0-Nano"] - 1.46) < 0.01
+    assert not cv.overlaps(), cv.overlaps()
+    assert not cv.text_overlaps(), cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "memt_fig3_efficiency"))))
 
 

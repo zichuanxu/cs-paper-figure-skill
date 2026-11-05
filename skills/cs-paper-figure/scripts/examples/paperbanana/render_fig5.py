@@ -23,6 +23,10 @@ CODE, IMG = "#2F6FC0", "#D9583B"
 W, H = 88, 62
 
 
+def gap_ok(c, i):
+    return abs(c - i) > 2.0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out")
@@ -43,13 +47,17 @@ def main():
         y = k
         bold = name == "Overall"
         ax.plot([c, i], [y, y], color="#C3C8D0", lw=2.2, zorder=2, solid_capstyle="round")
-        ax.scatter([c], [y], s=26, color=CODE, zorder=4, edgecolors="white", linewidths=0.6)
-        ax.scatter([i], [y], s=26, color=IMG, zorder=4, edgecolors="white", linewidths=0.6)
+        ms = 26 if gap_ok(c, i) else 13  # dots 0.8 pt apart (Overall) shrink so both stay visible, values unchanged
+        ax.scatter([c], [y], s=ms, color=CODE, zorder=4, edgecolors="white", linewidths=0.6)
+        ax.scatter([i], [y], s=ms, color=IMG, zorder=4, edgecolors="white", linewidths=0.6)
         for v, col in ((c, CODE), (i, IMG)):
             left = v < max(c, i)
-            ax.text(v + (-0.9 if left else 0.9), y, f"{v:.1f}", ha="right" if left else "left", va="center",
-                    fontsize=6.2, color=col, weight="bold" if bold else "normal", zorder=5,
-                    bbox=dict(boxstyle="square,pad=0.12", fc="white", ec="none") if abs(v - 50) < 4 else None)
+            kw = dict(fontsize=6.2, color=col, weight="bold" if bold else "normal", zorder=5)
+            if left and 50 < v < 54:  # a left label would sit on the parity line: put it under the dot instead
+                ax.text(v - 0.7, y - 0.2, f"{v:.1f}", ha="left", va="top", **kw)
+            else:
+                off = 0.9 if ms == 26 else 0.7
+                ax.text(v + (-off if left else off), y, f"{v:.1f}", ha="right" if left else "left", va="center", **kw)
         gap = abs(c - i)
         ax.text((c + i) / 2, y + 0.24, f"Δ {gap:.1f}", ha="center", va="bottom", fontsize=5.8, color=MUTED)
         ax.text(34.4, y, name, ha="right", va="center", fontsize=7.0, color=INK, weight="bold" if bold else "normal",
@@ -68,6 +76,9 @@ def main():
     cv.text(31.2, H - 3.4, "write plotting code", size=7.0, color=CODE, ha="left", weight="bold")
     cv.dot(58.0, H - 3.4, color=IMG, d=1.8)
     cv.text(59.6, H - 3.4, "generate the image", size=7.0, color=IMG, ha="left", weight="bold")
+    assert not cv.overlaps(), cv.overlaps()
+    assert not cv.text_overlaps(), cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "paperbanana_fig5"))))
 
 

@@ -17,6 +17,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+from matplotlib.patches import FancyBboxPatch  # noqa: E402
 from paperkit import Canvas, ROLE, INK, MUTED, LINE  # noqa: E402
 
 # one meaning per hue: grey = frozen backbone, teal = memory state M, blue = read path,
@@ -29,64 +30,84 @@ PHI = dict(fill="#FFF5E2", soft="#FBE2B4", stroke="#D29A3C", ink="#7A4B0C", mark
 ER, DC = ROLE["coral"], dict(ROLE["neutral"], soft="#E2E5E9", ink="#454C57")
 GEN = dict(ROLE["neutral"], soft="#C9CED6", stroke="#7F8894")  # generated tokens: darker neutral
 W, H = 170, 108
+KEY = 8.0                  # glyph key strip drawn in its own axes under the plate
 
 
-def card(cv, x, y, w, h, r, title):
-    cv.group(x, y, w, h, r, title, band=True, size=7.4, radius=2.0, lw=0.7,
-             fill=None if r is MEM else "white")
+def card(cv, x, y, w, h, r, letter, title, fill=None):
+    """Section frame in the path's hue: tinted field, dashed border, bold-italic corner title."""
+    s = 7.4
+    t = (f"({letter}) " if letter else "") + title
+    assert max(cv.text_width(ln, s, "bold") for ln in t.split("\n")) < w - 3.0, t
+    cv.section(x, y, w, h, r, title, letter=letter, tab="corner", size=s, radius=2.2, fill=fill or r["fill"])
+
+
+def slab(cv, x, y, w, h, c, title=None, sub=None, d=1.0, fill=None, tc=None, icon=None, size=7.0,
+         weight="normal", gap=1.6, lw=0.6, tdx=0.0):
+    """Backbone op / module as a flat pseudo-3D slab (cuboid), text set by hand."""
+    cv.cuboid(x, y, w, h, d=d, r=c, fill=fill or c["soft"], lw=lw)
+    tc = tc or c["ink"]
+    if title and sub:
+        cv.text(x + w / 2 + tdx, y + h / 2 + gap, title, size=size, color=tc, weight=weight, z=8)
+        cv.text(x + w / 2 + tdx, y + h / 2 - gap, sub, size=size - 0.3, color=tc if tc == "white" else INK, z=8)
+    elif title:
+        cv.text(x + w / 2, y + h / 2, title, size=size, color=tc, weight=weight, z=8)
+    if icon:
+        getattr(cv, f"icon_{icon}")(x + w - 2.2, y + h - 2.1, 2.3, color=c["stroke"])
 
 
 def panel_a(cv):
-    card(cv, 2, 30, 32, 76, FZ, "(a) MemT-1.0")
+    card(cv, 2, 30, 32, 76, FZ, "a", "MemT-1.0")
     cx = 18
     cv.text(cx, 34.2, r"$S_{t,k}=X_t\,\|\,Y_{t,<k}$", size=6.8)
     cv.arrow([(cx, 36.4), (cx, 39.5)])
-    cv.box(7, 39.5, 22, 5.2, FZ, "Embedding", weight="normal")
+    slab(cv, 7, 39.5, 21, 5.2, FZ, "Embedding", fill="white")
     blocks = []
     for y0 in (48.5, 66.5):
-        cv.box(6.5, y0, 23, 13.5, FZ, lw=0.7, shadow=y0 > 60)
-        cv.text(cx, y0 + 10.4, "Transformer block", size=6.6, color=FZ["ink"])
-        cv.box(8.3, y0 + 1.6, 19.4, 5.6, MEM, "Native memory", weight="bold", size=6.6, lw=0.7)
+        slab(cv, 6.5, y0, 22, 13.5, FZ, d=1.4, lw=0.7)
+        cv.text(17.5, y0 + 10.4, "Transformer block", size=6.6, color=FZ["ink"], z=8)
+        cv.box(8.3, y0 + 1.6, 18.4, 5.6, MEM, "Native memory", weight="bold", size=6.6, lw=0.7, fill=MEM["mark"],
+               stroke=MEM["ink"], title_color="white", z=8)
         blocks.append((6.5, y0, 23, 13.5))
-    cv.arrow([(cx, 44.7), (cx, 48.5)])
-    cv.arrow([(cx, 62), (cx, 63.2)], head=1.1)
+    cv.arrow([(cx, 45.4), (cx, 48.5)])
+    cv.arrow([(cx, 62.9), (cx, 63.6)], head=0.7)
     cv.text(cx, 64.5, r"$\vdots$", size=7, color=LINE)
     cv.arrow([(cx, 65.3), (cx, 66.5)], head=1.1)
     cv.brace(5.4, 48.5, 80, side="left", depth=1.2)
     cv.text(3.6, 64.3, r"$\times L$", size=6.6, ha="center", rotation=90)
-    cv.arrow([(cx, 80), (cx, 83.5)])
-    cv.box(7, 83.5, 22, 5.2, FZ, "Norm", weight="normal")
-    cv.arrow([(cx, 88.7), (cx, 91.2)])
-    cv.box(7, 91.2, 22, 5.2, FZ, "LM head", weight="normal")
-    cv.arrow([(cx, 96.4), (cx, 99.0)])
+    cv.arrow([(cx, 80.9), (cx, 83.5)])
+    slab(cv, 7, 83.5, 21, 5.2, FZ, "Norm", fill="white")
+    cv.arrow([(cx, 89.4), (cx, 91.2)])
+    slab(cv, 7, 91.2, 21, 5.2, FZ, "LM head", fill="white")
+    cv.arrow([(cx, 97.1), (cx, 99.0)])
     cv.text(cx, 100.4, r"$y_{t,k}$", size=7)
     return blocks[1]
 
 
 def panel_b(cv):
-    card(cv, 37, 30, 42, 76, FZ, r"(b) Transformer block $l$")
+    card(cv, 37, 30, 42, 76, FZ, "b", r"Transformer block $l$")
     cx = 58
     cv.text(cx, 33.6, r"$\mathbf{H}^{(l-1)}$", size=7)
     cv.arrow([(cx, 35.5), (cx, 40)])
-    cv.box(45, 40, 26, 6, FZ, "Pre-Attention", weight="normal", icon="snow")
-    cv.line([(cx, 46), (cx, 51.5)])
+    slab(cv, 45, 40, 25, 6, FZ, "Pre-Attention", icon="snow", fill="white")
+    cv.line([(cx, 46.6), (cx, 51.5)])
     cv.dot(cx, 51.5)
     cv.text(cx + 1.0, 49.0, r"$\tilde{\mathbf{H}}^{(l)}$", size=6.8, ha="left")
-    cv.arrow([(cx, 51.5), (48.5, 51.5), (48.5, 56)])
+    cv.arrow([(cx, 51.5), (49.9, 51.5), (49.9, 56)])
     cv.arrow([(cx, 51.5), (68, 51.5), (68, 56)])
-    cv.box(39.5, 56, 18, 10.5, FZ, "Original", "attention", icon="snow")
-    cv.box(59, 56, 18, 10.5, RD, "Memory attn.", r"see (c), (d)", lw=0.9, shadow=True)
+    slab(cv, 42.6, 56, 14.6, 10.5, FZ, "Original", "attention", icon="snow", fill="white", d=1.2, tdx=-1.3)
+    slab(cv, 59, 56, 17.4, 10.5, RD, "Memory attn.", r"see (c), (d)", lw=0.9, d=1.2, fill=RD["mark"], tc="white",
+         weight="bold")
     cv.op(cx, 71.5, "+", d=3.0)
-    cv.arrow([(48.5, 66.5), (48.5, 71.5), (cx - 1.5, 71.5)])
-    cv.arrow([(68, 66.5), (68, 71.5), (cx + 1.5, 71.5)], color=RD["mark"], lw=0.8)
-    cv.text(44.6, 69.0, r"$\mathbf{A}_{\mathrm{ori}}$", size=6.4, color=FZ["ink"])
+    cv.arrow([(49.9, 67.3), (49.9, 71.5), (cx - 1.5, 71.5)])
+    cv.arrow([(68, 67.3), (68, 71.5), (cx + 1.5, 71.5)], color=RD["mark"], lw=0.8)
+    cv.text(46.3, 69.0, r"$\mathbf{A}_{\mathrm{ori}}$", size=6.4, color=FZ["ink"])
     cv.text(72.4, 69.0, r"$\mathbf{A}_{\mathrm{mem}}$", size=6.4, color=RD["ink"])
     cv.arrow([(cx, 73), (cx, 77.5)])
     cv.text(cx + 1.2, 75.2, r"$\mathbf{A}^{(l)}$", size=6.4, ha="left")
-    cv.box(45, 77.5, 26, 6, FZ, "Post-Attention", weight="normal", icon="snow")
-    cv.arrow([(cx, 37.5), (41.2, 37.5), (41.2, 80.5), (45, 80.5)], color="#8C96A3", lw=0.55, head=1.15)
+    slab(cv, 45, 77.5, 25, 6, FZ, "Post-Attention", icon="snow", fill="white")
+    cv.arrow([(cx, 37.5), (40.2, 37.5), (40.2, 80.5), (45, 80.5)], color="#8C96A3", lw=0.55, head=1.15)
     cv.dot(cx, 37.5, color="#8C96A3", d=0.8)
-    cv.arrow([(cx, 83.5), (cx, 87.6)])
+    cv.arrow([(cx, 84.2), (cx, 87.6)])
     cv.text(cx, 89.2, r"$\mathbf{H}^{(l)}$", size=7)
     cv.rich(cx, 95.4, [(r"$\mathbf{A}^{(l)}=$", INK), (r"$\mathbf{A}^{(l)}_{\mathrm{ori}}$", FZ["ink"]),
                        (r"$\,+\,$", INK), (r"$\mathbf{A}^{(l)}_{\mathrm{mem}}$", RD["ink"])], size=7.2, ha="center")
@@ -95,8 +116,8 @@ def panel_b(cv):
 
 
 def pillar(cv):
-    card(cv, 82, 30, 19.5, 76, MEM, "Local memory")
-    cv.text(91.7, 96.2, r"$\mathbf{M}_t^{(l)}$", size=9, color=MEM["ink"])
+    card(cv, 82, 30, 19.5, 76, MEM, None, "Local\nmemory", fill=MEM["soft"])
+    cv.text(91.7, 94.4, r"$\mathbf{M}_t^{(l)}$", size=9, color=MEM["ink"])
     cv.matrix(85.3, 76.5, 9.6, 9.6, rows=5, cols=5, depth=3, r=MEM, dx=1.2, dy=1.2, seed=3)
     cv.text(91.7, 72.6, r"$\in\mathbb{R}^{H_{kv}\times d_k\times d_v}$", size=6.4, color=MEM["ink"])
     cv.text(91.7, 68.4, r"$H_{kv}$ channels", size=6.2, color=MUTED)
@@ -109,7 +130,7 @@ def pillar(cv):
 
 
 def panel_c(cv):
-    card(cv, 104.5, 76, 63.5, 30, RD, "(c) Utilization: read at every token")
+    card(cv, 104.5, 76, 63.5, 30, RD, "c", "Utilization: read at every token")
     yq, yg = 92.4, 82.0
     cv.text(106.6, 87.2, r"$\tilde{\mathbf{H}}_t$", size=7.2, ha="left")
     cv.line([(110.2, 87.2), (111.4, 87.2)])
@@ -123,10 +144,11 @@ def panel_c(cv):
     cv.text(125.25, yq + 2.2, r"$\mathbf{Q}$", size=6.8, color=RD["ink"])
     cv.text(125.25, yq - 2.4, "L2Norm", size=6.0, color=MUTED)
     cv.arrow([(127.5, yq), (130.4, yq)], head=1.1)
-    cv.box(130.4, yq - 3.6, 16.2, 7.2, RD, "Readout", r"$\mathbf{Q}\mathbf{M}_t/\sqrt{d_k}$",
-           fill=RD["soft"], size=6.7, gap=1.55, lw=0.85, shadow=True)
+    cv.box(130.4, yq - 3.6, 16.2, 7.2, RD, fill=RD["mark"], stroke=RD["ink"], lw=0.85, shadow=True)
+    cv.text(138.5, yq + 1.55, "Readout", size=6.7, color="white", weight="bold")
+    cv.text(138.5, yq - 1.55, r"$\mathbf{Q}\mathbf{M}_t/\sqrt{d_k}$", size=6.4, color="white")
     cv.arrow([(146.6, yq), (148.8, yq)], head=1.1)
-    cv.box(148.8, yq - 2.8, 10.6, 5.6, RD, "RMSNorm", fill="white", weight="normal", size=6.3)
+    cv.box(148.6, yq - 2.8, 11.8, 5.6, RD, "RMSNorm", fill="white", weight="normal", size=6.3)
     # gate lane: low-rank pair W_g/d, W_g/u
     cv.trap(113.4, yg - 3.0, 4.6, 6.0, PHI, narrow="right")
     cv.trap(118.4, yg - 3.0, 4.6, 6.0, PHI, narrow="left")
@@ -148,7 +170,7 @@ def panel_c(cv):
 
 
 def panel_d(cv):
-    card(cv, 104.5, 30, 63.5, 43, WR, "(d) Storage: write once per turn, token by token")
+    card(cv, 104.5, 30, 63.5, 43, WR, "d", "Storage: write once per turn, token-wise")
     ym = 56.4
     cv.text(106.0, 64.4, r"$\tilde{\mathbf{H}}_t$ of $S_t=X_t\,\|\,Y_t$", size=6.3, color=MUTED, ha="left")
     xs_op = [131.0, 150.5]
@@ -157,7 +179,7 @@ def panel_d(cv):
         cv.trap(x - 1.8, 58.6, 3.6, 2.8, PHI, narrow="bottom", lw=0.5)
         cv.line([(x, 62.6), (x, 61.4)], color=WR["stroke"], lw=0.5)
         cv.arrow([(x, 58.6), (x, ym + 1.5)], color=WR["stroke"], lw=0.5, head=0.9)
-    cv.text(133.0, 60.0, r"$\mathbf{K},\mathbf{V},\boldsymbol{\beta},\boldsymbol{\omega},\boldsymbol{\lambda}$",
+    cv.text(133.7, 60.3, r"$\mathbf{K},\mathbf{V},\boldsymbol{\beta},\boldsymbol{\omega},\boldsymbol{\lambda}$",
             size=6.3, color=WR["ink"], ha="left")
     mats = [(108.0, r"$\mathbf{M}_t$"), (120.6, r"$\tilde{\mathbf{M}}_{i-1}$"), (135.2, r"$\tilde{\mathbf{M}}_i$"),
             (155.6, r"$\tilde{\mathbf{M}}_{L_t}$")]
@@ -179,8 +201,9 @@ def panel_d(cv):
     cv.ax.add_patch(__import__("matplotlib.patches", fromlist=["FancyBboxPatch"]).FancyBboxPatch(
         (cx0, cy0), cw, chh, boxstyle="round,pad=0,rounding_size=1.2", fc="white", ec=WR["stroke"],
         lw=0.5, ls=(0, (2.5, 1.5)), zorder=3))
-    for xx in (cx0, cx0 + cw):
-        cv.line([(131.0, ym - 1.5), (xx, cy0 + chh)], color=WR["stroke"], lw=0.4, dashed=True, z=2)
+    # ponytail: a wedge to the callout corners must cross the neighbouring grids and their labels, so the
+    # callout hangs from u on one dashed drop (clear of the erase chip, which ends at x ~130.4)
+    cv.line([(131.0, ym - 1.5), (131.0, cy0 + chh)], color=WR["stroke"], lw=0.5, dashed=True, z=2)
     yc, g = 42.6, 4.6
     gx = [108.2, 119.6, 131.0, 155.2]
     cv.matrix(gx[0], yc, g, g, rows=4, cols=4, r=MEM, seed=11, lw=0.3)
@@ -189,7 +212,7 @@ def panel_d(cv):
     cv.matrix(gx[3], yc, g, g, rows=4, cols=4, r=MEM, seed=12, lw=0.3)
     for (x0, x1), (name, c) in zip(((112.8, 119.6), (124.2, 131.0)), (("forget", DC), ("erase", ER))):
         cv.arrow([(x0 + 0.4, yc + g / 2), (x1 - 0.2, yc + g / 2)], color=LINE, lw=0.55, head=0.95)
-        cv.chip((x0 + x1) / 2, yc + g + 1.5, name, c, size=6.1, pad=0.6)
+        cv.chip((x0 + x1) / 2 - (0.9 if name == "erase" else 0.0), yc + g + 1.5, name, c, size=6.1, pad=0.6)  # erase: clear of the drop from u
     cv.text(116.2, yc - 1.5, r"$\mathbf{D}_i$", size=6.4, color=DC["ink"])
     cv.text(127.6, yc - 1.5, r"$\mathbf{I}-\mathbf{U}_i^{\!\top}\mathbf{U}_i$", size=6.0, color=ER["ink"])
     cv.op(138.8, yc + g / 2, "+", d=2.4)
@@ -207,11 +230,12 @@ def panel_d(cv):
                           (r"$\mathbf{D}_i=\mathrm{Diag}(e^{\boldsymbol{\lambda}_i})$", DC["ink"])], size=6.4, ha="center")
     # write-back M_{t+1} to the pillar
     cv.arrow([(160.8, ym), (166.0, ym), (166.0, 32.0), (101.5, 32.0)], color=MEM["mark"], lw=1.0, head=1.5)
-    cv.text(116.0, 33.3, r"$\mathbf{M}_{t+1}=\tilde{\mathbf{M}}_{L_t}$", size=6.4, color=MEM["ink"])
+    cv.text(111.6, 33.9, r"$\mathbf{M}_{t+1}=\tilde{\mathbf{M}}_{L_t}$", size=6.4, color=MEM["ink"])
 
 
 def panel_e(cv):
-    card(cv, 2, 2, 166, 25, "neutral", r"(e) Parameters across interaction steps:  $\theta_t=\{\theta_b,\ \phi,\ \mathbf{M}_t\}$")
+    card(cv, 2, 2, 166, 25, ROLE["neutral"], "e",
+         r"Parameters across interaction steps:  $\theta_t=\{\theta_b,\ \phi,\ \mathbf{M}_t\}$", fill="white")
     rows = [(18.0, "snow", FZ, r"$\theta_b$", "backbone", "kept frozen"),
             (12.2, "lock", PHI, r"$\phi$", "hyper memory", r"$\tilde{\mathbf{W}}_{Q,K,V}$, gates: trained offline, fixed online"),
             (6.4, "cycle", MEM, r"$\mathbf{M}_t$", "local memory", "rewritten at every turn end")]
@@ -240,11 +264,38 @@ def panel_e(cv):
             cv.text((cs[-1][0] + 1.4 + xe) / 2, 7.4, "write", size=6.1, color=WR["ink"], style="italic")
 
 
+def key_strip(cv, x, y, w, h=6.0, size=6.3):
+    """Glyph key: every icon, circled operator, wire colour and the amber trapezoid, defined once."""
+    cv.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=1.6", fc="white",
+                                   ec=FZ["stroke"], lw=0.6, ls=(0, (3, 2)), zorder=3))
+    yc = y + h / 2
+    items = [(lambda g: cv.icon_snow(g, yc, 2.6, color=FZ["stroke"]), "frozen"),
+             (lambda g: cv.icon_lock(g, yc, 2.6, color=PHI["mark"]), "fixed online"),
+             (lambda g: cv.icon_cycle(g, yc, 2.8, color=MEM["mark"]), "evolves online"),
+             (lambda g: cv.trap(g - 2.0, yc - 1.4, 4.0, 2.8, PHI, narrow="right", lw=0.5), r"$\phi$ projection"),
+             (lambda g: cv.op(g, yc, "+", d=2.6), "sum"),
+             (lambda g: cv.op(g, yc, ".", d=2.6), "element-wise product"),
+             (lambda g: cv.op(g, yc, "u", r=WR, d=2.6), "token update"),
+             (lambda g: cv.arrow([(g - 2.3, yc), (g + 2.3, yc)], color=RD["mark"], lw=0.8, head=1.0), "read path"),
+             (lambda g: cv.arrow([(g - 2.3, yc), (g + 2.3, yc)], color=WR["mark"], lw=0.8, head=1.0), "write path")]
+    widths = [5.0 + 0.9 + cv.text_width(lab, size) for _, lab in items]
+    gap = (w - 4.0 - sum(widths)) / (len(items) - 1)
+    assert gap > 1.8, gap
+    xx = x + 2.0
+    for (fn, lab), iw in zip(items, widths):
+        fn(xx + 2.5)
+        cv.text(xx + 5.9, yc, lab, size=size, ha="left", z=12)
+        xx += iw + gap
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="out")
     a = ap.parse_args()
-    cv = Canvas(W, H, family="serif", size=7.0)
+    cv = Canvas(W, H + KEY, family="serif", size=7.0)
+    cv.h = H                                     # the plate keeps its 170 x 108 mm coordinates ...
+    cv.ax.set_position([0, KEY / (H + KEY), 1, H / (H + KEY)])
+    cv.ax.set_ylim(0, H)
     src = panel_a(cv)
     dst = panel_b(cv)
     cv.zoom(src, dst, color=FZ["stroke"], fill=FZ["soft"], alpha=0.45)
@@ -252,6 +303,18 @@ def main():
     panel_c(cv)
     panel_d(cv)
     panel_e(cv)
+    assert not cv.overlaps(), cv.overlaps()
+    assert not cv.text_overlaps(), cv.text_overlaps()
+    plate = cv.ax                                # ... and the key strip gets its own axes underneath
+    cv.ax = cv.fig.add_axes([0, 0, 1, KEY / (H + KEY)])
+    cv.ax.set_xlim(0, W)
+    cv.ax.set_ylim(0, KEY)
+    cv.ax.set_aspect("equal")
+    cv.ax.axis("off")
+    key_strip(cv, 2.0, 1.4, 166.0)
+    assert not cv.text_overlaps(), cv.text_overlaps()
+    cv.ax = plate
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "memt_fig4_architecture"))))
 
 

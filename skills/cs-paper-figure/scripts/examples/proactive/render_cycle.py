@@ -172,6 +172,7 @@ def main():
              radius=2.0, **f)
     cv.arrow([(xs[0] + CW * 0.5, yb + CH + 0.2), (xs[0] + CW * 0.5, yt - 0.4)], **f)
     assert not cv.overlaps() and not cv.text_overlaps(), cv.overlaps() + cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "proactive_cycle"))))
 
 

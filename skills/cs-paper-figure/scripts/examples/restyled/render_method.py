@@ -13,7 +13,8 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from paperkit import Canvas, ROLE, INK, MUTED, LINE  # noqa: E402
+from paperkit import Canvas, ROLE, INK, MUTED, LINE, mix  # noqa: E402
+from matplotlib.patches import Circle, Polygon, Rectangle  # noqa: E402
 
 MEMR, PROP, VAL = ROLE["blue"], ROLE["purple"], ROLE["amber"]
 ACC, REJ, NEU, FZ = ROLE["memory"], ROLE["coral"], ROLE["neutral"], ROLE["frozen"]
@@ -55,8 +56,11 @@ def evaluate(f):
 
 
 # ------------------------------------------------------------ local glyphs ---
-def card(cv, x, y, w, h, r, title):
-    cv.group(x, y, w, h, r, title, band=True, size=7.6, radius=2.0, lw=0.7, fill="white")
+def card(cv, x, y, w, h, r, title, fill=None):
+    """Panel frame in the architecture register: dashed border and tint in the panel's hue, title on a pill
+    tab sitting on the top border."""
+    letter, name = title[1], title[4:]
+    cv.section(x, y, w, h, r, name, letter=letter, tab="top", size=7.8, radius=2.2, fill=fill)
 
 
 def doc_stack(cv, x, y, w, h, r, n=3, d=0.9, lines=3):
@@ -70,9 +74,9 @@ def record(cv, x, y, w, ver, rows, hero=False):
     rh, hh = 2.9, 3.4
     h = hh + rh * len(rows) + 0.6
     cv.box(x, y, w, h, "blue", fill="white", lw=0.9 if hero else 0.6, radius=1.0, shadow=hero, z=6)
-    cv.ax.add_patch(__import__("matplotlib.patches", fromlist=["Rectangle"]).Rectangle(
-        (x + 0.3, y + h - hh), w - 0.6, hh - 0.3, fc=MEMR["soft"], ec="none", zorder=6.1))
-    cv.text(x + 1.4, y + h - hh / 2 - 0.1, ver, size=7.0, weight="bold", color=MEMR["ink"], ha="left", z=7)
+    cv.ax.add_patch(Rectangle((x + 0.3, y + h - hh), w - 0.6, hh - 0.3,
+                              fc=MEMR["mark"] if hero else MEMR["stroke"], ec="none", zorder=6.1))
+    cv.text(x + 1.4, y + h - hh / 2 - 0.1, ver, size=7.0, weight="bold", color="white", ha="left", z=7)
     for i, (k, v, tag) in enumerate(rows):
         yy = y + h - hh - rh * (i + 0.5) - 0.2
         cv.text(x + 1.4, yy, k, size=6.2, color=MUTED, ha="left", z=7)
@@ -97,10 +101,10 @@ def check(cv, x, y, ok, s=1.1):
 
 # ------------------------------------------------------------------ panels ---
 def panel_a(cv, f, r):
-    card(cv, 2, 58, 174, 74, "neutral", "(a) Refinement loop")
+    card(cv, 2, 58.6, 174, 72.6, "neutral", "(a) Refinement loop", fill="#F8F9FB")
     # versioned memory band (state as a horizontal pillar: read at left, write at right)
-    cv.group(4, 108.5, 170, 18, "blue", None, radius=1.6, lw=0.5)
-    cv.text(6.0, 124.6, "Versioned memory", size=7.0, weight="bold", color=MEMR["ink"], ha="left")
+    cv.section(4, 108.5, 170, 18, "blue", "Versioned memory", tab="corner", size=7.0, radius=1.6, lw=0.6,
+               fill=mix(MEMR["fill"], MEMR["soft"], 0.5))
     cv.icon_cycle(171.0, 124.3, 2.6, color=MEMR["mark"])
     keys = ["units", "freshness", "citation"]
     v12 = [(k, r["base"].get(k, "—"), None if k in r["base"] else "absent") for k in keys]
@@ -108,7 +112,7 @@ def panel_a(cv, f, r):
     v13 = [(k, r["cand"][k], sel.get(k)) for k in keys]
     record(cv, 9, 110, 34, f["base_version"], v12)
     record(cv, 115, 110, 38, f["next_version"], v13, hero=True)
-    cv.block_arrow(46, 116.4, 112.5, 116.4, width=4.2, color=MEMR["soft"])
+    cv.block_arrow(46, 116.4, 115.0, 116.4, width=4.6, color=mix(MEMR["soft"], MEMR["stroke"], 0.35))
     cv.text(79, 120.6, "one atomic write", size=6.2, color=MEMR["ink"], style="italic")
     x0 = 70.0
     for pid in r["selected"]:
@@ -118,17 +122,17 @@ def panel_a(cv, f, r):
     # training data -> frozen agent -> trace ledger
     doc_stack(cv, 5.5, 89, 9, 11.5, DOCN)
     cv.text(11.4, 86.2, r"$\mathcal{D}_{\mathrm{train}}$", size=6.8)
-    cv.text(11.4, 83.6, "source-tagged", size=6.2, color=MUTED, style="italic")
+    cv.text(11.4, 83.2, "source-tagged", size=6.2, color=MUTED, style="italic")
     cv.arrow([(16.8, yc), (21, yc)])
-    cv.box(21, 88.5, 18, 13, "frozen", lw=0.7, icon="snow")
-    cv.icon_robot(30, 97.4, 5.0, color=FZ["ink"], fill=FZ["soft"])
+    cv.box(21, 88.5, 18, 13, "frozen", fill=FZ["soft"], lw=0.7, icon="snow", shadow=True)
+    cv.icon_robot(30, 97.4, 5.0, color=FZ["ink"], fill="white")
     cv.text(30, 91.0, "agent", size=7.0, color=FZ["ink"], weight="bold")
     cv.arrow([(26, 110), (26, 101.5)], color=MEMR["mark"], lw=0.9)
     cv.text(27.0, 105.6, "read", size=6.2, color=MEMR["ink"], style="italic", ha="left")
     cv.arrow([(39, yc), (44.5, yc)])
     doc_stack(cv, 44.5, 89, 9, 11.5, DOCN)
     cv.text(50.4, 86.2, r"ledger $T$", size=7.0)
-    cv.text(50.4, 83.6, "traces", size=6.2, color=MUTED, style="italic")
+    cv.text(50.4, 83.2, "traces", size=6.2, color=MUTED, style="italic")
     # fan-out to parallel proposals
     bus = 59.5
     cv.line([(56.3, yc), (bus, yc)])
@@ -137,77 +141,75 @@ def panel_a(cv, f, r):
     cv.line([(bus, ys[-1]), (bus, ys[0])], radius=0)
     for p, y in zip(f["proposals"], ys):
         cv.arrow([(bus, y), (63, y)], head=1.1)
-        cv.box(63, y - 3.25, 23, 6.5, "purple", lw=0.6, radius=1.0)
+        cv.cuboid(63, y - 3.25, 22.2, 6.3, d=1.1, r="purple", fill=PROP["soft"], z=6)
         cv.chip(64.0, y, p["id"], PROP, size=6.2, pad=0.6, h=2.8, solid=True, ha="left")
         cv.text(70.6, y, p["key"], size=6.8, color=PROP["ink"], ha="left")
-        cv.text(85.0, y, p["evidence"], size=6.2, color=MUTED, ha="right")
+        cv.text(84.6, y, p["evidence"], size=6.2, color=PROP["ink"], ha="right")
     # merge bar = arbiter under conflicts + budget
-    cv.box(90, 83, 4.2, 24, "purple", fill=PROP["mark"], stroke=PROP["ink"], radius=1.0, lw=0.5)
-    cv.text(92.1, 95, f"arbiter · budget {f['edit_budget']}", size=6.2, color="white", rotation=90, z=12)
+    cv.cuboid(90, 83, 4.2, 23.2, d=1.2, r="purple", fill=PROP["mark"], rotate=True, z=6)
+    cv.text(92.1, 94.6, f"arbiter · budget {f['edit_budget']}", size=6.2, color="white", rotation=90, z=12)
     for y in ys:
-        cv.arrow([(86, y), (90, y)], head=1.0)
-    cv.arrow([(94.2, yc), (99.5, yc)])
+        cv.arrow([(86.1, y), (90, y)], head=1.0)
+    cv.arrow([(95.1, yc), (99.5, yc)])
     cv.doc(99.5, 89, 10, 12, "blue", lines=3)
     cv.text(104.5, 86.2, "candidate", size=7.0, color=MEMR["ink"])
-    cv.text(104.5, 83.6, "base + patch", size=6.2, color=MUTED, style="italic")
+    cv.text(104.5, 83.2, "base + patch", size=6.2, color=MUTED, style="italic")
     cv.arrow([(109.5, yc), (116, yc)])
     # hero: validation gate
     gx, gw, gh = 116, 26, 19
     cv.ax.add_patch(__import__("matplotlib.patches", fromlist=["Polygon"]).Polygon(
         [(gx + 0.4, yc - 0.4), (gx + gw / 2 + 0.4, yc + gh / 2 - 0.4), (gx + gw + 0.4, yc - 0.4),
          (gx + gw / 2 + 0.4, yc - gh / 2 - 0.4)], fc="#1A2230", alpha=0.08, ec="none", zorder=5.8))
-    cv.diamond(gx, yc - gh / 2, gw, gh, "amber", lw=1.1)
+    cv.diamond(gx, yc - gh / 2, gw, gh, dict(VAL, soft=VAL["mark"], stroke=VAL["ink"]), lw=0.9)
     gc = gx + gw / 2
-    cv.text(gc, yc + 1.5, "paired replay", size=7.0, weight="bold", color=VAL["ink"])
-    cv.text(gc, yc - 1.6, "strict gain?", size=6.4, color=VAL["ink"], style="italic")
+    cv.text(gc, yc + 1.5, "paired replay", size=7.0, weight="bold", color="white")
+    cv.text(gc, yc - 1.6, "strict gain?", size=6.4, color="white", style="italic")
     # validation and test splits (fixed during selection)
     cv.doc(148.5, 89, 10, 12, "amber", lines=3)
+    cv.ax.add_patch(Rectangle((148.5, 89), 10, 2.2, fc=VAL["soft"], ec="none", zorder=6.05))
     cv.icon_lock(153.6, 99.4, 2.2, color=VAL["stroke"])
     cv.text(153.5, 86.2, r"$\mathcal{D}_{\mathrm{val}}$", size=6.8, color=VAL["ink"])
-    cv.text(153.5, 83.6, "fixed cases", size=6.2, color=MUTED, style="italic")
+    cv.text(153.5, 83.2, "fixed cases", size=6.2, color=MUTED, style="italic")
     cv.arrow([(148.5, yc), (gx + gw, yc)], color=VAL["mark"], lw=0.8)
     cv.doc(162.5, 89, 10, 12, "frozen", lines=3)
     cv.icon_lock(167.6, 99.4, 2.2, color=FZ["stroke"])
     cv.text(167.5, 86.2, r"$\mathcal{D}_{\mathrm{test}}$", size=6.8, color=FZ["ink"])
-    cv.text(167.5, 83.6, "sealed", size=6.2, color=MUTED, style="italic")
+    cv.text(167.5, 83.2, "sealed", size=6.2, color=MUTED, style="italic")
     # accept -> commit into the hero record; reject -> rejection buffer -> arbiter
     cv.arrow([(gc, yc + gh / 2), (gc, 110)], color=ACC["mark"], lw=1.1, head=1.5)
-    cv.text(gc + 1.2, 107.2, "accept", size=6.4, color=ACC["ink"], style="italic", ha="left")
-    cv.arrow([(gc, yc - gh / 2), (gc, 70.5), (111.9, 70.5)], color=REJ["mark"], lw=0.8, dashed=True)
+    cv.text(gc + 1.2, 106.0, "accept", size=6.4, color=ACC["ink"], style="italic", ha="left")
+    cv.arrow([(gc, yc - gh / 2), (gc, 69.75), (110.0, 69.75)], color=REJ["mark"], lw=0.8, dashed=True)  # front card
     cv.text(gc + 1.2, 78.0, "reject", size=6.4, color=REJ["ink"], style="italic", ha="left")
-    cv.stack(100, 66, 10, 7.5, 3, "coral", dx=0.9, dy=0.9, lw=0.6)
-    cv.text(105, 69.75, "rejected", size=6.2, color=REJ["ink"], z=12)
+    cv.stack(100, 66, 10, 7.5, 3, "coral", dx=0.9, dy=0.9, lw=0.6, fill=REJ["soft"])
+    cv.text(105, 69.75, "rejected", size=6.2, color=REJ["ink"], z=12, weight="bold")
     cv.icon_cycle(113.6, 75.6, 2.2, color=REJ["mark"])
     cv.text(106, 62.4, "blocks exact retry IDs", size=6.2, color=MUTED, style="italic")
     cv.arrow([(100, 69.75), (92.1, 69.75), (92.1, 83)], color=REJ["mark"], lw=0.8, dashed=True, head=1.2)
     # epoch loop: replay T, reflect, update proposer context
-    cv.group(4, 60, 86, 19.5, "neutral", None, dashed=True, lw=0.55, radius=1.6, fill="#FAFAFB")
-    cv.text(6.0, 77.4, "Epoch loop", size=7.0, weight="bold", color=NEU["ink"], ha="left")
+    cv.section(4, 60, 86, 19.5, "neutral", "Epoch loop", tab="corner", size=7.0, radius=1.6, lw=0.6,
+               fill=NEU["fill"])
     doc_stack(cv, 7, 63, 7, 9, DOCN, n=2, lines=2)
-    cv.text(17.0, 69.3, r"replay $T$", size=6.8, ha="left")
-    cv.text(17.0, 66.6, r"prev. vs current $M$", size=6.2, color=MUTED, ha="left", style="italic")
+    cv.text(17.0, 69.6, r"replay $T$", size=6.8, ha="left")
+    cv.text(17.0, 66.3, r"prev. vs current $M$", size=6.2, color=MUTED, ha="left", style="italic")
     cv.arrow([(39.5, 68), (44, 68)])
-    for k, s in enumerate(("improved", "regressed", "unchanged")):
-        cv.chip(44.5, 73.0 - k * 3.6, s, NEU, size=6.2, pad=0.7, h=2.8, ha="left")
+    for k, (s, rr) in enumerate((("improved", ACC), ("regressed", REJ), ("unchanged", NEU))):
+        cv.chip(44.5, 73.0 - k * 3.6, s, rr, size=6.2, pad=0.7, h=2.8, ha="left")
     cv.arrow([(58.5, 68), (63.5, 68)])
     cv.doc(63.5, 62.5, 8.5, 10.5, "purple", lines=3)
     cv.text(73.4, 69.3, "proposer", size=6.8, color=PROP["ink"], ha="left")
     cv.text(73.4, 66.6, "context", size=6.8, color=PROP["ink"], ha="left")
     cv.icon_cycle(85.5, 68.0, 2.4, color=PROP["mark"])
     # state key: what is frozen, fixed, or updated
-    kx, ky = 146.0, 76.0
-    cv.text(kx, ky + 1.0, "State", size=7.0, weight="bold", color=NEU["ink"], ha="left")
-    for k, (ic, lab) in enumerate((("snow", "frozen weights"), ("lock", "fixed during selection"),
-                                   ("cycle", "updated online"))):
-        yy = ky - 4.0 - k * 3.6
-        getattr(cv, f"icon_{ic}")(kx + 1.2, yy, 2.4, color=NEU["ink"])
-        cv.text(kx + 3.6, yy, lab, size=6.2, color=INK, ha="left")
+    cv.legend(141.0, 61.0, 33.0, [("snow", NEU["ink"], "frozen weights"),
+                                  ("lock", NEU["ink"], "fixed during selection"),
+                                  ("cycle", NEU["ink"], "updated online"),
+                                  ("dash", REJ["mark"], "reject / retry path")], size=6.2, gap=1.0, glyph=3.4)
     cv.arrow([(67.75, 73), (67.75, ys[-1] - 3.25)], color=PROP["mark"], lw=0.8, dashed=True, head=1.2)
     cv.text(69.0, 80.9, "next epoch", size=6.2, color=PROP["ink"], style="italic", ha="left")
 
 
 def panel_b(cv, f, r):
-    card(cv, 2, 2, 111, 53, "purple", "(b) Edit arbitration")
+    card(cv, 2, 2, 111, 53.4, "purple", "(b) Edit arbitration")
     tr = {t["id"]: t for t in [f["worked_trace"]] + f["other_evidence"]}
     # evidence documents
     t08 = f["worked_trace"]
@@ -232,13 +234,13 @@ def panel_b(cv, f, r):
     cv.text(77.5, 47.6, "priority · evidence", size=6.2, color=MUTED, style="italic", ha="right")
     ys = [41.0, 29.5, 18.0]
     for p, y in zip(f["proposals"], ys):
-        cv.box(40, y - 4.6, 38.5, 9.2, "purple", lw=0.6, radius=1.2)
+        cv.cuboid(40, y - 4.6, 37.4, 9.0, d=1.3, r="purple", fill="white", lw=0.6, z=6)
         cv.chip(41.2, y, p["id"], PROP, size=6.4, pad=0.6, h=3.0, solid=True, ha="left")
         cv.text(47.6, y + 1.8, f"{p['operation']} {p['key']}", size=6.8, weight="bold",
                 color=PROP["ink"], ha="left")
         cv.text(47.6, y - 1.9, p["value"], size=6.4, color=INK, ha="left")
-        cv.text(77.0, y + 1.8, str(p["priority"]), size=7.0, weight="bold", color=PROP["mark"], ha="right")
-        cv.text(77.0, y - 1.9, p["evidence"], size=6.2, color=MUTED, ha="right")
+        cv.text(76.0, y + 1.8, str(p["priority"]), size=7.0, weight="bold", color=PROP["mark"], ha="right")
+        cv.text(76.0, y - 1.9, p["evidence"], size=6.2, color=MUTED, ha="right")
     # conflict matrix
     n, cs = 3, 4.6
     mx, my = 89.0, 22.0
@@ -249,10 +251,10 @@ def panel_b(cv, f, r):
         for j in range(n):
             x0, y0 = mx + j * cs, my + (n - i - 1) * cs
             clash = r["conflicts"][i][j]
-            fc = NEU["soft"] if i == j else (REJ["soft"] if clash else "white")
+            fc = NEU["soft"] if i == j else (REJ["mark"] if clash else "white")
             cv.box(x0, y0, cs, cs, "neutral", fill=fc, stroke=NEU["stroke"], radius=0, lw=0.45, z=6)
             if clash:
-                check(cv, x0 + cs / 2, y0 + cs / 2, False, s=2.0)
+                cv.icon_cross(x0 + cs / 2, y0 + cs / 2, 2.2, color="white", lw=0.9)
     cv.text(mx + n * cs / 2, my - 2.4, "× same key", size=6.2, color=REJ["ink"], style="italic")
     cv.text(mx + n * cs / 2, my + n * cs + 5.0, "conflicts", size=6.8, weight="bold", color=INK)
     # budget selection: two slots
@@ -266,55 +268,53 @@ def panel_b(cv, f, r):
 
 
 def panel_c(cv, f, r):
-    card(cv, 116, 2, 60, 53, "amber", f"(c) Replay on case {f['validation_trace']['id']}")
+    card(cv, 116, 2, 60, 53.4, "amber", f"(c) Replay on case {f['validation_trace']['id']}")
     vt = f["validation_trace"]
-    cv.text(146, 46.2, f"source {vt['source_value']} · {vt['source_date']}", size=6.2, color=MUTED,
+    cv.text(146, 48.6, f"source {vt['source_value']} · {vt['source_date']}", size=6.2, color=MUTED,
             style="italic")
     cols = [("v12", f["base_version"], "base"), ("alt", f"{f['proposals'][1]['id']} only", "alt"),
             ("v13", f["next_version"], "cand")]
     cx = [139.0, 153.5, 168.0]
-    cwid, rh = 13.6, 5.6
+    cwid, rh, pitch = 13.6, 6.0, 6.7
     for (k, lab, kind), x in zip(cols, cx):
         if kind == "alt":
-            cv.box(x - 5.5, 39.6, 11, 3.6, "neutral", lab, fill="white", dashed=True, size=6.4,
+            cv.box(x - 5.5, 42.0, 11, 3.6, "neutral", lab, fill="white", dashed=True, size=6.4,
                    weight="normal", radius=1.0, lw=0.5)
         else:
-            cv.chip(x, 41.4, lab, MEMR, size=6.8, pad=1.2, h=3.6, solid=kind == "cand")
-    labels = [("unit", "U"), ("date", "D"), ("citation", "C")]
+            cv.chip(x, 43.8, lab, MEMR, size=6.8, pad=1.2, h=3.6, solid=kind == "cand")
+    # outcome grid: pass = solid green cell, fail = coral cell (num_matrix style: the value printed in the cell)
+    labels = ["unit", "date", "citation"]
     keys = [a["key"] for a in f["assertions"]]
-    for i, (a, (nm, _)) in enumerate(zip(f["assertions"], labels)):
-        y = 34.4 - i * (rh + 0.6)
+    for i, (a, nm) in enumerate(zip(f["assertions"], labels)):
+        y = 36.8 - i * pitch
         cv.text(118.6, y + 1.2, nm, size=6.8, weight="bold", ha="left")
-        cv.text(118.6, y - 1.4, a["expected"], size=6.2, color=MUTED, ha="left")
+        cv.text(118.6, y - 1.5, a["expected"], size=6.2, color=MUTED, ha="left")
         for (k, _, kind), x in zip(cols, cx):
             ok = r["checks"][k][i]
             v = r["outs"][k][keys[i]]
             c = ACC if ok else REJ
-            cv.box(x - cwid / 2, y - rh / 2, cwid, rh, "neutral", fill=c["fill"], stroke=c["stroke"],
-                   radius=0.8, lw=0.45 if kind != "cand" else 0.7)
-            cv.text(x, y, v if v is not None else "—", size=6.2, color=c["ink"],
-                    weight="bold" if (ok and kind == "cand") else "normal")
-    # score: pips (area-true) + fraction, hero for v13
-    ys = 13.6
-    for (k, _, kind), x in zip(cols, cx):
-        ch = r["checks"][k]
-        for j, ok in enumerate(ch):
-            px = x - 2.2 + j * 2.2
-            cv.ax.add_patch(__import__("matplotlib.patches", fromlist=["Circle"]).Circle(
-                (px, ys + 2.6), 0.8, fc=ACC["mark"] if ok else "white", ec=ACC["mark"] if ok else NEU["stroke"],
-                lw=0.5, zorder=9))
-        hero = kind == "cand"
-        cv.text(x, ys - 0.6, f"{sum(ch)}/{len(ch)}", size=8.4 if hero else 6.8, weight="bold",
-                color=ACC["mark"] if hero else INK)
-    cv.text(118.6, ys + 1.0, "passed", size=6.4, color=MUTED, ha="left")
+            cv.box(x - cwid / 2, y - rh / 2, cwid, rh, "neutral", fill=c["mark"] if ok else c["soft"],
+                   stroke=c["ink"] if kind == "cand" else c["stroke"], radius=0.8, lw=0.9 if kind == "cand" else 0.45)
+            cv.text(x, y, v if v is not None else "—", size=6.4, color="white" if ok else c["ink"],
+                    weight="bold" if kind == "cand" else "normal")
+    # score bars (assertions passed, out of 3), hero bar for the candidate
+    n = len(f["assertions"])
+    sc = [sum(r["checks"][k]) for k, _, _ in cols]
+    bx0, by, bh = cx[0] - 7.25, 9.4, 6.4
+    hero = dict(ACC, soft=ACC["mark"], stroke=ACC["ink"])
+    cv.mini_plot(bx0, by, 43.5, bh, [[v if kind != "cand" else 0 for v, (_, _, kind) in zip(sc, cols)],
+                                     [v if kind == "cand" else 0 for v, (_, _, kind) in zip(sc, cols)]],
+                 roles=[dict(NEU, soft="#B8BFC9"), hero], bars=True)
+    for v, (_, _, kind), x in zip(sc, cols, cx):
+        h_ = bh * v / max(sc)
+        cv.text(x, by + h_ + 1.6, f"{v}/{n}", size=8.4 if kind == "cand" else 6.8, weight="bold",
+                color=ACC["mark"] if kind == "cand" else INK)
+    cv.text(118.6, by + 3.0, "passed", size=6.4, color=MUTED, ha="left")
     # verdicts relative to base
-    nb = sum(r["checks"]["v12"])
-    na, nc = sum(r["checks"]["alt"]), sum(r["checks"]["v13"])
-    cv.text(cx[1], 7.6, f"{na} = {nb}: reject", size=6.2, color=REJ["ink"], style="italic")
-    cv.text(cx[2], 7.6, f"{nc} > {nb}: commit", size=6.2, color=ACC["ink"], style="italic", weight="bold")
-    cv.text(cx[0], 7.6, "baseline", size=6.2, color=MUTED, style="italic")
-
-
+    nb, na, nc = sc
+    cv.text(cx[1], 5.4, f"{na} = {nb}: reject", size=6.2, color=REJ["ink"], style="italic")
+    cv.text(cx[2], 5.4, f"{nc} > {nb}: commit", size=6.2, color=ACC["ink"], style="italic", weight="bold")
+    cv.text(cx[0], 5.4, "baseline", size=6.2, color=MUTED, style="italic")
 
 
 def main():
@@ -336,6 +336,9 @@ def main():
     panel_a(cv, f, r)
     panel_b(cv, f, r)
     panel_c(cv, f, r)
+    assert not cv.overlaps(), cv.overlaps()
+    assert not cv.text_overlaps(), cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "evidence_guided_memory"))))
 
 

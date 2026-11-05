@@ -36,7 +36,8 @@ LX, LW, RX, RW = 2.0, 101.0, 105.5, 70.5
 
 
 def card(cv, x, y, w, h, title, sub):
-    cv.group(x, y, w, h, "neutral", title, band=True, size=7.6, radius=2.0, lw=0.6, fill="white")
+    # chart card: dashed frame in the hero hue, title bold-italic in the corner (no grey header band)
+    cv.section(x, y, w, h, "blue", title, tab="corner", size=7.6, radius=2.0, lw=0.7, fill="white")
     cv.text(x + 2.0, y + h - 7.6, sub, size=6.2, color=MUTED, ha="left", style="italic")
 
 
@@ -172,7 +173,7 @@ def panel_cost(cv, A):
         pts[p] = list(zip(xs, ys))
     # budget labels on the hero line
     for (x, y), b, (dx, dy) in zip(pts["verified"], A["config"]["budgets_tokens"],
-                                   ((-0.035, 0.0), (0.06, -1.8), (0.0, 1.9), (-0.02, 2.0))):
+                                   ((-0.035, 0.0), (0.06, -2.6), (-0.04, 1.0), (-0.035, 2.0))):
         ax.text(x + dx, y + dy, f"{b:,}", fontsize=6.0, color=HERO["ink"],
                 ha="left" if dx > 0 else ("right" if dx < 0 else "center"),
                 va="center", zorder=8)
@@ -183,7 +184,7 @@ def panel_cost(cv, A):
     sx, sy = pts["no_history"][0]
     ax.text(sx - 0.07, sy + 2.4, "No history", fontsize=6.5, color=INKC["no_history"], ha="right", va="center")
     ux, uy = pts["unfiltered"][-1]
-    ax.text(ux + 0.04, uy - 1.9, "Unfiltered", fontsize=6.5, color=GREY_D, ha="left", va="center")
+    ax.text(ux + 0.05, uy - 1.0, "Unfiltered", fontsize=6.5, color=GREY_D, ha="left", va="center")
     nx, ny = pts["none"][0]
     ax.text(nx + 0.05, ny - 1.6, "No memory", fontsize=6.5, color=INKC["none"], ha="left", va="center")
     # gap callout at the largest budget: verified minus unfiltered means
@@ -204,7 +205,7 @@ def panel_cost(cv, A):
 # ------------------------------------------------------------------ (d) ---
 def panel_diag(cv, A):
     card(cv, RX, BOT_Y, RW, BOT_H, "(d) Rejection-history diagnostic",
-         "events per 100 episodes · history uses 25% of capacity")
+         "events per 100 episodes · 95% CI within dot · history uses 25% of capacity")
     pol = A["config"]["policies"]
     D = A["diagnostics"]
     order = ["none", "unfiltered", "no_history", "verified"]
@@ -233,13 +234,16 @@ def panel_diag(cv, A):
             k = pol.index(p)
             m, lo_, hi_ = d["mean"][k], d["lo"][k], d["hi"][k]
             hero = p == "verified"
-            cv.ax.plot([X(lo_), X(hi_)], [ys[p]] * 2, color=COL[p], lw=1.6, solid_capstyle="round", zorder=5)
-            cv.ax.add_patch(Circle((X(m), ys[p]), 0.95 if hero else 0.75,
+            r_dot = 0.95 if hero else 0.75
+            # every CI here spans <= the dot plus 0.25 mm; a line would only peek out as clipped stubs
+            assert max(X(hi_) - X(m), X(m) - X(lo_)) <= r_dot + 0.25, (key, p)
+            cv.ax.add_patch(Circle((X(m), ys[p]), r_dot,
                                    fc="white" if p == "no_history" else COL[p],
                                    ec=COL[p] if p == "no_history" else "white", lw=0.6, zorder=6))
-            right = hi_ < 0.6 * vmax      # label beside the interval, on the side with room
-            cv.text(X(hi_) + 1.4 if right else X(lo_) - 1.4, ys[p], f"{m:.1f}", size=6.4, color=INKC[p],
-                    weight="bold" if hero else "normal", ha="left" if right else "right")
+            right = hi_ < 0.6 * vmax      # label beside the dot, on the side with room
+            cv.text(X(m) + r_dot + 0.8 if right else X(m) - r_dot - 0.8, ys[p], f"{m:.1f}", size=6.4,
+                    color=INKC[p], weight="bold" if hero else "normal", ha="left" if right else "right",
+                    bbox=dict(boxstyle="square,pad=0.1", fc="white", ec="none"))  # clear of the light gridlines
         r = d["mean"][pol.index("no_history")] / d["mean"][pol.index("verified")]
         ratios[key] = r
         # ratio bracket between no-history and verified rows, at the axis' right side
@@ -283,6 +287,9 @@ def main():
     assert abs(gap - np.mean([r[3] for r in A["heterogeneity"]["mean"]])) < 1e-9 and sgn(gap) == "+9.1"
     assert f"{ratios['corrupt_read']:.1f}" == "2.2" and f"{ratios['repeat_invalid_write']:.1f}" == "4.2"
     assert A["config"]["history_fraction"] == 0.25 and A["config"]["bootstrap_replicates"] == 20000
+    assert not cv.overlaps(), cv.overlaps()
+    assert not cv.text_overlaps(), cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "memory_policy_study"))))
 
 

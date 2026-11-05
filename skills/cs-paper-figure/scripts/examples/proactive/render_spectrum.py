@@ -124,6 +124,7 @@ def main():
     for xx in (xs[1] - gap / 2, xs[2] - gap / 2):
         cv.line([(xx, rows[1][2] - 4.6), (xx, rows[0][2] + 4.6)], color="#C9CED6", lw=0.5, dashed=True)
     assert not cv.overlaps() and not cv.text_overlaps(), cv.overlaps() + cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "proactive_spectrum"))))
 
 

@@ -12,7 +12,8 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | --- | --- |
 | [`SKILL.md`](skills/cs-paper-figure/SKILL.md) | The workflow: brief → references → structure → visual system → reproducible source → review |
 | [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | How it should look: typography, role colours, glyph vocabulary, composition, connectors, density, charts, anti-patterns |
-| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) plus `density`, `compare`, `parity` and `caption` checks (a redesign must not come out emptier, greyer or less illustrated than its original) |
+| [`architecture-study-2026-11.md`](skills/cs-paper-figure/references/architecture-study-2026-11.md) | What 23 vision/multimodal method figures (Holmes, ReSet, CoPS, SemDiff, LFBNet, HFF-Net, VideoFusion, …) do well and badly, and the rules taken from them |
+| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) plus `density`, `compare`, `parity` and `caption` checks (a redesign must not come out emptier, greyer or less illustrated than its original) |
 | [`figure-series.md`](skills/cs-paper-figure/references/figure-series.md) | Figure series for surveys and frameworks: one taxonomy palette, chapter frames, running examples, gate stacks, spectra, illustrated scenes with vector dialogue |
 | [`codex_images.py`](skills/cs-paper-figure/scripts/codex_images.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icons, scenes and vignettes generated with Codex CLI, embedded at full resolution |
 | `scripts/examples/`, `references/` | The gallery's render scripts; a 120-paper figure corpus, per-lab studies and review checklists |
@@ -27,9 +28,9 @@ Each redesign keeps the paper's components, values and notation; only the drawin
 | --- | --- |
 | <img src="gallery/transformer/original/transformer_original_fig1.png" width="300"> | <img src="gallery/transformer/transformer_fig1.png" width="520"> |
 
-- The three attention kinds get their own colours, and panel (b) draws each as its mask (full, causal, target × source).
-- K and V enter cross-attention from the encoder, Q from the decoder; "shifted right" is shown with real token strips.
-- Multi-head attention, the two equations and the base-model hyperparameters fit into the same figure.
+- Encoder and decoder run as two lanes of layer slabs; the three attention kinds are the solid-colour heroes, and the encoder output Z drops its keys and values into cross-attention.
+- A detail row opens multi-head attention, draws the three masks with the real tokens on both axes, and traces one head's tensors (Q, K → S → A, V → head).
+- A key strip defines every glyph once; "shifted right" is shown with real token strips.
 
 [PDF](gallery/transformer/transformer_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/transformer/render_fig1.py)
 
@@ -157,7 +158,8 @@ python scripts/codex_images.py generate icons.json --out out/icons [--ref existi
 7. Every number comes from the inputs and is asserted in code.
 8. Icons, if any: one matched set, labelled, never carrying text or data.
 9. Match the register: method figures reward restraint; an illustrated survey figure stays illustrated, with full cards, solid headers and large type.
-10. Captions say what is shown and how to read it; how the figure was made or drawn, and protocol the methods already give, stay out (`paperkit.py caption` checks).
+10. Method figures: one dashed, tinted section per module, pseudo-3D tensors and layer slabs, a data object in every detail panel, and a key strip (learned from 23 CV/multimodal figures; see [`visual-craft.md` §12](skills/cs-paper-figure/references/visual-craft.md#12-the-architecture-register-object-rich-method-figures)).
+11. Captions say what is shown and how to read it; how the figure was made or drawn, and protocol the methods already give, stay out (`paperkit.py caption` checks).
 
 ## License
 

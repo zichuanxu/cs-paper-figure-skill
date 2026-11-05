@@ -14,10 +14,12 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 from matplotlib.patches import FancyBboxPatch, Polygon, Rectangle  # noqa: E402
+from matplotlib.transforms import Affine2D  # noqa: E402
 from paperkit import Canvas, ROLE, INK, MUTED, LINE  # noqa: E402
 
 OLD = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "epoch-context")
-W, H = 178, 106
+W, H = 178, 106    # panel area; a phase bar and key strip are added below it (DY)
+DY = 11.0
 MONO = "DejaVu Sans Mono"   # bundled with matplotlib: literal output strings / field values only
 GR = {"improved": ROLE["memory"], "regressed": ROLE["coral"],
       "unchanged": dict(ROLE["neutral"], mark="#5E6875")}
@@ -38,8 +40,24 @@ def mono(cv, x, y, s, color=INK, size=MS, ha="left", **kw):
     return cv.text(x, y, s, size=size, color=color, ha=ha, family=MONO, **kw)
 
 
-def card(cv, x, y, w, h, r, title):
-    cv.group(x, y, w, h, r, title, band=True, size=7.6, radius=2.0, lw=0.7, fill="white")
+def card(cv, x, y, w, h, r, title, letter):
+    """Module frame: tinted field + dashed border in the stage's hue, title on a pill tab on the top border."""
+    cv.section(x, y, w, h, r, title, letter=letter, tab="top", size=7.6, radius=2.0)
+
+
+def lift(cv, dy):
+    """Move everything drawn so far up by dy mm (frees a strip at the bottom for the phase bar and key).
+    ponytail: covers the artist kinds this script draws (patches, lines, texts) and the chip audit list."""
+    for p in cv.ax.patches:
+        p.set_transform(Affine2D().translate(0, dy) + cv.ax.transData)
+    for ln in cv.ax.lines:
+        ln.set_ydata([y + dy for y in ln.get_ydata()])
+    for t in cv.ax.texts:
+        x, y = t.get_position()
+        t.set_position((x, y + dy))
+    cv.chips[:] = [(x, y + dy, w, h, s, reg and (reg[0], reg[1] + dy, reg[2], reg[3] + dy))
+                   for x, y, w, h, s, reg in cv.chips]
+    assert not cv.ax.collections and not cv.ax.images
 
 
 def folded(cv, x, y, w, h, r, title, lw=0.6, fill="white", shadow=False, f=2.6):
@@ -138,7 +156,7 @@ def case_card(cv, y, h, rec, src, g):
 
 
 def panel_a(cv, A, F):
-    card(cv, 2, 2, 76, 102, "neutral", "(a) Matched replay, M0 vs M1")
+    card(cv, 2, 2, 76, 101.4, "frozen", "Matched replay, M0 vs M1", "a")
     ms = F["memory_states"]
     assert ms["M0"] == {"unit_mode": "header", "scalar_date": False}
     assert ms["M1"] == {"unit_mode": "inline_all", "scalar_date": True}
@@ -167,8 +185,12 @@ def panel_a(cv, A, F):
                                        fc=c["fill"], ec=c["stroke"], lw=0.55, ls=(0, (3, 1.8)), zorder=2))
         x0, w = cv.chip(5.2, yt, f"{g} ×{A['counts'][g]}", dict(c, mark=c["mark"]), size=6.4, h=3.3,
                         pad=1.0, solid=True, ha="left", z=9)
-        cv.text(x0 + w + 1.2, yt - 0.05, pill[g], size=6.0, style="italic", color=c["ink"], ha="left",
-                bbox=dict(fc=c["fill"], ec="none", pad=0.6))
+        # knockout behind the caption on the group's top border: panel tint above the border, group tint
+        # below, so the patch is invisible and only the dashed line is interrupted
+        kx, kw = x0 + w + 0.6, cv.text_width(pill[g], 6.0) + 1.4
+        for ky, fc in ((yt, ROLE["frozen"]["fill"]), (yt - 1.8, c["fill"])):
+            cv.ax.add_patch(Rectangle((kx, ky), kw, 1.8, fc=fc, ec="none", zorder=2.5))
+        cv.text(x0 + w + 1.2, yt - 0.05, pill[g], size=6.0, style="italic", color=c["ink"], ha="left")
         cy = yt - 4.0 - ch
         for cid in ids:
             assert grp[cid] == g
@@ -183,7 +205,7 @@ PX0, PW = 135.0, 39.5      # proposal docs
 
 
 def panel_b(cv, A, ends):
-    card(cv, 80.5, 2, 50.5, 102, "purple", "(b) Context update, C0 \u2192 C1")
+    card(cv, 80.5, 2, 50.5, 101.4, "purple", "Context update, C0 \u2192 C1", "b")
     before, after = A["context_before"], A["context_after"]
     # C0: compact one-line rows
     y0, h0 = 71.0, 21.0
@@ -254,7 +276,7 @@ def panel_b(cv, A, ends):
 
 
 def panel_c(cv, A, F, yc0, rows_y):
-    card(cv, 133.5, 2, 42.5, 102, "amber", "(c) Next proposal")
+    card(cv, 133.5, 2, 42.5, 101.4, "amber", "Next proposal", "c")
     req = F["next_request"]
     pb, pa = A["proposal_before"], A["proposal_after"]
     for p in (pb, pa):
@@ -333,10 +355,24 @@ def main():
     assert A["context_before"] == F["context_before"]
     assert A["proposal_before"]["patch"]["scope"] == ["scalar", "csv"]
     assert A["proposal_after"]["patch"]["scope"] == ["scalar"]
-    cv = Canvas(W, H, family="serif", size=7.0)
+    cv = Canvas(W, H + DY, family="serif", size=7.0)
     ends = panel_a(cv, A, F)
     yc0, rows_y = panel_b(cv, A, ends)
     panel_c(cv, A, F, yc0, rows_y)
+    lift(cv, DY)
+    # stages named once, left to right, then the key for every chip and line style used above
+    cv.phase_bar(DY - 3.6, [(2, 78, "frozen", "1  replay both memories on the matched cases"),
+                            (80.5, 131, "purple", "2  reflect: rules R1–R4 edit C"),
+                            (133.5, 176, "amber", "3  propose under C1")], h=3.0, size=6.4)
+    rules = sorted({t["rule"] for t in A["reflection_trace"]})
+    assert rules == ["R1", "R2", "R3", "R4"], rules
+    cv.legend(2, 0.6, 174, [("abbr", "ADD", "entry added"), ("abbr", "DEL", "entry removed (struck)"),
+                            ("abbr", "REP", "patch replaces a field"), ("abbr", "R1–R4", "reflection rule"),
+                            ("abbr", "PASS", "all checks pass"), ("line", GR["unchanged"]["mark"], "evidence → field")],
+              size=6.2, gap=3.0, row_h=4.0, pad=0.9)
+    assert not cv.overlaps(), cv.overlaps()
+    assert not cv.text_overlaps(), cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "epoch_context_update"))))
 
 

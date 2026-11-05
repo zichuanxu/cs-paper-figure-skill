@@ -122,6 +122,7 @@ def main():
         cv.text((x + s + 1.0 + x + cw - 7.0) / 2, ay + ah / 2, line, size=8.6, weight="bold", color=c["ink"], linespacing=1.1)
     cv.arrow([(gx + cw - 6.0, ay + ah / 2), (gx + cw + 1.6 + 0.6, ay + ah / 2)], color=HIGH["mark"], lw=1.4, head=1.6, z=9)
     assert not cv.overlaps() and not cv.text_overlaps(), cv.overlaps() + cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "proactive_capabilities"))))
 
 

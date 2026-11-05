@@ -186,6 +186,40 @@ must come from the inputs; derived ratios are computed in code and asserted.
 5. Fix overlaps and clipped labels found in the PNG; iterate until the side-by-side shows a clear win
    on message, hierarchy, faithfulness and legibility, not only on decoration.
 
+## 12. The architecture register: object-rich method figures
+
+From a 2026-11 study of 23 vision/multimodal method figures (Holmes, ReSet, CoPS, SemDiff, LFBNet,
+HFF-Net, VideoFusion, C2R, …; [architecture-study-2026-11.md](architecture-study-2026-11.md)). The
+earlier gallery outputs shared one template (grey header band on a white card around flat 2-D
+boxes); beside these figures that template reads as tidy but generic. For a method or
+architecture figure, start from this register:
+
+- **Plate.** Overview pipeline across the top (55–65 % of height), a row of 2–4 equal-height detail
+  panels opening the new modules, a glyph key strip along the bottom. Dashed zoom rays or a shared
+  hue link each detail panel to its block in the overview.
+- **Section frames, not header bands.** Each module gets `cv.section(...)`: a tinted field and a
+  dashed border in its own hue, titled on a pill tab on the top border, a bold strip at the bottom,
+  or bold-italic in the corner. Name it as the paper does, with the acronym: "Masked Self-Attention
+  (MSA)". The grey `group(band=True)` card stays for charts and neutral context only.
+- **Pseudo-3D nouns.** Feature tensors = `cuboid` (H×W×C beside it in italic math); layer runs =
+  tall slabs `cuboid(rotate=True)` with vertical text; encoders = `trap`; fused features = a
+  gradient between the two source hues (`grad=`). Never put the whole pipeline in perspective.
+- **A data object in every detail panel.** A feature/attention map (`fmap`, `n=` for channels or
+  frames), a numeric matrix with the winner bold-bordered (`num_matrix`), a mini distribution or
+  score bars (`mini_plot`), a graph (`graph`), real tokens, or a real thumbnail. A panel of only
+  boxes and arrows explains the wiring, not the operation.
+- **Branch identity everywhere.** One hue per branch/modality/factor on its blocks, its wires when
+  branches run in parallel, its tokens, and the words that name it (`rich`).
+- **Key strip.** `cv.legend([...])` defines every circled operator, snowflake/flame, dashed =
+  train-only, and abbreviation once, so the panels can say one or two words.
+- **Phase bar.** `cv.phase_bar(...)` under the columns names the stages once (DySeT).
+- **Saturation.** Section tints at the role `fill`, blocks at `soft`, one or two hero blocks at
+  `mark` with white text. Compare against the original with `paperkit.py parity`: a redesign of a
+  colourful method figure must not come out greyer.
+
+Keep this skill's discipline on top: text ≥ 5.8 pt (they often fall to 4–5 pt), one meaning per hue
+(VideoFusion spends six hues on six block types), no wire through text, one icon family (no emoji).
+
 ## 11. Anti-patterns checklist
 
 - [ ] Equal-weight boxes, no hero
@@ -194,7 +228,12 @@ must come from the inputs; derived ratios are computed in code and asserted.
 - [ ] State or memory drawn as a text box
 - [ ] Colour with two meanings without a local label
 - [ ] Wire > 45 mm or crossing another wire
+- [ ] Wire running through or behind a box, slab or label (`cv.wire_crossings()`); icon touching text
 - [ ] Text < 5.8 pt, subscripts < 4.5 pt, or DejaVu Sans in a Times paper
 - [ ] Watermarks / audit receipts / slogans inside the art
 - [ ] Legend where direct labels fit; ratio claims without a visible ratio
 - [ ] Log-axis bars, unexplained hatching, or decorative 3-D
+- [ ] Every panel the same grey-banded white card; modules not told apart by a hue of their own (§12)
+- [ ] Tensors and layer runs drawn as flat labelled rectangles instead of cuboids/slabs (§12)
+- [ ] A detail panel with no data object (map, numeric matrix, mini plot, tokens, thumbnail)
+- [ ] Circled operators, snowflakes or abbreviations used without a key strip

@@ -123,6 +123,7 @@ def main():
         rbox(cv, cx, cy - 1.9, cw2, 3.8, SIXA[n]["mark"], r=1.9, z=5)
         cv.text(cx + cw2 / 2, cy, n, size=6.4, weight="bold", color="white", z=6)
     assert not cv.overlaps() and not cv.text_overlaps(), cv.overlaps() + cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "proactive_history"))))
 
 

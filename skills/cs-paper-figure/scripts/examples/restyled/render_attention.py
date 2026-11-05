@@ -19,14 +19,15 @@ from decimal import Decimal, getcontext
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 import matplotlib  # noqa: E402
-from matplotlib.patches import Rectangle  # noqa: E402
+from matplotlib.patches import FancyBboxPatch, Rectangle  # noqa: E402
 
 from paperkit import Canvas, ROLE, INK, MUTED, LINE  # noqa: E402
 
 E_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "attention")
 PRE, SUM, LOC, QRY, BANK = ROLE["blue"], ROLE["purple"], ROLE["memory"], ROLE["amber"], ROLE["frozen"]
 BLK = dict(fill="#F1F3F5", hatch="#AEB6C0", ink="#7A838E", stroke="#B5BCC5")
-W, H = 178, 138
+W, H = 178, 138    # rows (a)/(b), (d), (e); the overview row (c) adds ROW above (d)
+ROW = 35.0
 SW, SG, GG = 8.6, 1.6, 4.4          # slot width, slot gap, group gap (mm)
 X0 = 16.0                           # left edge of the first bank column
 
@@ -64,6 +65,9 @@ def compute(inp, chk):
                 Z=float(Z), allowed=ex["allowed_keys"], q=ex["query_index"])
 
 
+CMIN, CMAX = -0.16, 0.42   # amber ramp span covering every a_j v_j term (min -0.1554, max 0.4195)
+
+
 def kind(k):
     return PRE if k.startswith("P") else SUM if k.startswith("S") else LOC
 
@@ -84,8 +88,9 @@ def sub(k):  # 't10' -> '$t_{10}$', 'P0' -> '$P_{0}$'
 
 
 # ------------------------------------------------------------ primitives ---
-def card(cv, x, y, w, h, title, r="frozen"):
-    cv.group(x, y, w, h, r, title, band=True, size=7.9, radius=2.0, lw=0.7, fill="white")
+def card(cv, x, y, w, h, title, r="frozen", letter=None):
+    """Module frame: tinted field + dashed border in the panel's own hue, title on a pill tab."""
+    cv.section(x, y, w, h, r, title, letter=letter, tab="top", size=7.6, radius=2.0)
 
 
 def hatched(cv, x, y, w, h, z=6, lw=0.35):
@@ -93,9 +98,9 @@ def hatched(cv, x, y, w, h, z=6, lw=0.35):
     cv.ax.add_patch(Rectangle((x, y), w, h, fc="none", ec=BLK["hatch"], lw=0, hatch="//////", zorder=z + 0.01))
 
 
-def slot(cv, x, y, k, r, seed, h=12.8, lw=0.6, dashed=False):
-    """One cache slot: id over a key vector (3 cells) and a value vector (2 cells)."""
-    cv.box(x, y, SW, h, r, lw=lw, dashed=dashed, radius=1.2)
+def slot(cv, x, y, k, r, seed, h=12.8, lw=0.6):
+    """One cache slot, drawn as a thin pseudo-3D block: id over a key vector (3 cells) and a value vector (2)."""
+    cv.cuboid(x, y, SW, h, d=1.3, r=r, lw=lw, z=5)
     cv.text(x + SW / 2, y + h - 2.3, sub(k), size=7.0, color=r["ink"])
     cv.vec(x + SW / 2 - 1.95, y + 5.6, n=3, cell=1.3, r=r, seed=seed)
     cv.vec(x + SW / 2 - 1.3, y + 1.6, n=2, cell=1.3, r=r, seed=seed + 50)
@@ -117,7 +122,7 @@ def mini(cv, x, y, rows, cols, fills, cell=1.15, lw=0.3):
 
 # ---------------------------------------------------------------- panels ---
 def panel_a(cv, d, xs):
-    card(cv, 2, 100, 110, 36, "(a) Key/value cache bank")
+    card(cv, 2, 100, 110, 35.4, "Key/value cache bank", "frozen", "a")
     y0, h = 109.6, 12.8
     cv.box(xs[0] - 1.6, y0 - 1.0, xs[-1] + SW - xs[0] + 3.2, h + 2.0, "neutral", fill="#F7F8FA",
            stroke=BANK["stroke"], lw=0.7, radius=1.6, z=3)
@@ -129,7 +134,7 @@ def panel_a(cv, d, xs):
     for x, rng in ((xs[2], "$t_1$–$t_4$"), (xs[3], "$t_5$–$t_8$")):
         cs = cv.tokens(x + 0.05, 125.9, 4, w=1.85, h=1.85, gap=0.37, r="neutral", lw=0.4)
         cv.text(x + SW / 2, 129.6, rng, size=6.6, color=SUM["ink"])
-        cv.arrow([(x + SW / 2, 125.9), (x + SW / 2, y0 + h + 1.0 - 0.02)], color=SUM["stroke"], lw=0.6, head=1.0)
+        cv.arrow([(x + SW / 2, 125.9), (x + SW / 2, y0 + h + 1.0)], color=SUM["stroke"], lw=0.6, head=1.0)
     cv.text((xs[0] + xs[1] + SW) / 2, 127.2, "always readable", size=6.1, color=PRE["ink"], style="italic")
     cv.rich((xs[4] + xs[7] + SW) / 2, 127.2, [(r"$t_j$", LOC["ink"]), (r" readable iff ", LOC["ink"]),
                                                (r"$j\leq i$", LOC["ink"])], size=6.5, ha="center")
@@ -141,11 +146,13 @@ def panel_a(cv, d, xs):
 
 
 def panel_b(cv, d):
-    card(cv, 115, 100, 61, 36, "(b) Summary availability")
+    card(cv, 115, 100, 61, 35.4, "Summary availability", "purple", "b")
     y0, h = 109.6, 12.8
     qw, qg, qx = 6.2, 1.2, 118.0
     yq = y0 + h / 2
-    cv.line([(qx - 0.8, yq), (qx + 4 * qw + 3 * qg + 0.8, yq)], color=QRY["stroke"], lw=0.6, z=4)
+    for n in range(3):  # thread the query steps through the gaps only, never behind a chip
+        gx0 = qx + (n + 1) * qw + n * qg
+        cv.line([(gx0, yq), (gx0 + qg, yq)], color=QRY["stroke"], lw=0.6, z=4)
     for n, q in enumerate(d["qs"]):
         x = qx + n * (qw + qg)
         hero = q == d["q"]
@@ -164,14 +171,14 @@ def panel_b(cv, d):
     x3 = 159.0
     cv.tokens(x3 + 0.05, 125.9, 4, w=1.85, h=1.85, gap=0.37, r="memory", lw=0.4)
     cv.text(x3 + SW / 2, 129.6, "$t_9$–$t_{12}$", size=6.6, color=LOC["ink"])
-    cv.arrow([(x3 + SW / 2, 125.9), (x3 + SW / 2, y0 + h)], color=SUM["stroke"], lw=0.6, head=1.0)
+    cv.arrow([(x3 + SW / 2, 125.9), (x3 + SW / 2, y0 + h + 0.85)], color=SUM["stroke"], lw=0.6, head=1.0)
     slot(cv, x3, y0, "S3", SUM, seed=9, lw=0.9)
     cv.arrow([(xe, yq), (x3, yq)], color=LINE, lw=0.6, head=1.1)
     cv.text(x3 + SW / 2, 105.6, "later reads", size=6.1, color=SUM["ink"], style="italic")
 
 
 def panel_c(cv, d, xs):
-    card(cv, 2, 52, 174, 45, "(c) Additive causal mask over the bank")
+    card(cv, 2, 52, 174, 44.4, "Additive causal mask over the bank", "rose", "d")
     keys, qs, perm = d["keys"], d["qs"], d["perm"]
     rh, top = 5.6, 83.2
     cw = SW + 1.0
@@ -206,65 +213,163 @@ def panel_c(cv, d, xs):
     i10 = qs.index(d["q"])
     cv.ax.add_patch(Rectangle((xs[0] - 0.8, top - (i10 + 1) * rh - 0.3), xs[-1] + SW - xs[0] + 1.6, rh + 0.6,
                               fc="none", ec=QRY["mark"], lw=1.1, zorder=10))
-    # legend
-    ly = 56.4
-    for n_, r in enumerate((PRE, SUM, LOC)):
-        cv.ax.add_patch(Rectangle((xs[0] - 0.5 + n_ * 1.15, ly - 1.4), 1.15, 2.8, fc=r["soft"], ec="none", zorder=6))
-    cv.text(xs[0] + 3.8, ly, "$0$  permitted", size=6.4, color=INK, ha="left")
-    hatched(cv, xs[3], ly - 1.4, 3.4, 2.8)
-    cv.text(xs[3] + 4.3, ly, r"$-\infty$  blocked", size=6.4, color=INK, ha="left")
-    cv.line([(xs[6], ly), (xs[6] + 3.4, ly)], color=LOC["ink"], lw=1.1)
-    cv.text(xs[6] + 4.3, ly, r"$j\leq i$ edge", size=6.4, color=INK, ha="left")
-    # ---- right: shapes of the operator, then the equations
+    # key strip: every glyph of panels (c)-(d) defined once (hatching, staircase edge, circled product)
+    ly, kx0, kx1 = 56.6, xs[0] - 1.6, 110.6
+    cv.ax.add_patch(FancyBboxPatch((kx0, ly - 2.6), kx1 - kx0, 5.2, boxstyle="round,pad=0,rounding_size=1.4",
+                                   fc="white", ec=ROLE["rose"]["stroke"], lw=0.55, ls=(0, (3, 2)), zorder=5))
+    items = [("perm", "$0$ permitted"), ("block", r"$-\infty$ blocked"), ("edge", r"$j\leq i$ edge"),
+             ("op", "product"), ("plus", r"add $\mathbf{M}$")]
+    tw = [4.4 + cv.text_width(t, 6.4) for _, t in items]
+    gap_ = (kx1 - kx0 - 3.0 - sum(tw)) / (len(items) - 1)
+    gx = kx0 + 1.5
+    assert gap_ >= 2.0, gap_
+    for (kd, t), w_ in zip(items, tw):
+        if kd == "perm":
+            for n_, r in enumerate((PRE, SUM, LOC)):
+                cv.ax.add_patch(Rectangle((gx + n_ * 1.15, ly - 1.4), 1.15, 2.8, fc=r["soft"], ec="none", zorder=6))
+        elif kd == "block":
+            hatched(cv, gx, ly - 1.4, 3.4, 2.8)
+        elif kd == "edge":
+            cv.line([(gx, ly), (gx + 3.4, ly)], color=LOC["ink"], lw=1.1)
+        else:
+            cv.op(gx + 1.7, ly, "x" if kd == "op" else "+", d=2.4, lw=0.5)
+        cv.text(gx + 4.4, ly, t, size=6.4, color=INK, ha="left")
+        gx += w_ + gap_
+    # ---- right: the mask definition (the operator chain it feeds is the overview row (c))
     xR = 116.0
     cv.line([(xR - 3.0, 55.0), (xR - 3.0, 90.6)], color="#E1E5EA", lw=0.5)
-    cell, yc = 1.15, 73.0
+    xm = (xR + 176.0) / 2
+    cv.rich(xm, 79.0, [(r"$M_{ij}=0$  if  $j\in\{$", INK), (r"$P_0,P_1,$", PRE["ink"]), (r"$S_1,S_2$", SUM["ink"]),
+                       (r"$\}$  or  ", INK), (r"$t_j$ with $j\leq i$", LOC["ink"])], size=6.6, ha="center")
+    cv.text(xm, 73.6, r"$M_{ij}=-\infty$  otherwise", size=6.6, color=INK)
+    cv.text(xm, 66.4, "added to the scaled logits before the row softmax,", size=6.2, color=MUTED, style="italic")
+    cv.text(xm, 63.0, r"so a blocked key gets weight exactly $0$", size=6.2, color=MUTED, style="italic")
+
+
+def striped(cv, x, y, w, h, fills, vertical=False, z=6.5):
+    """Front face of a tensor cuboid split into rows (or columns) coloured per query / key."""
+    n = len(fills)
+    for k, f in enumerate(fills):
+        if vertical:
+            cv.ax.add_patch(Rectangle((x + k * w / n, y), w / n, h, fc=f, ec="white", lw=0.35, zorder=z))
+        else:
+            cv.ax.add_patch(Rectangle((x, y + h - (k + 1) * h / n), w, h / n, fc=f, ec="white", lw=0.35, zorder=z))
+    cv.ax.add_patch(Rectangle((x, y), w, h, fc="none", ec=INK, lw=0.45, zorder=z + 0.1))
+
+
+def panel_ops(cv, d):
+    """Overview row: the masked attention operator on 3-D tensors; A carries the computed q10 weights."""
+    card(cv, 2, 100.5, 174, 31.0, "Masked attention over the bank", "teal", "c")
+    keys, qs, perm = d["keys"], d["qs"], d["perm"]
+    i10 = qs.index(d["q"])
     roles = [kind(k) for k in keys]
-    x = xR + 1.0
-    glyphs = []
+    y0, h, dep = 105.6, 12.0, 1.6
+    yt, yd = 122.4, 103.0                 # tensor names above, shapes below
+    qrows = [QRY["mark"] if i == i10 else QRY["soft"] for i in range(len(qs))]
+    x = 7.0
 
-    def put(lbl, dims, rows, cols, fills, color):
+    def tensor(w, name, dims, r, fills, vertical=False, nc=None):
         nonlocal x
-        w, h = mini(cv, x, yc - rows * cell / 2, rows, cols, fills, cell)
-        cv.text(x + w / 2, yc + h / 2 + 2.0, lbl, size=7.0, color=color)
-        cv.text(x + w / 2, yc - h / 2 - 2.0, dims, size=6.5, color=MUTED)
-        glyphs.append((x, w))
-        x += w
+        cv.cuboid(x, y0, w, h, d=dep, r=r, z=6)
+        striped(cv, x, y0, w, h, fills, vertical)
+        cv.text(x + w / 2, yt, name, size=7.4, color=nc or r["ink"])
+        cv.text(x + w / 2, yd, dims, size=6.4, color=MUTED)
+        x += w + dep * 0.77
 
-    def gap(sym=None, wid=4.2, arrow=False, lab=None, lab2=None):
+    def op(sym, wid=5.0):
         nonlocal x
-        if arrow:
-            cv.arrow([(x + 0.8, yc), (x + wid - 0.8, yc)], head=1.0, lw=0.6)
-            if lab:
-                cv.text(x + wid / 2, yc + 1.9, lab, size=6.4, color=INK)
-            if lab2:
-                cv.text(x + wid / 2, yc - 1.9, lab2, size=6.0, color=INK)
-        elif sym:
-            cv.op(x + wid / 2, yc, sym, d=2.4, lw=0.5)
+        cv.op(x + wid / 2, y0 + h / 2, sym, d=2.8, lw=0.55)
         x += wid
 
-    put(r"$\mathbf{Q}$", r"$4\times d_k$", 4, 3, lambda i, j: QRY["soft"] if i != i10 else QRY["mark"], QRY["ink"])
-    gap("x")
-    put(r"$\mathbf{K}^{\!\top}$", r"$d_k\times 8$", 3, 8, lambda i, j: roles[j]["soft"], BANK["ink"])
-    gap(arrow=True, wid=11.4, lab=r"$+\mathbf{M}$", lab2="softmax")
-    put(r"$\mathbf{A}$", r"$4\times 8$", 4, 8,
-        lambda i, j: (roles[j]["mark"] if i == i10 else roles[j]["soft"]) if perm[i][j] else None, INK)
-    gap("x")
-    put(r"$\mathbf{V}$", r"$8\times d_v$", 8, 2, lambda i, j: roles[i]["soft"], BANK["ink"])
-    gap(arrow=True, wid=4.6)
-    put(r"$\mathbf{O}$", r"$4\times d_v$", 4, 2, lambda i, j: QRY["soft"] if i != i10 else QRY["mark"], QRY["ink"])
-    xm = (xR + x) / 2
-    cv.rich(xm, 87.6, [(r"$\mathbf{A}=\mathrm{rowsoftmax}($", INK), (r"$\mathbf{Q}$", QRY["ink"]),
-                       (r"$\mathbf{K}^{\!\top}$", BANK["ink"]), (r"$/\sqrt{d_k}\,+\,$", INK),
-                       (r"$\mathbf{M}$", INK), (r"$)$,", INK),
-                       (r"$\ \ \mathbf{O}=\mathbf{A}$", INK), (r"$\mathbf{V}$", BANK["ink"])], size=7.4, ha="center")
-    cv.rich(xm, 62.2, [(r"$M_{ij}=0$  if  $j\in\{$", INK), (r"$P_0,P_1,$", PRE["ink"]), (r"$S_1,S_2$", SUM["ink"]),
-                       (r"$\}$  or  ", INK), (r"$t_j$ with $j\leq i$", LOC["ink"])], size=6.6, ha="center")
-    cv.text(xm, 58.0, r"$M_{ij}=-\infty$  otherwise", size=6.6, color=INK)
+    def arr(wid, lab=None):
+        nonlocal x
+        cv.arrow([(x + 0.5, y0 + h / 2), (x + wid - 0.5, y0 + h / 2)], head=1.0, lw=0.6)
+        if lab:
+            cv.text(x + wid / 2, y0 + h / 2 + 2.2, lab, size=6.2, color=INK)
+        x += wid
+
+    tensor(6.0, r"$\mathbf{Q}$", r"$4\times d_k$", QRY, qrows)
+    op("x")
+    tensor(17.0, r"$\mathbf{K}^{\!\top}$", r"$d_k\times 8$", BANK, [r_["soft"] for r_ in roles], vertical=True)
+    arr(8.6, r"$/\sqrt{d_k}$")
+    op("+")
+    # M: the real 4x8 additive mask (hatched = -inf)
+    mc = 1.45
+    mini(cv, x, y0 + h / 2 - 2 * mc, 4, 8, lambda i, j: ROLE["rose"]["soft"] if perm[i][j] else None, mc)
+    cv.text(x + 4 * mc, yt, r"$\mathbf{M}$", size=7.4, color=ROLE["rose"]["ink"])
+    cv.text(x + 4 * mc, yd, r"$4\times 8$", size=6.4, color=MUTED)
+    x += 8 * mc
+    arr(4.0)
+    # row softmax as a narrowing projection
+    cv.trap(x, y0, 6.6, h, "teal", narrow="right", ratio=0.7)
+    cv.text(x + 3.0, y0 + h / 2, "softmax", size=6.2, color=ROLE["teal"]["ink"], rotation=90)
+    x += 6.6
+    arr(4.0)
+    # A: 4x8 attention weights; the q10 row is the computed one, the other rows show only their mask
+    cw_, ch_ = 5.9, h / 4
+    ax0 = x + 4.6
+    for i, q in enumerate(qs):
+        cv.text(ax0 - 0.8, y0 + h - (i + 0.5) * ch_, f"$q_{{{q}}}$", size=5.9, color=QRY["ink"], ha="right")
+    cv.cuboid(ax0, y0, 8 * cw_, h, d=dep, r="amber", z=5)
+    for i in range(len(qs)):
+        for j in range(8):
+            cx, cy = ax0 + j * cw_, y0 + h - (i + 1) * ch_
+            if i == i10:
+                continue
+            if perm[i][j]:
+                cv.ax.add_patch(Rectangle((cx, cy), cw_, ch_, fc=roles[j]["fill"], ec="white", lw=0.4, zorder=6))
+            else:
+                hatched(cv, cx, cy, cw_, ch_, z=6, lw=0.3)
+    a_row = d["a"] + [0.0] * (8 - len(d["a"]))
+    win = max(range(8), key=lambda j: a_row[j])
+    cv.num_matrix(ax0, y0 + h - (i10 + 1) * ch_, [a_row], cell=cw_, ch=ch_, r="amber", fmt="{:.3f}",
+                  size=5.9, hi=[(0, win)], vmin=0.0, vmax=max(a_row), z=6.6)
+    cv.ax.add_patch(Rectangle((ax0, y0), 8 * cw_, h, fc="none", ec=INK, lw=0.45, zorder=7))
+    # right edge stops inside the front face so the frame never spills onto the cuboid's side face
+    cv.ax.add_patch(Rectangle((ax0 - 0.3, y0 + h - (i10 + 1) * ch_ - 0.25), 8 * cw_ + 0.3 - 0.18, ch_ + 0.5,
+                              fc="none", ec=QRY["mark"], lw=1.0, zorder=7.2))
+    cv.text(ax0 + 4 * cw_, yt, r"$\mathbf{A}$", size=7.4, color=QRY["ink"])
+    for j, k in enumerate(keys):
+        cv.text(ax0 + (j + 0.5) * cw_, y0 + h + 2.4, sub(k), size=5.9, color=roles[j]["ink"])
+    cv.text(ax0 + 4 * cw_, yd, r"$4\times 8$;  only the $q_{10}$ row is computed", size=6.2, color=MUTED,
+            style="italic")
+    x = ax0 + 8 * cw_ + dep * 0.77
+    op("x", 4.6)
+    tensor(5.6, r"$\mathbf{V}$", r"$8\times d_v$", BANK, [r_["soft"] for r_ in roles])
+    arr(4.0)
+    tensor(5.6, r"$\mathbf{O}$", r"$4\times d_v$", QRY, qrows)
+    # hero: the q10 output row
+    o = d["out"]
+    cv.box(x + 0.6, y0 + 2.0, 176.0 - 2.2 - x - 0.6, h - 4.0, "amber", fill=QRY["mark"], stroke=QRY["ink"],
+           lw=0.6, radius=1.2, z=6)
+    cv.text((x + 174.4) / 2 + 0.3, y0 + h / 2 + 1.7, r"$\mathbf{o}_{10}$", size=7.2, color="white", weight="bold", z=8)
+    cv.text((x + 174.4) / 2 + 0.3, y0 + h / 2 - 1.8, f"$({o[0]:.4f},{o[1]:.4f})$", size=5.9, color="white", z=8)
+    cv.rich(89.0, 126.2 - 0.4, [(r"$\mathbf{A}=\mathrm{rowsoftmax}($", INK), (r"$\mathbf{Q}$", QRY["ink"]),
+                                (r"$\mathbf{K}^{\!\top}$", BANK["ink"]), (r"$/\sqrt{d_k}\,+\,$", INK),
+                                (r"$\mathbf{M}$", ROLE["rose"]["ink"]), (r"$)$,", INK),
+                                (r"$\ \ \mathbf{O}=\mathbf{A}$", INK), (r"$\mathbf{V}$", BANK["ink"])],
+            size=7.0, ha="center")
+    assert x < 160.0, x
+
+
+def lift(cv, dy):
+    """Move everything drawn so far up by dy mm (frees the band for the overview row).
+    ponytail: covers the artist kinds this script draws (patches, lines, texts) and the chip audit list."""
+    from matplotlib.transforms import Affine2D
+    for p in cv.ax.patches:
+        p.set_transform(Affine2D().translate(0, dy) + cv.ax.transData)
+    for ln in cv.ax.lines:
+        ln.set_ydata([y + dy for y in ln.get_ydata()])
+    for t in cv.ax.texts:
+        x, y = t.get_position()
+        t.set_position((x, y + dy))
+    cv.chips[:] = [(x, y + dy, w, h, s, reg and (reg[0], reg[1] + dy, reg[2], reg[3] + dy))
+                   for x, y, w, h, s, reg in cv.chips]
+    assert not cv.ax.collections and not cv.ax.images
 
 
 def panel_d(cv, d, xs):
-    card(cv, 2, 2, 174, 47, r"(d) Worked readout for query $q_{10}$")
+    card(cv, 2, 2, 174, 46.4, r"Worked readout for query $q_{10}$", "amber", "e")
     keys = d["keys"]
     n = len(d["allowed"])
     cw = SW + 1.0
@@ -286,8 +391,11 @@ def panel_d(cv, d, xs):
             cv.text(cx, base + hb + 1.5, f"{d['a'][j]:.4f}", size=6.2, color=r["ink"])
             v = d["vals"][j]
             cv.text(cx, yv, f"$({v[0]},\\,{v[1]})$", size=6.6, color=INK)
-            for yy, c in ((ya1, d["contrib"][j][0]), (ya2, d["contrib"][j][1])):
-                cv.text(cx, yy, f"${c:.4f}$", size=6.2, color=INK if c else MUTED)
+            # a_j v_j as a 2x1 numeric column on the amber ramp; the largest term per output dim is bold-bordered
+            c2 = d["contrib"][j]
+            hi = [(r_, 0) for r_ in (0, 1) if c2[r_] == max(cc[r_] for cc in d["contrib"])]
+            cv.num_matrix(x - 0.5, ya2 - 1.8, [[c2[0]], [c2[1]]], cell=cw, ch=3.6, r="amber", fmt="{:.4f}",
+                          size=6.2, hi=hi, vmin=CMIN, vmax=CMAX, lw=0.6)
         else:
             hatched(cv, x - 0.5 + 0.15, yl - 2.0, cw - 0.3, 4.0)
             cv.text(cx, yl, r"$-\infty$", size=6.6, color=BLK["ink"], bbox=dict(fc=BLK["fill"], ec="none", pad=0.4))
@@ -331,14 +439,14 @@ def panel_d(cv, d, xs):
            "S2": (-0.12, 0.0, "right"), "t9": (0.0, 0.17, "center"), "t10": (0.12, 0.0, "left")}
     for k, v, a in zip(d["allowed"], d["vals"], d["a"]):
         r = kind(k)
-        cv.line([P(0, 0), P(*v)], color=r["stroke"], lw=0.45, z=4)
+        cv.line([P(0, 0), P(*v)], color=r["stroke"], lw=0.35, z=4, alpha=0.45)  # light: o10 runs near the S1 spoke
         cv.dot(*P(*v), color=r["mark"], d=1.4, z=9)
         dx, dy, ha = off[k]
         cv.text(*P(v[0] + dx, v[1] + dy), sub(k), size=6.6, color=r["ink"], ha=ha,
                 va="bottom" if dy else "center")
     o = d["out"]
     cv.arrow([P(0, 0), P(*o)], color=QRY["mark"], lw=1.3, head=1.6, z=10)
-    cv.text(*P(0.64, 0.51), r"$\mathbf{o}_{10}$", size=7.2, color=QRY["ink"], ha="left", va="center",
+    cv.text(*P(0.2, 0.66), r"$\mathbf{o}_{10}$", size=7.2, color=QRY["ink"], ha="center", va="center",
             weight="bold")
     cv.text(*P(2.45, 2.2), r"value space, $d_v=2$", size=6.5, color=MUTED, style="italic", ha="right")
 
@@ -353,12 +461,18 @@ def main():
     chk = json.load(open(a.checks or os.path.join(os.path.dirname(a.inputs), "numerical_checks.json")))
     d = compute(inp, chk)
     matplotlib.rcParams["hatch.linewidth"] = 0.35
-    cv = Canvas(W, H, family="serif", size=7.0)
+    cv = Canvas(W, H + ROW, family="serif", size=7.0)
     xs = col_x(d["keys"])
     panel_a(cv, d, xs)
     panel_b(cv, d)
+    lift(cv, ROW)          # top row moves up; the overview row (c) takes the freed band
+    panel_ops(cv, d)
     panel_c(cv, d, xs)
     panel_d(cv, d, xs)
+    assert CMIN <= min(min(c) for c in d["contrib"]) and max(max(c) for c in d["contrib"]) <= CMAX
+    assert not cv.overlaps(), cv.overlaps()
+    assert not cv.text_overlaps(), cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "causal_cache_attention"))))
 
 

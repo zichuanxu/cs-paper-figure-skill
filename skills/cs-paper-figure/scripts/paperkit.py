@@ -140,7 +140,20 @@ class Canvas:
         self.nodes = {}
         self.chips = []  # (x, y, w, h, label, region) of every chip, for the overlap audit
         self.rasters = []  # (path, px wide, px high) of every placed image, checked against the PDF on save
+        self.solids = []  # (x, y, w, h, kind) of every opaque object, for wire_crossings()
+        self.wires = []   # polyline points of every arrow / line, for wire_crossings()
+        self.icons = []   # (x0, y0, x1, y1, kind) of every vector icon, for text_overlaps()
         self._r = None
+        _add = self.ax.add_patch
+
+        def add_patch(pp):  # bind the first patch drawn after a solid / wire is recorded, so audits follow moves
+            for k, e in enumerate(self.solids):
+                if e[-1] is None:
+                    self.solids[k] = e[:-1] + (pp,)
+            if self.wires and self.wires[-1][1] is None:
+                self.wires[-1] = (self.wires[-1][0], pp)
+            return _add(pp)
+        self.ax.add_patch = add_patch
 
     def _renderer(self):
         if self._r is None:
@@ -187,8 +200,9 @@ class Canvas:
     # ---- containers -------------------------------------------------------
     def box(self, x, y, w, h, r="neutral", title=None, sub=None, *, fill=None, stroke=None,
             lw=0.6, radius=None, dashed=False, shadow=False, size=None, tsize=None, icon=None,
-            weight="bold", z=5, title_color=None, align="center", name=None, alpha=1.0, gap=None):
-        """Rounded node. Title bold in role ink, optional sub-line (math welcome)."""
+            weight="bold", z=5, title_color=None, align="center", name=None, alpha=1.0, gap=None, container=False):
+        """Rounded node. Title bold in role ink, optional sub-line (math welcome). container=True marks a lane or
+        background field that wires may cross, so wire_crossings() ignores it."""
         c = role(r)
         rad = radius if radius is not None else min(1.6, 0.16 * h)
         if shadow:
@@ -199,6 +213,8 @@ class Canvas:
                            lw=lw, ec=stroke or c["stroke"], fc=fill or c["fill"], zorder=z,
                            ls=(0, (3, 2)) if dashed else "-", alpha=alpha)
         self.ax.add_patch(p)
+        if not container:
+            self.solids.append((x, y, w, h, f"box '{title or ''}'", p))
         tc = title_color or c["ink"]
         ts = tsize or (size or self.size)
         cx = x + w / 2 if align == "center" else x + 1.6
@@ -301,13 +317,52 @@ class Canvas:
                 continue
             (x0, y0), (x1, y1) = inv.transform(tx.get_window_extent(r).get_points())
             boxes.append((x0, y0, x1, y1, tx.get_text().replace("\n", " ")[:28]))
-        bad = [f"'{s}' is cut by the canvas edge" for x0, y0, x1, y1, s in boxes
+        tbox = list(boxes)
+        kids = self.ax.get_children()
+        for a, b, c, d, k, n in self.icons:
+            art = kids[n] if n < len(kids) else None  # first artist the icon drew; it moves if the script lifts art
+            if art is not None:
+                tr = art.get_data_transform() if hasattr(art, "get_data_transform") else art.get_transform()
+                (a, b), (c, d) = inv.transform(tr.transform([(a, b), (c, d)]))
+            boxes.append((a, b, c, d, k))  # an icon on a word is as bad as two words  # an icon on a word is as bad as two words
+        bad = [f"'{s}' is cut by the canvas edge" for x0, y0, x1, y1, s in tbox
                if x0 < -tol or y0 < -tol or x1 > self.w + tol or y1 > self.h + tol]
         for i, (a0, b0, a1, b1, s) in enumerate(boxes):
             for c0, d0, c1, d1, s2 in boxes[i + 1:]:
+                if s.endswith(" icon") and s2.endswith(" icon"):
+                    continue
                 if a0 < c1 - tol and c0 < a1 - tol and b0 < d1 - tol and d0 < b1 - tol:
                     bad.append(f"'{s}' overlaps '{s2}'")
         return bad
+
+    def wire_crossings(self, inset=0.35, min_len=0.4):
+        """Layout audit: wires (arrow / line) that run THROUGH an opaque object (box, cuboid, slab, doc, cylinder,
+        trap, matrix, fmap, token): it enters and leaves, with neither end inside, instead of ending on the border. A wire hidden behind a box reads as a
+        wrong edge (MemT Fig. 4: the residual line ran under "Original attention"). Empty list = clean.
+        End every figure script with `assert not cv.wire_crossings(), cv.wire_crossings()`."""
+        inv = self.ax.transData.inverted()
+
+        def here(pts, art):  # current position: a script may have moved the artist after drawing (lift helpers)
+            if art is None:
+                return pts
+            return [tuple(q) for q in inv.transform(art.get_data_transform().transform(pts))]
+
+        solids = []
+        for sx, sy, sw, sh, name, art in self.solids:
+            (a0, b0), (a1, b1) = here([(sx, sy), (sx + sw, sy + sh)], art)
+            solids.append((a0, b0, a1 - a0, b1 - b0, name))
+        bad = []
+        for pts, art in self.wires:
+            pts = here(pts, art)
+            for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+                for sx, sy, sw, sh, name in solids:
+                    a0, b0, a1, b1 = sx + inset, sy + inset, sx + sw - inset, sy + sh - inset
+                    if any(a0 < px < a1 and b0 < py < b1 for px, py in ((x0, y0), (x1, y1))):
+                        continue  # wire starts or ends inside: the object is its container (lane, frame)
+                    L = _clip_len(x0, y0, x1, y1, sx + inset, sy + inset, sx + sw - inset, sy + sh - inset)
+                    if L > min_len:
+                        bad.append(f"wire ({x0:.1f},{y0:.1f})->({x1:.1f},{y1:.1f}) crosses {name} for {L:.1f} mm")
+        return sorted(set(bad))
 
     # ---- figure-series and narrative devices ----------------------------------
     def badge(self, x, y, k, r="neutral", d=3.0, z=12, size=None):
@@ -421,6 +476,7 @@ class Canvas:
         c = role(r)
         f = fold or min(w, h) * 0.28
         pts = [(x, y), (x + w, y), (x + w, y + h - f), (x + w - f, y + h), (x, y + h)]
+        self.solids.append((x, y, w, h, f"doc '{title or ''}'", None))
         self.ax.add_patch(Polygon(pts, closed=True, fc="white", ec=c["stroke"], lw=lw, zorder=z))
         self.ax.add_patch(Polygon([(x + w - f, y + h), (x + w - f, y + h - f), (x + w, y + h - f)],
                                   closed=True, fc=c["soft"], ec=c["stroke"], lw=lw * 0.8, zorder=z + 0.1))
@@ -455,6 +511,7 @@ class Canvas:
         rng = np.random.default_rng(seed)
         cm = cmap or mcolors.LinearSegmentedColormap.from_list("m", [c["fill"], c["soft"], c["mark"]])
         cw, ch = w / cols, h / rows
+        self.solids.append((x, y, w + (depth - 1) * dx, h + (depth - 1) * dy, "matrix", None))
         for k in range(depth - 1, -1, -1):
             ox, oy = x + k * dx, y + k * dy
             vals = values if (values is not None and k == 0) else rng.uniform(0.05, 0.85, (rows, cols))
@@ -486,6 +543,7 @@ class Canvas:
         for i in range(n):
             rr = role(fills[i]) if fills else role(r)
             xx = x + i * (w + gap)
+            self.solids.append((xx, y, w, h, f"token {labels[i] if labels else i}", None))
             self.ax.add_patch(FancyBboxPatch((xx, y), w, h, boxstyle=f"round,pad=0,rounding_size={min(w, h) * 0.22}",
                               fc=rr["soft"], ec=rr["stroke"], lw=lw, zorder=z))
             if labels:
@@ -499,6 +557,7 @@ class Canvas:
         A narrow-right + narrow-left pair reads as a low-rank (down/up) projection."""
         c = role(r)
         k = (1 - ratio) / 2
+        self.solids.append((x, y, w, h, f"trap '{title or ''}'", None))
         if narrow == "right":
             pts = [(x, y), (x + w, y + h * k), (x + w, y + h * (1 - k)), (x, y + h)]
         elif narrow == "left":
@@ -526,6 +585,7 @@ class Canvas:
         """Database / store."""
         c = role(r)
         e = min(h * 0.22, w * 0.22)
+        self.solids.append((x, y, w, h, f"cylinder '{title or ''}'", None))
         self.ax.add_patch(Ellipse((x + w / 2, y + e / 2), w, e, fc=c["fill"], ec=c["stroke"], lw=lw, zorder=z))
         self.ax.add_patch(Rectangle((x, y + e / 2), w, h - e, fc=c["fill"], ec="none", zorder=z + 0.01))
         for xx in (x, x + w):
@@ -638,6 +698,7 @@ class Canvas:
     # ---- icons (pure vector) -------------------------------------------------
     def icon_snow(self, x, y, s, color=LINE, lw=0.55, z=12):
         """Snowflake = frozen / not trained."""
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "snow icon", len(self.ax.get_children())])
         for k in range(3):
             a = k * math.pi / 3
             dx, dy = s / 2 * math.cos(a), s / 2 * math.sin(a)
@@ -661,6 +722,7 @@ class Canvas:
 
     def icon_flame(self, x, y, s, color="#E0702A", z=12):
         """Flame = trainable."""
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "flame icon", len(self.ax.get_children())])
         h, w = s, s * 0.72
         outer = [(x, y - h / 2), (x + w / 2, y - h * 0.25), (x + w * 0.42, y + h * 0.08), (x + w * 0.08, y + h / 2),
                  (x + w * 0.12, y + h * 0.14), (x - w * 0.08, y + h * 0.1), (x - w * 0.2, y + h * 0.26),
@@ -672,6 +734,7 @@ class Canvas:
 
     def icon_lock(self, x, y, s, color=LINE, z=12, lw=0.55):
         """Lock = fixed after offline training."""
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "lock icon", len(self.ax.get_children())])
         bw, bh = s * 0.74, s * 0.52
         self.ax.add_patch(Arc((x, y - s / 2 + bh), bw * 0.6, s * 0.7, theta1=0, theta2=180, ec=color,
                               lw=lw * 1.5, zorder=z))
@@ -681,6 +744,7 @@ class Canvas:
 
     def icon_cycle(self, x, y, s, color=LINE, z=12, lw=0.6):
         """Circular arrows = evolves online / recurrent."""
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "cycle icon", len(self.ax.get_children())])
         rr = s * 0.4
         for a0 in (30, 210):
             self.ax.add_patch(Arc((x, y), 2 * rr, 2 * rr, theta1=a0, theta2=a0 + 125, ec=color, lw=lw, zorder=z))
@@ -710,6 +774,224 @@ class Canvas:
     def icon_doc(self, x, y, s, r="neutral"):
         self.doc(x - s * 0.38, y - s / 2, s * 0.76, s, r, lines=3, fold=s * 0.28, z=12)
 
+    # ---- architecture register (2026-11 study of 23 method figures; references/architecture-study-2026-11.md)
+    def section(self, x, y, w, h, r="neutral", title=None, *, tab="top", letter=None, dashed=True, lw=0.75,
+                radius=2.4, size=None, fill=None, z=1, italic=False):
+        """Module region: tinted field and a dashed border in one hue, the title on a pill tab that sits ON
+        the top border (tab="top", ReSet/CoPS), a bold strip along the bottom edge (tab="bottom", HFF-Net/STDD),
+        a bold-italic title in the top-left corner in the role mark (tab="corner", SemDiff/C2R/CHAL) or the old
+        header band (tab="band"). Each module of the method gets its own hue, so panels, wires and the legend
+        share one key. letter='a' prefixes '(a) '. Returns the free inner rect (x, y, w, h)."""
+        c = role(r)
+        self.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={radius}", lw=lw,
+                                         ec=c["stroke"], fc=fill or c["fill"], ls=(0, (4, 2.2)) if dashed else "-",
+                                         zorder=z))
+        s = size or self.size + 0.6
+        t = (f"({letter}) " if letter else "") + (title or "")
+        if not t.strip():
+            return (x, y, w, h)
+        st = "italic" if italic else "normal"
+        if tab == "top":
+            tw, th = self.text_width(t, s, "bold") + 4.0, s * 0.56
+            self.ax.add_patch(FancyBboxPatch((x + w / 2 - tw / 2, y + h - th / 2), tw, th,
+                                             boxstyle=f"round,pad=0,rounding_size={th / 2}", fc=c["soft"],
+                                             ec=c["stroke"], lw=0.6, zorder=z + 0.3))
+            self.text(x + w / 2, y + h, t, size=s, weight="bold", color=c["ink"], z=z + 0.4, style=st)
+            return (x, y, w, h - th / 2)
+        if tab == "bottom":
+            bh = s * 0.6
+            self.ax.add_patch(FancyBboxPatch((x + 1.0, y + 0.9), w - 2.0, bh, boxstyle=f"round,pad=0,rounding_size={bh / 2}",
+                                             fc=c["soft"], ec="none", zorder=z + 0.2))
+            self.text(x + w / 2, y + 0.9 + bh / 2, t, size=s, weight="bold", color=c["ink"], z=z + 0.4, style=st)
+            return (x, y + bh + 1.4, w, h - bh - 1.4)
+        if tab == "corner":
+            self.text(x + 2.0, y + h - 1.3, t, size=s, weight="bold", color=c["mark"], ha="left", va="top",
+                      z=z + 0.4, style="italic")
+            return (x, y, w, h - s * 0.5 - 1.3)
+        self.group(x, y, w, h, r, t, band=True, size=s, radius=radius, lw=lw, fill=fill or c["fill"], z=z)
+        return (x, y, w, h - s * 0.62)
+
+    def cuboid(self, x, y, w, h, d=None, r="blue", title=None, *, size=None, rotate=False, angle=40.0, fill=None,
+               lw=0.5, z=6, grad=None, weight="bold", color=None, sub=None):
+        """Pseudo-3D block: front face (x, y, w, h) with top and right faces receding by depth d. Tall thin
+        cuboids with rotate=True are layer slabs (Conv, LN, FFN, ResBlock; vertical text); small near-square
+        ones are feature tensors with an H×W×C label beside them; grad=(c0, c1) paints the front face as a
+        gradient for a fused feature (HFF-Net). Returns the front rect; the top face adds d·sin(angle)."""
+        c = role(r)
+        d = min(w, h) * 0.35 if d is None else d
+        ox, oy = d * math.cos(math.radians(angle)), d * math.sin(math.radians(angle))
+        front = fill or c["soft"]
+        self.solids.append((x, y, w + ox, h + oy, f"cuboid '{title or ''}'", None))
+        self.ax.add_patch(Polygon([(x, y + h), (x + w, y + h), (x + w + ox, y + h + oy), (x + ox, y + h + oy)],
+                                  closed=True, fc=mix(front, "#FFFFFF", 0.5), ec=c["stroke"], lw=lw, zorder=z,
+                                  joinstyle="round"))
+        self.ax.add_patch(Polygon([(x + w, y), (x + w + ox, y + oy), (x + w + ox, y + h + oy), (x + w, y + h)],
+                                  closed=True, fc=mix(front, c["stroke"], 0.4), ec=c["stroke"], lw=lw, zorder=z,
+                                  joinstyle="round"))
+        if grad:
+            self.gradient_rect(x, y, w, h, grad[0], grad[1], z=z + 0.01, horizontal=not rotate)
+            self.ax.add_patch(Rectangle((x, y), w, h, fc="none", ec=c["stroke"], lw=lw, zorder=z + 0.02))
+        else:
+            self.ax.add_patch(Rectangle((x, y), w, h, fc=front, ec=c["stroke"], lw=lw, zorder=z + 0.01))
+        s = size or self.size
+        if title and sub:
+            g = (w if rotate else h) * 0.16
+            off = (-g, 0) if rotate else (0, g)
+            self.text(x + w / 2 + off[0], y + h / 2 + off[1], title, size=s, weight=weight, color=color or c["ink"],
+                      rotation=90 if rotate else 0, z=z + 1)
+            self.text(x + w / 2 - off[0], y + h / 2 - off[1], sub, size=s - 0.6, color=INK,
+                      rotation=90 if rotate else 0, z=z + 1)
+        elif title:
+            self.text(x + w / 2, y + h / 2, title, size=s, weight=weight, color=color or c["ink"],
+                      rotation=90 if rotate else 0, z=z + 1, linespacing=1.0)
+        return (x, y, w, h)
+
+    def fmap(self, x, y, w, h, *, n=1, dx=1.0, dy=1.0, cmap="viridis", seed=0, blobs=3, data=None, border=None,
+             lw=0.45, z=6, vmin=None, vmax=None):
+        """Feature-map / attention-map thumbnail; n offset copies behind = channels, frames or scales.
+        data: a real 2-D array (attention weights, a mask, an image channel); otherwise a smooth
+        illustrative field. Saying "illustrative maps" once in the caption is enough. Returns the front rect."""
+        rng = np.random.default_rng(seed)
+        self.solids.append((x, y, w + (n - 1) * dx, h + (n - 1) * dy, "fmap", None))
+        for k in range(n - 1, -1, -1):
+            ox, oy = x + k * dx, y + k * dy
+            a = data if (data is not None and k == 0) else _field(rng, blobs=blobs)
+            self.ax.imshow(a, extent=(ox, ox + w, oy, oy + h), cmap=cmap, interpolation="bilinear" if data is None
+                           else "nearest", aspect="auto", zorder=z - k * 0.01, vmin=vmin, vmax=vmax)
+            self.ax.add_patch(Rectangle((ox, oy), w, h, fc="none", ec=(border or LINE) if k == 0 else "#FFFFFF",
+                                        lw=lw, zorder=z - k * 0.01 + 0.005))
+        self.ax.set_xlim(0, self.w)
+        self.ax.set_ylim(0, self.h)
+        return (x, y, w, h)
+
+    def num_matrix(self, x, y, values, cell=3.6, r="blue", fmt="{:.2f}", size=None, hi=(), rows=None, cols=None,
+                   lw=0.4, z=6, vmin=None, vmax=None, ch=None):
+        """Matrix with its numbers in the cells (ProEmoTrans, Holmes calibration, CoPS weighting): fill on the role
+        ramp by value, white numerals on dark cells, bold border on hi=[(i, j)]. rows/cols: header labels.
+        Returns (x, y, w, h) of the grid; (x, y) is the bottom-left."""
+        c = role(r)
+        v = np.asarray(values, float)
+        R, C = v.shape
+        ch = ch or cell
+        lo, top = (v.min() if vmin is None else vmin), (v.max() if vmax is None else vmax)
+        cm = mcolors.LinearSegmentedColormap.from_list("n", [c["fill"], c["soft"], c["mark"]])
+        s = size or self.size - 1.0
+        for i in range(R):
+            for j in range(C):
+                fc = cm((v[i, j] - lo) / max(top - lo, 1e-9))
+                cx, cy = x + j * cell, y + (R - 1 - i) * ch
+                self.ax.add_patch(Rectangle((cx, cy), cell, ch, fc=fc, ec="white", lw=lw, zorder=z))
+                lum = 0.2126 * fc[0] + 0.7152 * fc[1] + 0.0722 * fc[2]
+                self.text(cx + cell / 2, cy + ch / 2, fmt.format(v[i, j]).replace("-", "\u2212"), size=s,
+                          color="white" if lum < 0.55 else c["ink"], z=z + 1,
+                          weight="bold" if (i, j) in hi else "normal")
+                if (i, j) in hi:
+                    self.ax.add_patch(Rectangle((cx, cy), cell, ch, fc="none", ec=c["ink"], lw=0.9, zorder=z + 0.5))
+        self.ax.add_patch(Rectangle((x, y), C * cell, R * ch, fc="none", ec=c["stroke"], lw=0.6, zorder=z + 0.4))
+        for j, s_ in enumerate(cols or []):
+            self.text(x + (j + 0.5) * cell, y + R * ch + 1.3, s_, size=s, color=MUTED, z=z + 1)
+        for i, s_ in enumerate(rows or []):
+            self.text(x - 1.0, y + (R - 1 - i + 0.5) * ch, s_, size=s, color=MUTED, ha="right", z=z + 1)
+        return (x, y, C * cell, R * ch)
+
+    def graph(self, cx, cy, rad, n=5, r="blue", edges="full", node_d=1.6, colors=None, lw=0.45, z=8, rot=90.0):
+        """Small node-link glyph (similarity graph, scene graph, cell graph): n nodes on a circle,
+        edges = 'full' | 'ring' | [(i, j), ...]; colors = per-node fill. Returns node centres."""
+        c = role(r)
+        pts = [(cx + rad * math.cos(math.radians(rot + 360 * k / n)), cy + rad * math.sin(math.radians(rot + 360 * k / n)))
+               for k in range(n)]
+        es = ([(i, j) for i in range(n) for j in range(i + 1, n)] if edges == "full" else
+              [(i, (i + 1) % n) for i in range(n)] if edges == "ring" else edges)
+        for i, j in es:
+            self.ax.plot([pts[i][0], pts[j][0]], [pts[i][1], pts[j][1]], color=c["stroke"], lw=lw, zorder=z)
+        for k, p in enumerate(pts):
+            self.ax.add_patch(Circle(p, node_d / 2, fc=(colors[k] if colors else c["mark"]), ec="white", lw=0.4,
+                                     zorder=z + 0.1))
+        return pts
+
+    def mini_plot(self, x, y, w, h, series, roles=None, fill=True, axis=True, lw=0.7, z=8, bars=False):
+        """Sparkline inside a card: a distribution, a loss curve, class scores (bars=True). series = list of
+        1-D arrays sampled evenly over [x, x + w]; scaled jointly to h. Shape only: no ticks, no numbers."""
+        roles = roles or ["blue"] * len(series)
+        top = max(float(np.max(s)) for s in series) or 1.0
+        if axis:
+            self.ax.plot([x, x, x + w], [y + h, y, y], color="#9AA0A8", lw=0.5, zorder=z, solid_joinstyle="miter")
+        for s, rr in zip(series, roles):
+            c, s = role(rr), np.asarray(s, float)
+            if bars:
+                bw = w / len(s)
+                for k, v in enumerate(s):
+                    self.ax.add_patch(Rectangle((x + k * bw + bw * 0.15, y), bw * 0.7, h * v / top, fc=c["soft"],
+                                                ec=c["stroke"], lw=0.4, zorder=z + 0.1))
+                continue
+            xs = np.linspace(x, x + w, len(s))
+            ys = y + h * s / top
+            if fill:
+                self.ax.fill_between(xs, y, ys, color=c["soft"], alpha=0.75, lw=0, zorder=z)
+            self.ax.plot(xs, ys, color=c["mark"], lw=lw, zorder=z + 0.1)
+
+    def phase_bar(self, y, segments, h=3.4, size=None, z=2, gap=0.4):
+        """Stage strip under the columns of a pipeline (DySeT, MAGRPP): segments = [(x0, x1, role, label)].
+        Names the phases once so the panels above need no long titles."""
+        for x0, x1, rr, lab in segments:
+            c = role(rr)
+            self.ax.add_patch(Rectangle((x0 + gap / 2, y), x1 - x0 - gap, h, fc=c["soft"], ec="none", zorder=z))
+            self.text((x0 + x1) / 2, y + h / 2, lab, size=size or self.size, color=c["ink"], weight="bold", z=z + 1)
+
+    def legend(self, x, y, w, items, *, size=None, frame=True, gap=3.2, glyph=4.2, row_h=None, r="neutral",
+               dashed=True, pad=1.6, z=10):
+        """Glyph key in a dashed strip, laid out like words: items = [(kind, arg, label)], kind in
+        op | snow | flame | lock | cycle | box | cuboid | fmap | line | dash | abbr. Every symbol the reader meets
+        unlabelled (⊕ ⓒ ⊗, snowflake, flame, dashed = train only, an abbreviation) gets one entry; this is the
+        figure's key, so the panels can stay terse. (x, y) is the bottom-left; returns the strip height."""
+        size = size or self.size - 0.4
+        row_h = row_h or max(4.2, size * 0.62)
+
+        def gwidth(kind, arg):
+            return self.text_width(arg, size, "bold") + 1.8 if kind == "abbr" else glyph
+
+        widths = [gwidth(k, a) + 1.0 + self.text_width(lab, size) for k, a, lab in items]
+        rows, cur = [], []
+        for it, iw in zip(items, widths):
+            if cur and sum(cw for _, cw in cur) + gap * len(cur) + iw > w - 2 * pad:
+                rows.append(cur)
+                cur = []
+            cur.append((it, iw))
+        rows.append(cur)
+        H = len(rows) * row_h + 2 * pad - 1.0
+        if frame:
+            self.ax.add_patch(FancyBboxPatch((x, y), w, H, boxstyle="round,pad=0,rounding_size=1.6", fc="white",
+                                             ec=role(r)["stroke"], lw=0.6, ls=(0, (3, 2)) if dashed else "-",
+                                             zorder=z - 1))
+        yy = y + H - pad - row_h / 2 + 0.5
+        for row in rows:
+            xx = x + pad
+            for (kind, arg, lab), iw in row:
+                gw = gwidth(kind, arg)
+                gx = xx + gw / 2
+                if kind == "op":
+                    self.op(gx, yy, arg, d=2.8, z=z)
+                elif kind in ("snow", "lock", "cycle"):
+                    getattr(self, f"icon_{kind}")(gx, yy, 2.7, color=arg or "#4A90C8", z=z)
+                elif kind == "flame":
+                    self.icon_flame(gx, yy, 2.7, z=z)
+                elif kind == "box":
+                    self.box(gx - 1.9, yy - 1.2, 3.8, 2.4, arg, radius=0.6, lw=0.5, z=z)
+                elif kind == "cuboid":
+                    self.cuboid(gx - 1.7, yy - 1.3, 2.6, 2.2, d=1.0, r=arg, z=z)
+                elif kind == "fmap":
+                    self.fmap(gx - 1.6, yy - 1.3, 3.2, 2.6, cmap=arg, z=z)
+                elif kind in ("line", "dash"):
+                    self.arrow([(gx - 2.0, yy), (gx + 2.0, yy)], color=arg or LINE, dashed=kind == "dash", head=1.1,
+                               z=z)
+                elif kind == "abbr":
+                    self.box(xx, yy - 1.3, gw, 2.6, "neutral", radius=0.6, lw=0.5, z=z)
+                    self.text(gx, yy, arg, size=size, weight="bold", z=z + 1)
+                self.text(xx + gw + 1.0, yy, lab, size=size, ha="left", z=z + 1)
+                xx += iw + gap
+            yy -= row_h
+        return H
+
     # ---- connectors ---------------------------------------------------------
     def arrow(self, pts, color=LINE, lw=0.7, head=1.4, dashed=False, radius=1.2, z=8, both=False,
               start_dot=False, halo=False):
@@ -717,6 +999,7 @@ class Canvas:
         Route orthogonally; end exactly on the target border. halo=True lays a white casing under the
         line so an unavoidable crossing reads as a bridge over the other wire (draw it with a higher z)."""
         pts = [tuple(p) for p in pts]
+        self.wires.append((pts, None))
         if halo:
             self.ax.add_patch(PathPatch(_rounded_path(pts[:-1] + [pts[-1]], radius), fc="none", ec="white",
                                         lw=lw + 2.6, zorder=z - 0.05, capstyle="butt"))
@@ -730,6 +1013,7 @@ class Canvas:
         return a
 
     def line(self, pts, color=LINE, lw=0.6, dashed=False, z=7, radius=1.0, alpha=1):
+        self.wires.append(([tuple(p) for p in pts], None))
         self.ax.add_patch(PathPatch(_rounded_path([tuple(p) for p in pts], radius), fc="none", ec=color,
                                     lw=lw, zorder=z, ls=(0, (3.2, 1.8)) if dashed else "-", alpha=alpha,
                                     capstyle="round", joinstyle="round"))
@@ -824,6 +1108,37 @@ def _smooth(pts):
     verts.append(verts[0])
     codes.append(Path.CLOSEPOLY)
     return Path(verts, codes)
+
+
+def _clip_len(x0, y0, x1, y1, a0, b0, a1, b1):
+    """Length of segment (x0,y0)-(x1,y1) inside the rectangle [a0,a1] x [b0,b1] (Liang-Barsky)."""
+    if a1 <= a0 or b1 <= b0:
+        return 0.0
+    dx, dy, t0, t1 = x1 - x0, y1 - y0, 0.0, 1.0
+    for p, q in ((-dx, x0 - a0), (dx, a1 - x0), (-dy, y0 - b0), (dy, b1 - y0)):
+        if p == 0:
+            if q < 0:
+                return 0.0
+            continue
+        r = q / p
+        if p < 0:
+            t0 = max(t0, r)
+        else:
+            t1 = min(t1, r)
+        if t0 > t1:
+            return 0.0
+    return (t1 - t0) * math.hypot(dx, dy)
+
+
+def _field(rng, n=64, blobs=3):
+    """Smooth illustrative 2-D field in [0, 1]: a few Gaussian blobs over a low-frequency ripple."""
+    yy, xx = np.mgrid[0:1:n * 1j, 0:1:n * 1j]
+    f = 0.18 * np.sin(2 * math.pi * (rng.uniform(0.6, 1.6) * xx + rng.uniform(0, 1))) * \
+        np.cos(2 * math.pi * (rng.uniform(0.6, 1.6) * yy + rng.uniform(0, 1)))
+    for _ in range(blobs):
+        cx, cy, s = rng.uniform(0.15, 0.85), rng.uniform(0.15, 0.85), rng.uniform(0.08, 0.22)
+        f += rng.uniform(0.5, 1.0) * np.exp(-((xx - cx) ** 2 + (yy - cy) ** 2) / (2 * s * s))
+    return (f - f.min()) / (f.max() - f.min())
 
 
 def _round_top_rect(x, y, w, h, r):
@@ -1022,7 +1337,28 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
     cv.label(80, 13, "a", "Label")
     cv.flow_chips(["Update knowledge", "Refine preferences", "Calibrate thresholds"], 84, 116, 48, "teal", size=5.6)
     assert not cv.overlaps(), cv.overlaps()
+    t = Canvas(40, 20)
+    t.box(10, 5, 10, 8, "blue", "B")
+    t.arrow([(2, 9), (10, 9)])
+    assert not t.wire_crossings(), t.wire_crossings()
+    t.arrow([(2, 7), (30, 7)])
+    assert len(t.wire_crossings()) == 1, t.wire_crossings()
     d = tempfile.mkdtemp()
+    sv = Canvas(150, 62)  # architecture-register primitives
+    sv.section(2, 18, 70, 42, "blue", "Module A", letter="a")
+    sv.section(76, 18, 72, 42, "coral", "Module B", tab="bottom")
+    sv.cuboid(8, 24, 4, 22, d=2.4, r="blue", title="Conv 3×3", rotate=True, size=6)
+    sv.cuboid(16, 30, 9, 9, r="purple", grad=("#CFE0F5", "#F6D2C4"))
+    sv.fmap(30, 28, 12, 12, n=3, cmap="viridis")
+    sv.num_matrix(48, 26, [[0.87, 0.11], [0.05, 0.93]], cell=5.0, r="blue", hi=[(0, 0), (1, 1)])
+    sv.graph(90, 42, 5, 5, "coral")
+    sv.mini_plot(100, 32, 16, 8, [np.exp(-np.linspace(-3, 3, 50) ** 2)], ["coral"])
+    sv.mini_plot(122, 32, 14, 8, [np.array([5, 3, 2, 1.5])], ["purple"], bars=True)
+    sv.phase_bar(12.5, [(2, 72, "blue", "Encoding"), (76, 148, "coral", "Decoding")])
+    sv.legend(2, 1, 146, [("op", "+", "Addition"), ("op", "C", "Concat"), ("snow", None, "Frozen"),
+                          ("flame", None, "Trainable"), ("dash", None, "Train only"), ("cuboid", "blue", "Feature"),
+                          ("abbr", "FFT2D", "2-D Fourier transform")])
+    sv.save(os.path.join(d, "arch"))
     from PIL import Image, ImageDraw
     src = Image.new("RGB", (512, 512), "white")
     ImageDraw.Draw(src).ellipse((60, 60, 452, 452), fill="#5A8BCB", outline="#333333", width=12)

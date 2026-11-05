@@ -118,6 +118,7 @@ def main():
     cv.arrow([(rx + rw / 2, top - vh - 14.2), (rx + rw / 2, ay + ah / 2), (sx1 + 0.3, ay + ah / 2)],
              color=adapt["mark"], lw=0.8, head=1.1, dashed=True, radius=1.5)
     assert not cv.overlaps() and not cv.text_overlaps(), cv.overlaps() + cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
     print("\n".join(cv.save(os.path.join(a.out, "proactive_overview"))))
 
 
