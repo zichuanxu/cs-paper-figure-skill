@@ -1,346 +1,400 @@
-"""Restyled 'evidence-guided memory refinement' method figure (cs-paper-figure example).
+"""Method figure: evidence-guided memory refinement (fast loop, slow loop, one worked transaction).
 
-All values come from the old example's fixture (dense-method-fixture.json); the
-transaction (selection under conflicts + budget, deterministic toy executor,
-assertion replay, P2 counterfactual) is recomputed here and asserted.
+Source: gallery/before/method.png, a three-panel schematic (a: frozen runtime with a fast loop and an
+epoch loop; b: three competing edits arbitrated into one transaction; c: paired replay of a separate
+case and an audit receipt), plus the bundled fixture data/method/data/dense-method-fixture.json.
+The fixture is a deterministic toy, not an evaluated system, so the figure marks its worked values
+as illustrative in the key strip.
 
-    python render_method.py --fixture <dense-method-fixture.json> --out <dir>
+Content kept from the source
+- Topology: D_train -> frozen agent (reads memory M) -> trace ledger T -> parallel proposers P1-P3
+  (sharing a proposer context) -> arbitration under an edit budget -> candidate record (base ID +
+  patch set) -> paired replay on a fixed validation case -> commit (atomic write to M) or reject
+  (exact proposal IDs blocked at the arbiter). D_val is used by the gate only; D_test stays sealed.
+  Slow loop: epoch replay of the ledger -> reflection (improved / regressed / unchanged) -> proposer
+  context for the next epoch. Model weights never change.
+- Values: traces T08 and T11, proposals P1-P3 with operation, key, value, priority and evidence,
+  budget 2, base record v12, assertions U / D / C on V01, versions v12 -> v13.
+- Derived in this script and asserted: the conflict relation (same target key), the kept set
+  (P1 + P3), the candidate record, the per-assertion replay outputs, the scores 1/3 and 3/3, the
+  guard 3 > 1, and the tie of the P2-only alternative.
+
+Design decisions
+- One plate drawn as the loop itself instead of an overview plus two tables: every stage shows its
+  real artifact (ledger rows, edit cards, conflict matrix, record fields, assertion outcomes), so the
+  worked example and the system diagram are the same picture. Stages are numbered 1-6 clockwise.
+- Hero: the memory record. It sits between the reader above (agent) and the gate below; v12 and v13
+  are aligned field by field, the two patches enter the fields they change, and the green commit
+  arrow from the gate's decision diamond is the only way into v13.
+- Colour = role: slate frozen runtime, green memory state / accepted, purple proposed edits, amber
+  validation gate, coral conflict / rejection, teal epoch-rate proposer context.
+- The two timescales are named on the state each loop writes (tab of M, tab of C).
+- Monospace = data from the fixture; serif = the figure's own words.
+
+    python render_method.py --out figures/method [--fixture path.json]
 """
 import argparse
-import hashlib
 import json
+import math
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from paperkit import Canvas, ROLE, INK, MUTED, LINE, mix  # noqa: E402
-from matplotlib.patches import Circle, Polygon, Rectangle  # noqa: E402
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.normpath(os.path.join(HERE, "..", "..")))
 
-MEMR, PROP, VAL = ROLE["blue"], ROLE["purple"], ROLE["amber"]
-ACC, REJ, NEU, FZ = ROLE["memory"], ROLE["coral"], ROLE["neutral"], ROLE["frozen"]
-DOCN = dict(ROLE["neutral"], stroke="#69717D")  # trace/data documents: darker outline
-W, H = 178, 134
-DEFAULT_FIXTURE = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "method"), "data", "dense-method-fixture.json")
+from matplotlib.patches import FancyBboxPatch, Rectangle  # noqa: E402
 
+from paperkit import INK, LINE, MUTED, ROLE, Canvas, mix  # noqa: E402
 
-# ------------------------------------------------------------------ data ---
-def evaluate(f):
-    """Same deterministic semantics as the original example (render_dense_method.py)."""
-    base, props = dict(f["base_record"]), f["proposals"]
-    assert f["validation_trace"]["id"] not in {p["evidence"] for p in props}, "V01 must not propose edits"
-    rejected = {r["proposal_id"] for r in f.get("rejection_history", [])}
-    chosen, claimed = [], set()
-    for p in sorted(props, key=lambda p: -p["priority"]):
-        assert (p["operation"] == "ADD") != (p["key"] in base), p["id"]
-        if p["id"] not in rejected and p["key"] not in claimed and len(chosen) < f["edit_budget"]:
-            chosen.append(p)
-            claimed.add(p["key"])
-    cand = {**base, **{p["key"]: p["value"] for p in chosen}}
-    vt = f["validation_trace"]
+FIXTURE = os.path.join(HERE, "data", "method", "data", "dense-method-fixture.json")
+STEM = "method"
+W, H = 178.0, 139.0
 
-    def execute(m):
-        return {"value": vt["source_value"] if m.get("units") == "value + unit" else vt["baseline_answer"],
-                "source_date": vt["source_date"] if m.get("freshness") == "source date" else None,
-                "citation": "URL" if m.get("citation") == "URL" else None}
-
-    def checks(o):
-        return [o.get(a["key"]) == a["expected"] for a in f["assertions"]]
-
-    alt = {**base, props[1]["key"]: props[1]["value"]}
-    outs = {"v12": execute(base), "alt": execute(alt), "v13": execute(cand)}
-    return dict(selected=[p["id"] for p in chosen], base=base, cand=cand, outs=outs,
-                checks={k: checks(o) for k, o in outs.items()},
-                conflicts=[[i != j and a["key"] == b["key"] for j, b in enumerate(props)]
-                           for i, a in enumerate(props)],
-                hash=hashlib.sha256(json.dumps(cand, sort_keys=True).encode()).hexdigest()[:8])
+GREEN, PURPLE, AMBER, CORAL, TEAL, SLATE = (ROLE[k] for k in ("memory", "purple", "amber", "coral", "teal", "frozen"))
+CARD = mix("#FFFFFF", PURPLE["soft"], 0.62)   # edit cards: a block tone on the section tint
 
 
-# ------------------------------------------------------------ local glyphs ---
-def card(cv, x, y, w, h, r, title, fill=None):
-    """Panel frame in the architecture register: dashed border and tint in the panel's hue, title on a pill
-    tab sitting on the top border."""
-    letter, name = title[1], title[4:]
-    cv.section(x, y, w, h, r, name, letter=letter, tab="top", size=7.8, radius=2.2, fill=fill)
+# ------------------------------------------------------------------ fixture logic ---
+def arbitrate(proposals, budget, rejected=()):
+    """Conflict = same target key. Greedy by priority within the budget; exact rejected IDs are excluded."""
+    conflict = {(a["id"], b["id"]) for a in proposals for b in proposals
+                if a["id"] != b["id"] and a["key"] == b["key"]}
+    kept = []
+    for p in sorted(proposals, key=lambda q: -q["priority"]):
+        if p["id"] in rejected or len(kept) >= budget:
+            continue
+        if not any((p["id"], k["id"]) in conflict for k in kept):
+            kept.append(p)
+    return conflict, [p for p in proposals if p in kept]
 
 
-def doc_stack(cv, x, y, w, h, r, n=3, d=0.9, lines=3):
-    for k in range(n - 1, -1, -1):
-        cv.doc(x + k * d, y + k * d, w, h, r, lines=lines if k == 0 else 0, z=6 - k * 0.05)
+def apply(record, edits):
+    out = dict(record)
+    for e in edits:
+        out[e["key"]] = e["value"]
+    return out
 
 
-def record(cv, x, y, w, ver, rows, hero=False):
-    """Memory record glyph: version header strip + key/value field rows.
-    rows = [(key, value, tag)] where tag in {None, 'REP', 'ADD', 'absent'}."""
-    rh, hh = 2.9, 3.4
-    h = hh + rh * len(rows) + 0.6
-    cv.box(x, y, w, h, "blue", fill="white", lw=0.9 if hero else 0.6, radius=1.0, shadow=hero, z=6)
-    cv.ax.add_patch(Rectangle((x + 0.3, y + h - hh), w - 0.6, hh - 0.3,
-                              fc=MEMR["mark"] if hero else MEMR["stroke"], ec="none", zorder=6.1))
-    cv.text(x + 1.4, y + h - hh / 2 - 0.1, ver, size=7.0, weight="bold", color="white", ha="left", z=7)
-    for i, (k, v, tag) in enumerate(rows):
-        yy = y + h - hh - rh * (i + 0.5) - 0.2
-        cv.text(x + 1.4, yy, k, size=6.2, color=MUTED, ha="left", z=7)
-        col = MUTED if tag == "absent" else (MEMR["ink"] if tag else INK)
-        cv.text(x + 13.2, yy, v, size=6.4, color=col, ha="left", z=7,
-                weight="bold" if tag in ("REP", "ADD") else "normal")
-        if tag in ("REP", "ADD"):
-            cv.chip(x + w - 1.0, yy, tag, PROP, size=6.2, pad=0.5, h=2.5, ha="right", z=8)
+def execute(record, case):
+    """The fixture's toy executor (execution_semantics)."""
+    return {"value": case["source_value"] if record.get("units") == "value + unit" else case["baseline_answer"],
+            "source_date": case["source_date"] if record.get("freshness") == "source date" else None,
+            "citation": "URL" if record.get("citation") == "URL" else None}
+
+
+def replay(record, case, assertions):
+    out = execute(record, case)
+    return [(out[a["key"]], out[a["key"]] == a["expected"]) for a in assertions]
+
+
+# ---------------------------------------------------------------- local helpers ---
+def mono(cv, x, y, s, size=5.9, color=INK, weight="normal", ha="left", **kw):
+    return cv.text(x, y, s, size=size, color=color, weight=weight, ha=ha, family="monospace", **kw)
+
+
+def frame(cv, x, y, w, h, r, title, anchor="left", badge=None, size=7.4, fill=None, solid=False):
+    """Tinted dashed module frame with its title on a pill that sits on the top border at one end,
+    so wires can cross the border elsewhere."""
+    c = ROLE[r]
+    cv.section(x, y, w, h, r, None, fill=fill)
+    extra = 3.5 if badge else 0.0
+    tw, th = cv.text_width(title, size, "bold") + 3.8 + extra, size * 0.56
+    x0 = x + 3.0 if anchor == "left" else x + w - 3.0 - tw
+    cv.ax.add_patch(FancyBboxPatch((x0, y + h - th / 2), tw, th, boxstyle=f"round,pad=0,rounding_size={th / 2}",
+                                   fc=c["mark"] if solid else c["soft"], ec=c["mark"] if solid else c["stroke"],
+                                   lw=0.6, zorder=1.3))
+    if badge:
+        cv.badge(x0 + 2.4, y + h, badge, r, d=3.1, z=1.5)
+    cv.text(x0 + 1.9 + extra, y + h - 0.05, title, size=size, weight="bold", color="white" if solid else c["ink"],
+            ha="left", z=1.4)
+
+
+def dashed_arrow(cv, pts, color, lw=0.8, head=1.4):
+    """Dashed wire with a solid head (a dashed FancyArrowPatch also dashes its head, which prints ragged)."""
+    (x0, y0), (x1, y1) = pts[-2], pts[-1]
+    t = min(0.9, (head * 0.95 + 0.5) / math.hypot(x1 - x0, y1 - y0))
+    pre = (x1 - (x1 - x0) * t, y1 - (y1 - y0) * t)
+    if len(pts) > 2 or t < 0.9:
+        cv.line(list(pts[:-1]) + [pre], color=color, lw=lw, dashed=True, radius=1.2, z=8)
+    cv.arrow([pre, pts[-1]], color=color, lw=lw, head=head)
+
+
+def key_strip(cv, x, y, items, size=6.0, h=5.6, gap=3.6, pad=2.0):
+    """Glyph key in a dashed strip sized to its content. items = [(glyph width, draw(x, y), label)]."""
+    xx = x + pad
+    for gw, fn, lab in items:
+        fn(xx, y + h / 2)
+        cv.text(xx + gw + 1.1, y + h / 2, lab, size=size, ha="left")
+        xx += gw + 1.1 + cv.text_width(lab, size) + gap
+    cv.ax.add_patch(FancyBboxPatch((x, y), xx - gap + pad - x, h, boxstyle="round,pad=0,rounding_size=1.6", fc="none",
+                                   ec=ROLE["neutral"]["stroke"], lw=0.6, ls=(0, (3, 2)), zorder=3))
     return h
 
 
-def check(cv, x, y, ok, s=1.1):
-    c = ACC["mark"] if ok else REJ["mark"]
-    if ok:
-        cv.ax.plot([x - s * 0.5, x - s * 0.1, x + s * 0.6], [y, y - s * 0.45, y + s * 0.5], color=c,
-                   lw=0.9, zorder=12, solid_capstyle="round", solid_joinstyle="round")
-    else:
-        for sg in (1, -1):
-            cv.ax.plot([x - s * 0.45, x + s * 0.45], [y - sg * s * 0.45, y + sg * s * 0.45], color=c,
-                       lw=0.9, zorder=12, solid_capstyle="round")
+def mark(cv, x, y, ok, s=2.7):
+    c = GREEN if ok else CORAL
+    cv.ax.add_patch(FancyBboxPatch((x - s / 2, y - s / 2), s, s, boxstyle="round,pad=0,rounding_size=0.5",
+                                   fc=c["soft"], ec=c["stroke"], lw=0.4, zorder=7))
+    (cv.icon_check if ok else cv.icon_cross)(x, y, s * 0.55, color=c["ink"], lw=0.85, z=8)
 
 
-# ------------------------------------------------------------------ panels ---
-def panel_a(cv, f, r):
-    card(cv, 2, 58.6, 174, 72.6, "neutral", "(a) Refinement loop", fill="#F8F9FB")
-    # versioned memory band (state as a horizontal pillar: read at left, write at right)
-    cv.section(4, 108.5, 170, 18, "blue", "Versioned memory", tab="corner", size=7.0, radius=1.6, lw=0.6,
-               fill=mix(MEMR["fill"], MEMR["soft"], 0.5))
-    cv.icon_cycle(171.0, 124.3, 2.6, color=MEMR["mark"])
-    keys = ["units", "freshness", "citation"]
-    v12 = [(k, r["base"].get(k, "—"), None if k in r["base"] else "absent") for k in keys]
-    sel = {p["key"]: p["operation"][:3] for p in f["proposals"] if p["id"] in r["selected"]}
-    v13 = [(k, r["cand"][k], sel.get(k)) for k in keys]
-    record(cv, 9, 110, 34, f["base_version"], v12)
-    record(cv, 115, 110, 38, f["next_version"], v13, hero=True)
-    cv.block_arrow(46, 116.4, 115.0, 116.4, width=4.6, color=mix(MEMR["soft"], MEMR["stroke"], 0.35))
-    cv.text(79, 120.6, "one atomic write", size=6.2, color=MEMR["ink"], style="italic")
-    x0 = 70.0
-    for pid in r["selected"]:
-        x0 += cv.chip(x0, 116.4, pid, PROP, size=6.2, pad=0.7, h=2.6, solid=True, ha="left")[1] + 1.2
-
-    yc = 95.0
-    # training data -> frozen agent -> trace ledger
-    doc_stack(cv, 5.5, 89, 9, 11.5, DOCN)
-    cv.text(11.4, 86.2, r"$\mathcal{D}_{\mathrm{train}}$", size=6.8)
-    cv.text(11.4, 83.2, "source-tagged", size=6.2, color=MUTED, style="italic")
-    cv.arrow([(16.8, yc), (21, yc)])
-    cv.box(21, 88.5, 18, 13, "frozen", fill=FZ["soft"], lw=0.7, icon="snow", shadow=True)
-    cv.icon_robot(30, 97.4, 5.0, color=FZ["ink"], fill="white")
-    cv.text(30, 91.0, "agent", size=7.0, color=FZ["ink"], weight="bold")
-    cv.arrow([(26, 110), (26, 101.5)], color=MEMR["mark"], lw=0.9)
-    cv.text(27.0, 105.6, "read", size=6.2, color=MEMR["ink"], style="italic", ha="left")
-    cv.arrow([(39, yc), (44.5, yc)])
-    doc_stack(cv, 44.5, 89, 9, 11.5, DOCN)
-    cv.text(50.4, 86.2, r"ledger $T$", size=7.0)
-    cv.text(50.4, 83.2, "traces", size=6.2, color=MUTED, style="italic")
-    # fan-out to parallel proposals
-    bus = 59.5
-    cv.line([(56.3, yc), (bus, yc)])
-    cv.dot(bus, yc)
-    ys = [103.5, 95.0, 86.5]
-    cv.line([(bus, ys[-1]), (bus, ys[0])], radius=0)
-    for p, y in zip(f["proposals"], ys):
-        cv.arrow([(bus, y), (63, y)], head=1.1)
-        cv.cuboid(63, y - 3.25, 22.2, 6.3, d=1.1, r="purple", fill=PROP["soft"], z=6)
-        cv.chip(64.0, y, p["id"], PROP, size=6.2, pad=0.6, h=2.8, solid=True, ha="left")
-        cv.text(70.6, y, p["key"], size=6.8, color=PROP["ink"], ha="left")
-        cv.text(84.6, y, p["evidence"], size=6.2, color=PROP["ink"], ha="right")
-    # merge bar = arbiter under conflicts + budget
-    cv.cuboid(90, 83, 4.2, 23.2, d=1.2, r="purple", fill=PROP["mark"], rotate=True, z=6)
-    cv.text(92.1, 94.6, f"arbiter · budget {f['edit_budget']}", size=6.2, color="white", rotation=90, z=12)
-    for y in ys:
-        cv.arrow([(86.1, y), (90, y)], head=1.0)
-    cv.arrow([(95.1, yc), (99.5, yc)])
-    cv.doc(99.5, 89, 10, 12, "blue", lines=3)
-    cv.text(104.5, 86.2, "candidate", size=7.0, color=MEMR["ink"])
-    cv.text(104.5, 83.2, "base + patch", size=6.2, color=MUTED, style="italic")
-    cv.arrow([(109.5, yc), (116, yc)])
-    # hero: validation gate
-    gx, gw, gh = 116, 26, 19
-    cv.ax.add_patch(__import__("matplotlib.patches", fromlist=["Polygon"]).Polygon(
-        [(gx + 0.4, yc - 0.4), (gx + gw / 2 + 0.4, yc + gh / 2 - 0.4), (gx + gw + 0.4, yc - 0.4),
-         (gx + gw / 2 + 0.4, yc - gh / 2 - 0.4)], fc="#1A2230", alpha=0.08, ec="none", zorder=5.8))
-    cv.diamond(gx, yc - gh / 2, gw, gh, dict(VAL, soft=VAL["mark"], stroke=VAL["ink"]), lw=0.9)
-    gc = gx + gw / 2
-    cv.text(gc, yc + 1.5, "paired replay", size=7.0, weight="bold", color="white")
-    cv.text(gc, yc - 1.6, "strict gain?", size=6.4, color="white", style="italic")
-    # validation and test splits (fixed during selection)
-    cv.doc(148.5, 89, 10, 12, "amber", lines=3)
-    cv.ax.add_patch(Rectangle((148.5, 89), 10, 2.2, fc=VAL["soft"], ec="none", zorder=6.05))
-    cv.icon_lock(153.6, 99.4, 2.2, color=VAL["stroke"])
-    cv.text(153.5, 86.2, r"$\mathcal{D}_{\mathrm{val}}$", size=6.8, color=VAL["ink"])
-    cv.text(153.5, 83.2, "fixed cases", size=6.2, color=MUTED, style="italic")
-    cv.arrow([(148.5, yc), (gx + gw, yc)], color=VAL["mark"], lw=0.8)
-    cv.doc(162.5, 89, 10, 12, "frozen", lines=3)
-    cv.icon_lock(167.6, 99.4, 2.2, color=FZ["stroke"])
-    cv.text(167.5, 86.2, r"$\mathcal{D}_{\mathrm{test}}$", size=6.8, color=FZ["ink"])
-    cv.text(167.5, 83.2, "sealed", size=6.2, color=MUTED, style="italic")
-    # accept -> commit into the hero record; reject -> rejection buffer -> arbiter
-    cv.arrow([(gc, yc + gh / 2), (gc, 110)], color=ACC["mark"], lw=1.1, head=1.5)
-    cv.text(gc + 1.2, 106.0, "accept", size=6.4, color=ACC["ink"], style="italic", ha="left")
-    cv.arrow([(gc, yc - gh / 2), (gc, 69.75), (110.0, 69.75)], color=REJ["mark"], lw=0.8, dashed=True)  # front card
-    cv.text(gc + 1.2, 78.0, "reject", size=6.4, color=REJ["ink"], style="italic", ha="left")
-    cv.stack(100, 66, 10, 7.5, 3, "coral", dx=0.9, dy=0.9, lw=0.6, fill=REJ["soft"])
-    cv.text(105, 69.75, "rejected", size=6.2, color=REJ["ink"], z=12, weight="bold")
-    cv.icon_cycle(113.6, 75.6, 2.2, color=REJ["mark"])
-    cv.text(106, 62.4, "blocks exact retry IDs", size=6.2, color=MUTED, style="italic")
-    cv.arrow([(100, 69.75), (92.1, 69.75), (92.1, 83)], color=REJ["mark"], lw=0.8, dashed=True, head=1.2)
-    # epoch loop: replay T, reflect, update proposer context
-    cv.section(4, 60, 86, 19.5, "neutral", "Epoch loop", tab="corner", size=7.0, radius=1.6, lw=0.6,
-               fill=NEU["fill"])
-    doc_stack(cv, 7, 63, 7, 9, DOCN, n=2, lines=2)
-    cv.text(17.0, 69.6, r"replay $T$", size=6.8, ha="left")
-    cv.text(17.0, 66.3, r"prev. vs current $M$", size=6.2, color=MUTED, ha="left", style="italic")
-    cv.arrow([(39.5, 68), (44, 68)])
-    for k, (s, rr) in enumerate((("improved", ACC), ("regressed", REJ), ("unchanged", NEU))):
-        cv.chip(44.5, 73.0 - k * 3.6, s, rr, size=6.2, pad=0.7, h=2.8, ha="left")
-    cv.arrow([(58.5, 68), (63.5, 68)])
-    cv.doc(63.5, 62.5, 8.5, 10.5, "purple", lines=3)
-    cv.text(73.4, 69.3, "proposer", size=6.8, color=PROP["ink"], ha="left")
-    cv.text(73.4, 66.6, "context", size=6.8, color=PROP["ink"], ha="left")
-    cv.icon_cycle(85.5, 68.0, 2.4, color=PROP["mark"])
-    # state key: what is frozen, fixed, or updated
-    cv.legend(141.0, 61.0, 33.0, [("snow", NEU["ink"], "frozen weights"),
-                                  ("lock", NEU["ink"], "fixed during selection"),
-                                  ("cycle", NEU["ink"], "updated online"),
-                                  ("dash", REJ["mark"], "reject / retry path")], size=6.2, gap=1.0, glyph=3.4)
-    cv.arrow([(67.75, 73), (67.75, ys[-1] - 3.25)], color=PROP["mark"], lw=0.8, dashed=True, head=1.2)
-    cv.text(69.0, 80.9, "next epoch", size=6.2, color=PROP["ink"], style="italic", ha="left")
-
-
-def panel_b(cv, f, r):
-    card(cv, 2, 2, 111, 53.4, "purple", "(b) Edit arbitration")
-    tr = {t["id"]: t for t in [f["worked_trace"]] + f["other_evidence"]}
-    # evidence documents
-    t08 = f["worked_trace"]
-    cv.doc(5, 27.5, 30, 18.5, DOCN, lines=0)
-    cv.text(6.4, 43.4, t08["id"], size=6.8, weight="bold", ha="left")
-    cv.text(6.4, 39.4, "source", size=6.2, color=MUTED, ha="left")
-    cv.text(15.4, 39.4, f"{t08['source_value']} · {t08['source_date']}", size=6.4, ha="left")
-    cv.text(6.4, 35.6, "answer", size=6.2, color=MUTED, ha="left")
-    cv.text(15.4, 35.6, t08["baseline_answer"], size=6.4, ha="left")
-    cv.text(6.4, 31.0, t08["omission"], size=6.2, color=REJ["ink"], style="italic", ha="left")
-    t11 = tr["T11"]
-    col, cell = [s.split(": ", 1)[1] for s in t11["source_form"].split("; ")]
-    cv.doc(5, 6, 30, 18.5, DOCN, lines=0)
-    cv.text(6.4, 21.9, t11["id"], size=6.8, weight="bold", ha="left")
-    # tiny table: header cell + value cell
-    cv.box(7.0, 9.0, 18, 8.4, "neutral", fill="white", radius=0.5, lw=0.5)
-    cv.ax.plot([7.0, 25.0], [13.2, 13.2], color=NEU["stroke"], lw=0.5, zorder=7)
-    cv.text(16.0, 15.3, col, size=6.2, color=INK, weight="bold")
-    cv.text(16.0, 11.1, cell, size=6.4, color=INK)
-    cv.text(12.0, 21.9, "table column", size=6.2, color=MUTED, ha="left", style="italic")
-    # proposals sorted by priority
-    cv.text(77.5, 47.6, "priority · evidence", size=6.2, color=MUTED, style="italic", ha="right")
-    ys = [41.0, 29.5, 18.0]
-    for p, y in zip(f["proposals"], ys):
-        cv.cuboid(40, y - 4.6, 37.4, 9.0, d=1.3, r="purple", fill="white", lw=0.6, z=6)
-        cv.chip(41.2, y, p["id"], PROP, size=6.4, pad=0.6, h=3.0, solid=True, ha="left")
-        cv.text(47.6, y + 1.8, f"{p['operation']} {p['key']}", size=6.8, weight="bold",
-                color=PROP["ink"], ha="left")
-        cv.text(47.6, y - 1.9, p["value"], size=6.4, color=INK, ha="left")
-        cv.text(76.0, y + 1.8, str(p["priority"]), size=7.0, weight="bold", color=PROP["mark"], ha="right")
-        cv.text(76.0, y - 1.9, p["evidence"], size=6.2, color=MUTED, ha="right")
-    # conflict matrix
-    n, cs = 3, 4.6
-    mx, my = 89.0, 22.0
-    ids = [p["id"] for p in f["proposals"]]
-    for i in range(n):
-        cv.text(mx - 1.2, my + (n - i - 0.5) * cs, ids[i], size=6.2, color=PROP["ink"], ha="right")
-        cv.text(mx + (i + 0.5) * cs, my + n * cs + 1.6, ids[i], size=6.2, color=PROP["ink"])
-        for j in range(n):
-            x0, y0 = mx + j * cs, my + (n - i - 1) * cs
-            clash = r["conflicts"][i][j]
-            fc = NEU["soft"] if i == j else (REJ["mark"] if clash else "white")
-            cv.box(x0, y0, cs, cs, "neutral", fill=fc, stroke=NEU["stroke"], radius=0, lw=0.45, z=6)
-            if clash:
-                cv.icon_cross(x0 + cs / 2, y0 + cs / 2, 2.2, color="white", lw=0.9)
-    cv.text(mx + n * cs / 2, my - 2.4, "× same key", size=6.2, color=REJ["ink"], style="italic")
-    cv.text(mx + n * cs / 2, my + n * cs + 5.0, "conflicts", size=6.8, weight="bold", color=INK)
-    # budget selection: two slots
-    cv.text(mx + n * cs / 2, 12.4, f"budget {f['edit_budget']}", size=6.8, weight="bold", color=PROP["ink"])
-    x0 = mx + n * cs / 2 - 9.6
-    for k, pid in enumerate(r["selected"]):
-        sx = x0 + k * 10.2
-        cv.box(sx, 4.6, 9.0, 4.8, "purple", fill="white", dashed=True, radius=1.0, lw=0.5)
-        cv.chip(sx + 4.5, 7.0, pid, PROP, size=6.4, pad=0.6, h=3.0, solid=True)
-    cv.arrow([(mx + n * cs / 2, my - 4.0), (mx + n * cs / 2, 14.6)], head=1.1)
-
-
-def panel_c(cv, f, r):
-    card(cv, 116, 2, 60, 53.4, "amber", f"(c) Replay on case {f['validation_trace']['id']}")
-    vt = f["validation_trace"]
-    cv.text(146, 48.6, f"source {vt['source_value']} · {vt['source_date']}", size=6.2, color=MUTED,
-            style="italic")
-    cols = [("v12", f["base_version"], "base"), ("alt", f"{f['proposals'][1]['id']} only", "alt"),
-            ("v13", f["next_version"], "cand")]
-    cx = [139.0, 153.5, 168.0]
-    cwid, rh, pitch = 13.6, 6.0, 6.7
-    for (k, lab, kind), x in zip(cols, cx):
-        if kind == "alt":
-            cv.box(x - 5.5, 42.0, 11, 3.6, "neutral", lab, fill="white", dashed=True, size=6.4,
-                   weight="normal", radius=1.0, lw=0.5)
+def record(cv, x, y, w, h, ver, gloss, rows, row_y, hero=False):
+    """Memory record: version chip + one aligned row per field. rows = [(key, value, state)]."""
+    cv.box(x, y, w, h, "memory", fill="white", lw=0.95 if hero else 0.6, radius=1.2, shadow=hero)
+    hy = y + h - 2.7
+    cv.chip(x + 1.5, hy, ver, "memory", size=6.2, solid=True, ha="left", z=7)
+    cv.text(x + w - 1.6, hy, gloss, size=5.8, style="italic", color=MUTED, ha="right")
+    cv.ax.plot([x + 0.9, x + w - 0.9], [y + h - 5.3] * 2, color=GREEN["soft"], lw=0.5, zorder=6)
+    for key, val, state in rows:
+        cy = row_y[key]
+        if state == "edit":
+            cv.ax.add_patch(Rectangle((x + 0.7, cy - 2.05), w - 1.4, 4.1, fc=PURPLE["soft"], ec="none", zorder=5.5))
+        kc = MUTED if state == "absent" else INK
+        mono(cv, x + 2.0, cy, key, color=kc, weight="bold" if state != "absent" else "normal")
+        if state == "absent":
+            cv.text(x + 15.2, cy, "absent", size=5.9, style="italic", color=MUTED, ha="left")
         else:
-            cv.chip(x, 43.8, lab, MEMR, size=6.8, pad=1.2, h=3.6, solid=kind == "cand")
-    # outcome grid: pass = solid green cell, fail = coral cell (num_matrix style: the value printed in the cell)
-    labels = ["unit", "date", "citation"]
-    keys = [a["key"] for a in f["assertions"]]
-    for i, (a, nm) in enumerate(zip(f["assertions"], labels)):
-        y = 36.8 - i * pitch
-        cv.text(118.6, y + 1.2, nm, size=6.8, weight="bold", ha="left")
-        cv.text(118.6, y - 1.5, a["expected"], size=6.2, color=MUTED, ha="left")
-        for (k, _, kind), x in zip(cols, cx):
-            ok = r["checks"][k][i]
-            v = r["outs"][k][keys[i]]
-            c = ACC if ok else REJ
-            cv.box(x - cwid / 2, y - rh / 2, cwid, rh, "neutral", fill=c["mark"] if ok else c["soft"],
-                   stroke=c["ink"] if kind == "cand" else c["stroke"], radius=0.8, lw=0.9 if kind == "cand" else 0.45)
-            cv.text(x, y, v if v is not None else "—", size=6.4, color="white" if ok else c["ink"],
-                    weight="bold" if kind == "cand" else "normal")
-    # score bars (assertions passed, out of 3), hero bar for the candidate
-    n = len(f["assertions"])
-    sc = [sum(r["checks"][k]) for k, _, _ in cols]
-    bx0, by, bh = cx[0] - 7.25, 9.4, 6.4
-    hero = dict(ACC, soft=ACC["mark"], stroke=ACC["ink"])
-    cv.mini_plot(bx0, by, 43.5, bh, [[v if kind != "cand" else 0 for v, (_, _, kind) in zip(sc, cols)],
-                                     [v if kind == "cand" else 0 for v, (_, _, kind) in zip(sc, cols)]],
-                 roles=[dict(NEU, soft="#B8BFC9"), hero], bars=True)
-    for v, (_, _, kind), x in zip(sc, cols, cx):
-        h_ = bh * v / max(sc)
-        cv.text(x, by + h_ + 1.6, f"{v}/{n}", size=8.4 if kind == "cand" else 6.8, weight="bold",
-                color=ACC["mark"] if kind == "cand" else INK)
-    cv.text(118.6, by + 3.0, "passed", size=6.4, color=MUTED, ha="left")
-    # verdicts relative to base
-    nb, na, nc = sc
-    cv.text(cx[1], 5.4, f"{na} = {nb}: reject", size=6.2, color=REJ["ink"], style="italic")
-    cv.text(cx[2], 5.4, f"{nc} > {nb}: commit", size=6.2, color=ACC["ink"], style="italic", weight="bold")
-    cv.text(cx[0], 5.4, "baseline", size=6.2, color=MUTED, style="italic")
+            mono(cv, x + 15.2, cy, val, color=PURPLE["ink"] if state == "edit" else INK,
+                 weight="bold" if state == "edit" else "normal")
 
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--fixture", default=DEFAULT_FIXTURE)
-    ap.add_argument("--out", default="out")
-    a = ap.parse_args()
-    f = json.load(open(a.fixture))
-    r = evaluate(f)
-    # key derived values (must match the original example's fixture-result.json)
-    assert r["selected"] == ["P1", "P3"], r["selected"]
-    assert r["conflicts"] == [[False, True, False], [True, False, False], [False, False, False]]
-    assert r["checks"]["v12"] == [False, False, True] and r["checks"]["v13"] == [True, True, True]
-    assert r["checks"]["alt"] == [False, False, True]
-    assert sum(r["checks"]["v13"]) > sum(r["checks"]["v12"]) and not sum(r["checks"]["alt"]) > sum(r["checks"]["v12"])
-    assert r["cand"] == {"units": "value + unit", "citation": "URL", "freshness": "source date"}
-    assert r["hash"] == "48057a62", r["hash"]
-    cv = Canvas(W, H, family="serif", size=7.0)
-    panel_a(cv, f, r)
-    panel_b(cv, f, r)
-    panel_c(cv, f, r)
+def draw(out, fixture=FIXTURE):
+    fx = json.load(open(fixture))
+    props, budget, asserts = fx["proposals"], fx["edit_budget"], fx["assertions"]
+    t08, v01, t11 = fx["worked_trace"], fx["validation_trace"], fx["other_evidence"][0]
+    v_old, v_new = fx["base_version"], fx["next_version"]
+
+    # ---- derive everything that is printed -------------------------------------------------
+    conflict, kept = arbitrate(props, budget, fx["rejection_history"])
+    kept_ids = [p["id"] for p in kept]
+    assert kept_ids == ["P1", "P3"], kept_ids
+    base = dict(fx["base_record"])
+    cand = apply(base, kept)
+    r_old, r_new = replay(base, v01, asserts), replay(cand, v01, asserts)
+    n_old, n_new, n_all = sum(ok for _, ok in r_old), sum(ok for _, ok in r_new), len(asserts)
+    assert (n_old, n_new) == (1, 3) and n_new > n_old           # the gate: strict improvement
+    alt = [p for p in props if p["id"] not in kept_ids]          # the dropped alternative, replayed alone
+    n_alt = sum(ok for _, ok in replay(apply(base, alt), v01, asserts))
+    assert len(alt) == 1 and n_alt == n_old                      # a tie is not a strict improvement
+    fields = list(dict.fromkeys(list(cand) + list(base)))        # units, citation, freshness
+    fields = [k for k in ("units", "freshness", "citation") if k in fields]
+    max_pri = max(p["priority"] for p in props)
+
+    cv = Canvas(W, H)
+
+    # ======================================================== 1-2  frozen runtime (top left)
+    frame(cv, 2, 105, 89, 30, "frozen", "Frozen runtime", anchor="right")
+    for i in (2, 1, 0):
+        cv.doc(5.5 + i * 0.9, 115.2 + i * 0.9, 8, 10, "neutral", lines=4, fold=2.2, z=6 - i * 0.1)
+    cv.text(10.4, 112.3, r"$D_{\mathrm{train}}$", size=6.8, weight="bold", color=ROLE["neutral"]["ink"])
+    cv.text(10.6, 109.0, "source-tagged", size=5.8, style="italic", color=MUTED)
+    cv.box(21.5, 113.5, 23, 14, "frozen", "Agent execution", "frozen weights", icon="snow", size=6.3, tsize=6.8,
+           fill=SLATE["soft"], lw=0.7)
+    cv.badge(21.9, 127.3, 1, "frozen")
+    cv.arrow([(15.6, 120.5), (21.5, 120.5)])
+    cv.arrow([(44.5, 120.5), (48.5, 120.5)])
+
+    # ledger: real trace rows
+    lx, ly, lw_, lh = 48.5, 107.3, 40.5, 24.4
+    cv.box(lx, ly, lw_, lh, "frozen", fill="white", radius=1.0, lw=0.7)
+    cv.ax.add_patch(Rectangle((lx + 0.35, ly + lh - 4.4), lw_ - 0.7, 4.05, fc=SLATE["soft"], ec="none", zorder=5.5))
+    cv.badge(lx + 0.4, ly + lh - 0.2, 2, "frozen")
+    cv.text(lx + 3.0, ly + lh - 2.35, r"Trace ledger $\mathbf{T}$", size=6.8, weight="bold", color=SLATE["ink"], ha="left")
+    hy = ly + lh - 6.5
+    for xx, s in ((lx + 1.6, "case"), (lx + 9.6, "source"), (lx + lw_ - 1.6, "answer")):
+        cv.text(xx, hy, s, size=5.8, style="italic", color=MUTED, ha="right" if s == "answer" else "left")
+    y1 = hy - 3.7
+    cv.chip(lx + 1.4, y1, t08["id"], "frozen", size=5.9, solid=True, ha="left")
+    mono(cv, lx + 9.6, y1, f"{t08['source_value']} · {t08['source_date']}")
+    mono(cv, lx + lw_ - 1.8, y1, t08["baseline_answer"], ha="right", weight="bold", color=CORAL["ink"])
+    cv.icon_cross(lx + 10.6, y1 - 3.5, 1.5, color=CORAL["mark"], lw=0.8)
+    cv.text(lx + 12.2, y1 - 3.5, t08["omission"], size=5.8, style="italic", color=CORAL["ink"], ha="left")
+    ys = y1 - 5.6
+    cv.ax.plot([lx + 1.2, lx + lw_ - 1.2], [ys, ys], color=SLATE["soft"], lw=0.5, zorder=6)
+    # T11: its source is a table column, drawn as one
+    col, cell = t11["source_form"].split(";")
+    col, cell = col.split(":")[1].strip(), cell.split(":")[1].strip()
+    cv.chip(lx + 1.4, ys - 2.4, t11["id"], "frozen", size=5.9, solid=True, ha="left")
+    tw = 16.4
+    for k, (s, fc) in enumerate(((col, SLATE["soft"]), (cell, "white"))):
+        yy = ys - 0.9 - (k + 1) * 3.1
+        cv.ax.add_patch(Rectangle((lx + 9.6, yy), tw, 3.1, fc=fc, ec=SLATE["stroke"], lw=0.4, zorder=6))
+        mono(cv, lx + 9.6 + tw / 2, yy + 1.5, s, ha="center", size=5.8)
+    cv.text(lx + lw_ - 1.6, ys - 2.4, "table", size=5.8, style="italic", color=MUTED, ha="right")
+    cv.text(lx + lw_ - 1.6, ys - 5.3, "column", size=5.8, style="italic", color=MUTED, ha="right")
+
+    # ======================================================== slow loop: proposer context (top right)
+    frame(cv, 97, 120, 79, 15, "teal", r"Proposer context $\mathbf{C}$ · slow loop, per epoch")
+    cv.box(99.5, 122, 26, 9.2, "teal", "Epoch replay", r"same cases, old vs. new $\mathbf{M}$", size=6.2, tsize=6.8,
+           fill=TEAL["soft"])
+    cv.box(129.5, 122, 31.5, 9.2, "teal", fill=TEAL["soft"])
+    cv.text(145.25, 128.6, "Reflect", size=6.8, weight="bold", color=TEAL["ink"])
+    cv.rich(145.25, 124.6, [("improved", GREEN["ink"]), (" · ", MUTED), ("regressed", CORAL["ink"]), (" · ", MUTED),
+                            ("unchanged", ROLE["neutral"]["ink"])], size=5.9, ha="center")
+    cv.doc(165.2, 121.7, 8, 10, "teal", lines=0, fold=2.4, lw=0.8)
+    cv.text(168.9, 126.2, r"$\mathbf{C}$", size=8.0, color=TEAL["ink"])
+    tm = TEAL["mark"]
+    cv.arrow([(lx + lw_, 126.6), (99.5, 126.6)], color=tm, lw=0.9)
+    cv.arrow([(125.5, 126.6), (129.5, 126.6)], color=tm, lw=0.9)
+    cv.arrow([(161, 126.6), (165.2, 126.6)], color=tm, lw=0.9)
+    cv.arrow([(169.2, 121.7), (169.2, 114)], color=tm, lw=0.9)
+    cv.text(167.8, 117.0, "shared by P1–P3", size=5.8, style="italic", color=TEAL["ink"], ha="right")
+
+    # ======================================================== 3  parallel proposals
+    frame(cv, 97, 71, 79, 43, "purple", "Parallel proposals", badge=3)
+    cv.arrow([(lx + lw_, 110.2), (97, 110.2)])
+    px, pw, ph = 99.5, 74.0, 9.6
+    cv.text(px + 1.6, 108.5, "atomic edit", size=5.8, style="italic", color=MUTED, ha="left")
+    cv.text(px + 58.4, 108.5, "priority", size=5.8, style="italic", color=MUTED)
+    cv.text(px + 69.2, 108.5, "evidence", size=5.8, style="italic", color=MUTED)
+    for i, p in enumerate(props):
+        y = 96.4 - i * (ph + 2.0)
+        cy = y + ph / 2
+        cv.box(px, y, pw, ph, "purple", fill=CARD, radius=1.3)
+        x0, w0 = cv.chip(px + 1.6, cy, p["id"], "purple", size=6.4, solid=True, ha="left", h=4.0, pad=1.1)
+        x1, w1 = cv.chip(x0 + w0 + 1.3, cy, p["operation"], dict(PURPLE, soft="#FFFFFF"), size=5.8, ha="left")
+        mono(cv, px + 20.2, cy, p["key"], weight="bold")
+        cv.arrow([(px + 33.0, cy), (px + 35.8, cy)], lw=0.6, head=1.0, color=PURPLE["stroke"])
+        mono(cv, px + 36.8, cy, p["value"])
+        for k in range(max_pri):                               # priority pips
+            cv.ax.add_patch(Rectangle((px + 54.0 + k * 1.75, cy - 0.75), 1.35, 1.5, zorder=7, lw=0.35,
+                                      fc=PURPLE["mark"] if k < p["priority"] else "white", ec=PURPLE["stroke"]))
+        cv.text(px + 62.4, cy, str(p["priority"]), size=6.4, weight="bold", color=PURPLE["ink"])
+        cv.chip(px + 69.2, cy, p["evidence"], "frozen", size=5.9, solid=True)
+
+    # ======================================================== 4  arbitration
+    frame(cv, 131, 25, 45, 40, "purple", "Arbitrate", badge=4)
+    cv.arrow([(165, 71), (165, 65)])
+    mx, mtop, mc = 142.0, 56.2, 5.4
+    ids = [p["id"] for p in props]
+    for j, pid in enumerate(ids):
+        cv.text(mx + (j + 0.5) * mc, mtop + 1.9, pid, size=6.2, weight="bold", color=PURPLE["ink"])
+        cy = mtop - (j + 0.5) * mc
+        cv.text(mx - 1.3, cy, pid, size=6.2, weight="bold", color=PURPLE["ink"], ha="right")
+        for k, qid in enumerate(ids):
+            hit = (pid, qid) in conflict
+            fc = ROLE["neutral"]["soft"] if pid == qid else CORAL["soft"] if hit else "white"
+            cv.ax.add_patch(Rectangle((mx + k * mc, mtop - (j + 1) * mc), mc, mc, fc=fc, ec=PURPLE["stroke"], lw=0.45,
+                                      zorder=6))
+            if hit:
+                cv.icon_cross(mx + (k + 0.5) * mc, cy, 2.3, color=CORAL["mark"], lw=1.0)
+        ok = pid in kept_ids
+        (cv.icon_check if ok else cv.icon_cross)(161.2, cy, 1.9, color=(GREEN if ok else CORAL)["mark"], lw=1.0)
+        cv.text(163.2, cy, "kept" if ok else "dropped", size=6.2, ha="left", color=(GREEN if ok else CORAL)["ink"],
+                weight="bold" if ok else "normal")
+    cv.icon_cross(134.6, 35.4, 1.7, color=CORAL["mark"], lw=0.9)
+    cv.text(136.4, 35.4, "same target key", size=5.9, style="italic", color=CORAL["ink"], ha="left")
+    ex = cv.rich(133.6, 30.3, [(f"edit budget {budget}  →", INK)], size=6.2)
+    for pid in kept_ids:
+        x0, w0 = cv.chip(ex + 1.4, 30.3, pid, "purple", size=6.0, solid=True, ha="left")
+        ex = x0 + w0
+
+    # ======================================================== candidate record
+    cx0, cy0, cw, ch = 100.0, 48.5, 24.0, 19.0
+    cv.doc(cx0, cy0, cw, ch, "purple", lines=0, fold=3.0, lw=0.7)
+    cv.text(cx0 + 1.8, cy0 + ch - 3.2, "Candidate", size=6.8, weight="bold", color=PURPLE["ink"], ha="left")
+    mono(cv, cx0 + 1.8, cy0 + 9.5, "base")
+    cv.chip(cx0 + 9.6, cy0 + 9.5, v_old, "memory", size=6.0, solid=True, ha="left")
+    mono(cv, cx0 + 1.8, cy0 + 4.2, "patch")
+    ex = cx0 + 9.6
+    for pid in kept_ids:
+        x0, w0 = cv.chip(ex, cy0 + 4.2, pid, "purple", size=6.0, solid=True, ha="left")
+        ex = x0 + w0 + 1.0
+    gy = 58.0                                                  # header row of the gate
+    cv.arrow([(131, gy), (cx0 + cw, gy)])
+    cv.arrow([(cx0, gy), (88, gy)])
+
+    # ======================================================== 5  paired replay gate
+    frame(cv, 2, 25, 89, 40, "amber", "Paired replay", anchor="right", badge=5, fill="#FFF1DA")
+    cv.box(5, gy - 3.5, 28, 7, "amber", fill=AMBER["soft"], radius=1.2)
+    cv.box(60, gy - 3.5, 28, 7, "amber", fill=AMBER["soft"], radius=1.2)
+    cv.chip(6.5, gy, v_old, "memory", size=6.2, solid=True, ha="left")
+    cv.rich(31.4, gy, [(f"{n_old}/{n_all}", INK, "bold"), (" pass", MUTED)], size=6.8, ha="right")
+    cv.rich(61.6, gy, [(f"{n_new}/{n_all}", GREEN["mark"], "bold"), (" pass", MUTED)], size=6.8, ha="left")
+    cv.chip(86.5, gy, v_new, "memory", size=6.2, solid=True, ha="right")
+    cv.diamond(39.0, gy - 4.2, 15.0, 8.4, "amber")
+    cv.text(46.5, gy, f"{n_new} > {n_old}", size=7.0, weight="bold", color=AMBER["ink"])
+    cv.arrow([(33, gy), (39.0, gy)], lw=0.6, head=1.1)
+    cv.arrow([(60, gy), (54.0, gy)], lw=0.6, head=1.1)
+    for i, (a, (vo, oko), (vn, okn)) in enumerate(zip(asserts, r_old, r_new)):
+        cy = 49.4 - i * 5.1
+        cv.ax.plot([5, 88], [cy - 2.55] * 2, color=AMBER["stroke"], lw=0.45, alpha=0.55, zorder=4)
+        mono(cv, 27.6, cy, vo or "absent", ha="right", color=INK if oko else CORAL["ink"])
+        mark(cv, 31.0, cy, oko)
+        cv.text(46.5, cy, a["label"], size=6.2, color=AMBER["ink"])
+        mark(cv, 62.0, cy, okn)
+        mono(cv, 65.4, cy, vn or "absent", color=INK if (okn and vn == vo) else GREEN["ink"],
+             weight="normal" if vn == vo else "bold")
+    cv.box(5, 28.3, 38, 6.2, "amber", fill=AMBER["soft"], radius=1.0)
+    cv.chip(6.4, 31.4, v01["id"], "amber", size=6.0, solid=True, ha="left")
+    mono(cv, 14.2, 31.4, f"{v01['source_value']} · {v01['source_date']}")
+    cv.box(51, 28.3, 37, 6.2, "coral", radius=1.0, dashed=True)
+    x0, w0 = cv.chip(52.4, 31.4, alt[0]["id"], "purple", size=6.0, solid=True, ha="left")
+    cv.text(x0 + w0 + 1.0, 31.4, f"alone: {n_alt}/{n_all} vs {n_old}/{n_all}, a tie", size=6.0, color=CORAL["ink"],
+            ha="left")
+
+    # ======================================================== 6  memory (hero)
+    frame(cv, 2, 71, 89, 28, "memory", r"Memory $\mathbf{M}$ · fast loop, per rollout batch", anchor="right",
+          fill="#E3F1E7", solid=True)
+    row_y = {"units": 86.5, "freshness": 81.9, "citation": 77.3}
+    rows_old = [(k, base.get(k), "same" if k in base else "absent") for k in fields]
+    rows_new = [(k, cand[k], "same" if cand.get(k) == base.get(k) else "edit") for k in fields]
+    record(cv, 4.5, 73.4, 34, 21.2, v_old, "base", rows_old, row_y)
+    record(cv, 54.5, 73.4, 34, 21.2, v_new, "after commit", rows_new, row_y, hero=True)
+    cv.box(42.0, 79.2, 9.0, 10.0, "purple", fill=PURPLE["soft"], radius=1.2, lw=0.6, container=True)
+    for p in kept:
+        cv.chip(46.5, row_y[p["key"]], p["id"], "purple", size=6.0, solid=True)
+        cv.arrow([(51.0, row_y[p["key"]]), (54.5, row_y[p["key"]])], color=PURPLE["mark"], lw=0.8, head=1.1)
+    cv.arrow([(38.5, 84.2), (42.0, 84.2)], lw=0.7, head=1.1)
+    cv.text(46.5, 92.0, "atomic write", size=5.8, style="italic", color=PURPLE["ink"])
+    gm = GREEN["mark"]
+    cv.arrow([(46.5, gy + 4.2), (46.5, 79.2)], color=gm, lw=1.1, head=1.6)
+    cv.badge(49.6, 68.0, 6, "memory")
+    cv.text(51.8, 68.0, "commit", size=6.8, weight="bold", color=GREEN["ink"], ha="left")
+    cv.arrow([(21.5, 73.4), (21.5, gy + 3.5)])
+    cv.text(22.8, 68.0, "baseline", size=5.9, style="italic", color=MUTED, ha="left")
+    cv.arrow([(36.0, 94.6), (36.0, 113.5)])
+    cv.text(34.9, 102.0, "read", size=5.9, style="italic", color=MUTED, ha="right")
+
+    # ======================================================== rail: splits, rejection buffer
+    cv.doc(5.5, 12.0, 6, 7.5, "amber", lines=3, fold=1.8)
+    cv.arrow([(8.5, 19.5), (8.5, 28.3)], color=AMBER["mark"], lw=0.8, head=1.2)
+    cv.text(13.2, 17.6, r"$D_{\mathrm{val}}$", size=6.8, weight="bold", color=AMBER["ink"], ha="left")
+    cv.text(13.2, 14.2, "fixed cases, gate only", size=5.8, style="italic", color=MUTED, ha="left")
+    cv.doc(38.0, 12.0, 6, 7.5, "neutral", lines=3, fold=1.8)
+    ex = cv.rich(45.7, 17.6, [(r"$D_{\mathrm{test}}$", ROLE["neutral"]["ink"], "bold")], size=6.8)
+    cv.icon_lock(ex + 2.2, 17.7, 2.4, color=ROLE["neutral"]["mark"])
+    cv.text(45.7, 14.2, "sealed, final use only", size=5.8, style="italic", color=MUTED, ha="left")
+    cm = CORAL["mark"]
+    cv.box(99, 11.4, 28, 9.2, "coral", "Rejected IDs", "exact retries blocked", size=6.2, tsize=6.8)
+    dashed_arrow(cv, [(72, 28.3), (72, 16), (99, 16)], cm)
+    cv.text(85.5, 17.7, "reject", size=5.9, style="italic", color=CORAL["ink"])
+    dashed_arrow(cv, [(127, 16), (153.5, 16), (153.5, 25)], cm)
+    cv.text(140.2, 17.7, "excluded", size=5.9, style="italic", color=CORAL["ink"])
+
+    # ======================================================== key strip
+    kh = key_strip(cv, 2, 1.6, [
+        (3.0, lambda x, y: cv.icon_snow(x + 1.5, y, 2.7, color=SLATE["stroke"]), "weights never change"),
+        (3.0, lambda x, y: cv.icon_lock(x + 1.5, y, 2.6, color=ROLE["neutral"]["mark"]), "sealed split"),
+        (7.6, lambda x, y: (cv.badge(x + 1.5, y, 1, "neutral", d=2.9), cv.badge(x + 6.1, y, 6, "neutral", d=2.9),
+                            cv.ax.plot([x + 3.3, x + 4.3], [y, y], color=LINE, lw=0.6)), "fast-loop order"),
+        (4.4, lambda x, y: cv.arrow([(x, y), (x + 4.4, y)], color=gm, lw=1.0, head=1.3), "commit"),
+        (4.4, lambda x, y: dashed_arrow(cv, [(x, y), (x + 4.4, y)], cm, head=1.2), "reject"),
+        (4.4, lambda x, y: cv.arrow([(x, y), (x + 4.4, y)], color=tm, lw=0.9, head=1.3), "slow-loop update")])
+    cv.text(176, 1.6 + kh / 2 + 1.5, "Worked values: a deterministic toy fixture,", size=5.9, style="italic",
+            color=MUTED, ha="right")
+    cv.text(176, 1.6 + kh / 2 - 1.5, "illustrative only, not measured results", size=5.9, style="italic",
+            color=MUTED, ha="right")
+
     assert not cv.overlaps(), cv.overlaps()
     assert not cv.text_overlaps(), cv.text_overlaps()
     assert not cv.wire_crossings(), cv.wire_crossings()
-    print("\n".join(cv.save(os.path.join(a.out, "evidence_guided_memory"))))
+    return cv.save(os.path.join(out, STEM))
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--out", default="figures/method")
+    ap.add_argument("--fixture", default=FIXTURE)
+    a = ap.parse_args()
+    print("\n".join(draw(a.out, a.fixture)))

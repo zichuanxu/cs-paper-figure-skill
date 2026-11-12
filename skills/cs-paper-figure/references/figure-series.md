@@ -131,11 +131,15 @@ Rules for this register (14-18 continue the list above):
 
 `scripts/examples/proactive/` (second version, after the register lesson in §3): `sixa.py` (the shared
 palette), `vignettes/` (41 full-bleed vignettes of one cast, generated from `cast.jpg` with `--ref`, prompts in
-the `manifest_*.json` files), `render_overview.py` (Fig. 1: reactive scene, five illustrated stages with solid
-headers, Adaptation bar, result), `render_capabilities.py` (Fig. 3: current -> goal pairs, low/high grid with
+the `manifest_*.json` files), `render_overview.py` (Fig. 1, since redrawn from scratch: a narrow grey
+reactive row over a tall proactive row under three shared column headers, five illustrated capacity cards with
+solid headers that each end in an object panel, an Adaptation rail with dashed returns, matching outcome
+pills), `render_capabilities.py` (Fig. 3: current -> goal pairs, low/high grid with
 vector dialogue, earned autonomy), `render_spectrum.py` (Fig. 4: scenes with vector dialogue and plan/progress
 cards), `render_history.py` (Fig. 5: illustrated era cards around a proportional axis), `render_cycle.py`
 (Fig. 6: the ring with the running example as vector chips), `render_arbitration.py` (Fig. 10: solid gate
 headers, fallbacks beside each test, licence column). All six pass `paperkit.py parity` against the originals.
-`scripts/examples/reharness/render_fig1.py` (diff panels, typed-edge legend, bridged crossing) and
-`scripts/examples/paperbanana/render_fig5.py` (dumbbell centred on human parity). The README gallery shows each beside the paper's original.
+`scripts/examples/reharness/render_fig1.py` (one instance stream drawn once, the stateful harness above it and
+ReHarness below on the same column grid, backward revision in its own orange row, numbered label chips on the
+edges) and `scripts/examples/paperbanana/render_fig5.py` (dumbbell rows on an axis centred on human parity,
+grouped into content and presentation bands). The README gallery shows each beside the paper's original.

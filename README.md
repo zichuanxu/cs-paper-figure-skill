@@ -29,9 +29,9 @@ Each redesign keeps the paper's components, values and notation; only the drawin
 | --- | --- |
 | <img src="gallery/transformer/original/transformer_original_fig1.png" width="300"> | <img src="gallery/transformer/transformer_fig1.png" width="520"> |
 
-- Encoder and decoder run as two lanes of layer slabs; the three attention kinds are the solid-colour heroes, and the encoder output Z drops its keys and values into cross-attention.
-- A detail row opens multi-head attention, draws the three masks with the real tokens on both axes, and traces one head's tensors (Q, K → S → A, V → head).
-- A key strip defines every glyph once; "shifted right" is shown with real token strips.
+- The three multi-head attention blocks are the only saturated blocks and carry numbers 1–3. Each has the same K, V, Q ports; only the colour of what enters changes: all blue for encoder self-attention, all coral for masked decoder self-attention, and a blue-to-coral blend fed by the encoder output **z**, "to every decoder layer".
+- "Add & Norm" is opened into a residual wire, ⊕ and a LayerNorm bar. The two embeddings and the pre-softmax linear layer are three amber trapezoids (one shared weight matrix). "Shifted right" is the one-column offset between the decoder input row and the predicted row of an English→German example.
+- Panel (b) zooms from the stack of h = 8 heads into one head with numbers (scores → mask → softmax → weights whose rows sum to 1). Panel (c) shows the three uses as query-by-key matrices over the example tokens, with hatched −∞ cells for the causal mask.
 
 [PDF](gallery/transformer/transformer_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/transformer/render_fig1.py)
 
@@ -42,9 +42,9 @@ Each redesign keeps the paper's components, values and notation; only the drawin
 | <img src="gallery/harness2/original/harness2_original_fig2.png" width="420"> | <img src="gallery/harness2/harness2_fig2_components.png" width="420"> |
 | <img src="gallery/harness2/original/harness2_original_fig3.png" width="420"> | <img src="gallery/harness2/harness2_fig3_pipeline.png" width="420"> |
 
-- Fig. 2: the eight components as editable files around a frozen model, with the tool loop through the plugin hook and delegation to a subagent.
-- Fig. 3: two bands forming one cycle — Propose → Probe (contrast with e₀) → Compose with the paper's four decisions, and the reflector updating the library.
-- One icon family generated with the skill's Codex helper replaces the mixed clipart; `--vector-icons` renders without it.
+- Fig. 2 follows one model call from left to right: files, context, frozen model, plugin hook, tools. Each of the eight components is a file card with its activation as a tag on the border (solid = every call, dashed = on demand), and the context is a stack whose bands take the colour of the group that owns them.
+- Fig. 3 nests the task-level frame inside the harnessing-level frame. Every harness is a rack of C1–C8 in which grey cells are inherited, teal cells were edited by the invariant candidate and coral cells by the domain candidate, so the composed successor shows the merge on the object. Both probes are contrasted with the same reference record e₀.
+- The two figures share one visual system (the rack, the execution-record page, one robot and file-icon family, no hue with two meanings). The icons come from the skill's Codex helper; `--vector-icons` renders without them.
 
 [Fig. 2 PDF](gallery/harness2/harness2_fig2_components.pdf) · [Fig. 3 PDF](gallery/harness2/harness2_fig3_pipeline.pdf) · [source](skills/cs-paper-figure/scripts/examples/harness2/)
 
@@ -56,6 +56,10 @@ Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-res
 | --- | --- | --- |
 | **Fig. 1**, proactive vs. reactive | <img src="gallery/proactive/original/proactive_original_fig1.png" width="400"> | <img src="gallery/proactive/proactive_overview.png" width="400"> |
 
+- Two rows over three shared columns (identify the work and initiate action, act, outcome). In the reactive row the first columns are the user's turn; in the proactive row the same columns hold Awareness, Anticipation, Agenda and Arbitration, and "Act when asked" sits directly above "Action: before being asked".
+- Each stage card ends in an object made from its own definition: a progress bar with the gap left open, the candidate goals as a checklist, three ticked tests (worthwhile, timely, safe), and suggest / assist / execute on a lightness ramp.
+- Adaptation is a rail under the stages: outcomes and feedback enter it, dashed arrows return to every capacity, and no feedback line crosses a card.
+
 [PDFs](gallery/proactive/) · [source](skills/cs-paper-figure/scripts/examples/proactive/) · [what the studies found](skills/cs-paper-figure/references/figure-series.md)
 
 ### ReHarness, Figure 1 ([arXiv:2610.12668](https://arxiv.org/abs/2610.12668))
@@ -64,9 +68,9 @@ Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-res
 | --- | --- |
 | <img src="gallery/reharness/original/reharness_original_fig1.png" width="420"> | <img src="gallery/reharness/reharness_fig1.png" width="420"> |
 
-- Both panels share one column grid and the same sorting example, so the eye compares straight down; the revision layer exists only in (b), in its own row and colour.
-- Edge numbers sit on their edges, the typed-edge legend sits beside each panel, and the one unavoidable crossing is drawn as a bridge.
-- The outcome that changes, τ<sub>t+1</sub> going from wrong to right, is marked by the card border.
+- One instance stream, two harnesses: the three trajectories are drawn once in the middle, with the stateful harness above and ReHarness below on the same column grid. The τ<sub>t+1</sub> card carries both answers, {7,4,3} wrong for (a) and {3,4,7} correct for (b).
+- Backward revision is its own orange row under the unchanged blue forward row. The h′<sub>t</sub> card shows the edit itself: "Put larger numbers first" struck out, "Larger first only if descending" with the new condition highlighted.
+- Every numbered edge carries its label on the wire ("write R<sub>t</sub>", "read R′<sub>t−1</sub>", "revise R<sub>t−1</sub>"), coloured by type; numbers are tokens shaded by magnitude, and each panel ends on a verdict pill.
 
 [PDF](gallery/reharness/reharness_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/reharness/render_fig1.py)
 
@@ -76,7 +80,7 @@ Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-res
 | --- | --- |
 | <img src="gallery/paperbanana/original/paperbanana_original_fig5.png" width="420"> | <img src="gallery/paperbanana/paperbanana_fig5.png" width="420"> |
 
-Grouped bars on an axis starting at 30 become dumbbells on an axis centred on human parity: the gap per dimension is labelled, the losing side is shaded, and the two findings read at once (code wins faithfulness and conciseness, image generation wins readability and aesthetics; only faithfulness is below parity). [PDF](gallery/paperbanana/paperbanana_fig5.pdf) · [source](skills/cs-paper-figure/scripts/examples/paperbanana/render_fig5.py)
+Ten hatched bars on an axis starting at 30 become five rows on an axis centred on the human reference (50): a square for code and a disc for image generation, joined by a bar in the colour of the route that leads, with the lead printed at the right. The rows are grouped as the paper reads them, a blue Content band where code leads and an amber Presentation band where image generation leads, and the half of the axis where the human-made plot is preferred is darkened; Faithfulness is the only row with both marks in it. [PDF](gallery/paperbanana/paperbanana_fig5.pdf) · [source](skills/cs-paper-figure/scripts/examples/paperbanana/render_fig5.py)
 
 ### MemT-1.0, Figures 3 and 4 ([arXiv:2610.26825](https://arxiv.org/abs/2610.26825))
 
@@ -85,8 +89,8 @@ Grouped bars on an axis starting at 30 become dumbbells on an axis centred on hu
 | <img src="gallery/memt/original/memt_original_fig4.png" width="420"> | <img src="gallery/memt/memt_fig4_architecture.png" width="420"> |
 | <img src="gallery/memt/original/memt_original_fig3.png" width="420"> | <img src="gallery/memt/memt_fig3_efficiency.png" width="420"> |
 
-- Architecture: one zoom step instead of four, the memory state in its own column, one meaning per colour (grey frozen, teal state, blue read, violet write, amber φ).
-- Efficiency: no bars on a log axis; a slope chart with visible ratios (3.99×, 59×) and an area-true waffle for storage.
+- Architecture: four panels answer where the memory sits, when it is read and written, how it is read and how it is written. The time panel is a state rail from M₁ = 0 through M<sub>t</sub> to M<sub>t+1</sub>, with a read under every token and one write per turn; the storage panel shows forget, erase and write on the matrix itself. One meaning per colour: grey frozen backbone, green memory state, blue read, purple write, amber hyper-memory parameters.
+- Efficiency: the two log-axis bar panels become one slope chart in which the gap between Full Context and MemT-1.0-Nano opens from 1.86× to 3.99×, and storage is drawn to scale in units of Nano's 40 MiB state (a 130-cell block for Full Context, one cell for Nano). Every printed ratio is computed from the data in the script.
 
 [Fig. 4 PDF](gallery/memt/memt_fig4_architecture.pdf) · [Fig. 3 PDF](gallery/memt/memt_fig3_efficiency.pdf) · [source](skills/cs-paper-figure/scripts/examples/memt/)
 
@@ -94,13 +98,27 @@ Grouped bars on an axis starting at 30 become dumbbells on an axis centred on hu
 
 Illustrative fixtures or synthetic data, not real benchmark results.
 
-| | Before | After |
-| --- | --- | --- |
-| **Method** | <img src="gallery/before/method.png" width="380"> | <img src="gallery/after/method.png" width="380"> |
-| **Attention** | <img src="gallery/before/attention.png" width="380"> | <img src="gallery/after/attention.png" width="380"> |
-| **Experiment** | <img src="gallery/before/experiment.png" width="380"> | <img src="gallery/after/experiment.png" width="380"> |
-| **Scene planning** | <img src="gallery/before/scene-planning.png" width="380"> | <img src="gallery/after/scene-planning.png" width="380"> |
-| **Epoch context** | <img src="gallery/before/epoch-context.png" width="380"> | <img src="gallery/after/epoch-context.png" width="380"> |
+**Method.** A memory-update loop drawn as one clockwise cycle of real artifacts: ledger rows, three edit cards, a conflict matrix, the candidate record, and a paired-replay gate whose "3 > 1" drives the only arrow into memory v13.
+
+<img src="gallery/after/method.png" width="760">
+
+**Attention.** One eight-column grid runs through the cache slots, the 4 × 8 causal mask and the worked read for q10, so a key keeps its position from the slot that stores it to the weight it receives.
+
+<img src="gallery/after/attention.png" width="760">
+
+**Experiment.** One policy keeps one colour and marker in all four panels; the primary contrast (+6.6 pp) sits in a tinted band with its 24 seed-block dots, and the grand mean of the heat table is asserted equal to it.
+
+<img src="gallery/after/experiment.png" width="760">
+
+**Scene planning.** Three candidate rollouts share one scene; the stretch of the direct path inside the barrier is the thick stroke with a cross, and the only solid arrow is the first step that is executed.
+
+<img src="gallery/after/scene-planning.png" width="760">
+
+**Epoch context.** One coloured lane per replayed case crosses the three stages, so a regression can be followed from the check that flipped to the context edit it caused and the clause that cites it.
+
+<img src="gallery/after/epoch-context.png" width="760">
+
+[PDFs](gallery/after/) · [source](skills/cs-paper-figure/scripts/examples/restyled/)
 
 ## Installation
 

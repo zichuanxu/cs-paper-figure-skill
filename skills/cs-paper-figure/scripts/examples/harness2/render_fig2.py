@@ -1,205 +1,222 @@
-"""Redesign of Harness^2 (arXiv 2610.14224) Figure 2: the eight harness components and their runtime roles.
+"""Harness² Fig. 2: the eight components of the execution harness, placed where they act in the agent loop.
 
-Facts (Sec. 2.1 and the original Figure 2): a harness H = (c1..c8) of editable files composes with a
-frozen model M to form an agent; components are grouped by runtime role:
-  context construction: C1 system prompt (systemprompt.md, every call), C2 guardrails (guardrails.md,
-  every call), C3 memory (LongTermMEMORY.md, every call), C6 skills (skills/<n>/SKILL.md, on invoke);
-  middleware: C8 plugin (plugin/<name>.ts) hooks every tool call, outside the model's discretion;
-  tool interface: C4 tool guidance (tool_guidance.md, every call), C7 scripts (scripts/<name>.py, via bash);
-  orchestration: C5 subagents (sub_agents/<n>/AGENT.md, task tool) delegate work to a new agent.
-The agent produces a trajectory and a deliverable.
+Source: Xu et al., "Harness²: Recursive Agent Harnessing for an Open World", arXiv:2610.14224, Fig. 2,
+with Table 5 (files, activation, definitions) and Appendix D.1 (always-on files, on-demand components).
 
-    python render_fig2.py --out <dir> [--vector-icons]
+Kept from the source: the frozen model M; components C1-C8 with their names and file paths; the four
+groups (context construction, tool interface, orchestration, middleware) and their one-line roles; the
+activation of each component; the call / result loop through the plugin; delegation to a subagent that
+returns only its result; the output, a trajectory tau and a deliverable y.
 
-Icons in icons/ were generated with scripts/codex_images.py (prompts in icons/manifest_fig2*.json): the frozen
-model, the subagent, four group emblems, and one file icon per component (f_c1..f_c8, f_out: the same page with
-a role badge); --vector-icons draws paperkit's vector glyphs instead.
+Design:
+* Reading order follows one model call: files -> context -> frozen model -> tool call -> hook -> tools.
+  The hero is the frozen model with the context it reads; every component sits where it acts on that loop.
+* The context is drawn as an object, a stack of the text present at a call. Band colour = owning group,
+  so C4 (tool guidance, an always-on file of the tool-interface group) shows up inside the context
+  without a wire across the figure; the on-invoke skill is the dashed band, loaded after the task.
+  Band order is illustrative; membership and activation follow Table 5.
+* The plugin is a node ON the call and result wires: interposed in the tool loop, not a box beside it.
+* Each component is a file card (file icon, C-number, name, path). Its activation is a tag on the card
+  border: solid = reaches the model on every call, dashed = on demand.
+* One hue per group, slate for the frozen model; the key strip defines the tags and the harness rack
+  H = (c1..c8) that Fig. 3 (render_fig3.py) reuses. Palette and objects live in h2_style.py.
+
+    python render_fig2.py --out DIR [--vector-icons]
 """
 import argparse
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from paperkit import Canvas, INK, MUTED  # noqa: E402
-from matplotlib.patches import Circle, Rectangle  # noqa: E402
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
+sys.path.insert(0, os.path.join(HERE, "..", ".."))
+import h2_style as S  # noqa: E402
+from h2_style import CONTEXT, INK, MID, MODEL, MONO, MUTED, ORCH, ROLE, TOOLS  # noqa: E402
+from paperkit import Canvas  # noqa: E402
 
-CTX = dict(fill="#EBF2FC", soft="#D2E2F7", stroke="#5A8BCB", ink="#1C4C8C", mark="#2F5FA8")
-MID = dict(fill="#F3EFFB", soft="#E1D6F4", stroke="#8C6CC8", ink="#47297F", mark="#6A45B0")
-TOOL = dict(fill="#ECF5EC", soft="#CFE6CF", stroke="#5E9E62", ink="#25592A", mark="#3F7F44")
-ORC = dict(fill="#FBEFF3", soft="#F3D5E0", stroke="#C27896", ink="#7A2E4A", mark="#A84C72")
-NEU = dict(fill="#F3F4F6", soft="#E4E7EB", stroke="#8F98A4", ink="#353C47", mark="#6B7480")
-MONO = "DejaVu Sans Mono"
-COMPONENTS = {  # id: (group, name, file, activation)
-    "C1": ("ctx", "System prompt", "systemprompt.md", "every call"),
-    "C2": ("ctx", "Guardrails", "guardrails.md", "every call"),
-    "C3": ("ctx", "Memory", "LongTermMEMORY.md", "every call"),
-    "C6": ("ctx", "Skills", "skills/<n>/SKILL.md", "on invoke"),
-    "C8": ("mid", "Plugin", "plugin/<name>.ts", None),
-    "C4": ("tool", "Tool guidance", "tool_guidance.md", "every call"),
-    "C7": ("tool", "Scripts", "scripts/<name>.py", "via bash"),
-    "C5": ("orc", "Subagents", "sub_agents/<n>/AGENT.md", "task tool"),
+STEM = "harness2_fig2_components"
+W, H = 178, 92
+CARD_H = 13.6
+
+# number, name, path, activation tag, on demand?   (Table 5)
+COMP = {
+    1: ("System prompt", "systemprompt.md", "every call", False),
+    2: ("Guardrails", "guardrails.md", "every call", False),
+    3: ("Memory", "LongTermMEMORY.md", "every call", False),
+    6: ("Skills", "skills/<n>/SKILL.md", "on invoke", True),
+    4: ("Tool guidance", "tool_guidance.md", "every call", False),
+    7: ("Scripts", "scripts/<name>.py", "via bash", True),
+    5: ("Subagents", "sub_agents/<n>/AGENT.md", "task tool", True),
+    8: ("Plugin", "plugin/<name>.ts", "in tool loop", False),
 }
-W, H = 178, 93
-KEY = 7.0  # legend strip height under the art (the art is drawn in 0..86 and lifted by KEY)
-ICON_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
-NO_ICONS = False
 
 
-def icon(name):
-    p = os.path.join(ICON_DIR, f"{name}.png")
-    return p if os.path.exists(p) and not NO_ICONS else None
+def frame(cv, x, y, w, h, r, title, sub=None, tx=None, inline=False):
+    """Group region: tinted field, dashed border in the group hue, title in its ink, one-line role in italic."""
+    cv.section(x, y, w, h, r)
+    tx = x + 2.4 if tx is None else tx
+    cv.text(tx, y + h - 1.5, title, size=8.2, weight="bold", color=ROLE[r]["ink"], ha="left", va="top", z=4)
+    if sub and inline:
+        cv.text(tx + cv.text_width(title, 8.2, "bold") + 1.6, y + h - 1.85, sub, size=6.2, style="italic", color=MUTED,
+                ha="left", va="top", z=4)
+    elif sub:
+        cv.text(tx, y + h - 5.2, sub, size=6.2, style="italic", color=MUTED, ha="left", va="top", z=4, linespacing=1.05)
 
 
-def lift(cv, dy, since=None):
-    """Move every artist drawn after `since` (from mark(cv)) up by dy mm, snapped to whole output pixels so
-    placed icons keep their 1:1 pixel grid. Lets a key strip go under art laid out from y = 0."""
-    from matplotlib.transforms import Affine2D
-    from paperkit import RASTER_DPI
-    ppm = RASTER_DPI / 25.4
-    dy = round(dy * ppm) / ppm
-    since = since or dict(patches=0, texts=0, lines=0, images=0, collections=0, chips=0)
-    for kind in ("patches", "texts", "lines", "collections"):
-        for a in list(getattr(cv.ax, kind))[since[kind]:]:
-            # compose with earlier lifts; a patch's get_transform() also holds its own patch transform
-            base = a.get_data_transform() if kind == "patches" else a.get_transform()
-            a.set_transform(Affine2D().translate(0, dy) + base)
-    for im in list(cv.ax.images)[since["images"]:]:
-        x0, x1, y0, y1 = im.get_extent()
-        im.set_extent((x0, x1, y0 + dy, y1 + dy))
-    cv.chips[since["chips"]:] = [(x, y + dy, w, h, s, reg and (reg[0], reg[1] + dy, reg[2], reg[3] + dy))
-                                 for x, y, w, h, s, reg in cv.chips[since["chips"]:]]
-    cv.ax.set_xlim(0, cv.w)
-    cv.ax.set_ylim(0, cv.h)
+def head(cv, x, y, k, r, ha="left"):
+    """'C4 Tool guidance': number badge in the group mark, name in the group ink. (x, y) = left end, centre line."""
+    name = COMP[k][0]
+    bw = 5.0
+    if ha == "center":
+        x -= (bw + 1.1 + cv.text_width(name, 7.2, "bold")) / 2
+    cv.ax.add_patch(S.FancyBboxPatch((x, y - 1.65), bw, 3.3, boxstyle="round,pad=0,rounding_size=0.8", fc=ROLE[r]["mark"],
+                                     ec="none", zorder=8))
+    cv.text(x + bw / 2, y - 0.05, f"C{k}", size=5.9, weight="bold", color="white", z=9)
+    cv.text(x + bw + 1.1, y - 0.05, name, size=7.2, weight="bold", color=ROLE[r]["ink"], ha="left", z=9)
 
 
-def mark(cv):
-    return {k: len(getattr(cv.ax, k)) for k in ("patches", "texts", "lines", "images", "collections")} | \
-        {"chips": len(cv.chips)}
+def file_card(cv, x, y, w, k, h=CARD_H):
+    """One component = one editable file: icon, number + name, path; activation tag on the top border."""
+    r = S.GROUP[k]
+    _, path, act, demand = COMP[k]
+    cv.box(x, y, w, h, r, fill="white", lw=0.7, radius=1.5, z=5)
+    S.icon(cv, f"f_c{k}", x + 5.9, y + h / 2, 9.2, r, tint=(k == 8))
+    head(cv, x + 12.0, y + h / 2 + 2.5, k, r)
+    cv.text(x + 12.0, y + h / 2 - 2.5, path, size=5.9, color=INK, ha="left", z=9, **MONO)
+    S.tag(cv, x + w - 1.6, y + h, act, r, dashed=demand)
+    return (x, y, w, h)
 
 
-def card(cv, x, y, w, h, c, title, sub, em=None):
-    """Module section: tinted field, dashed border in the module hue, title on a pill tab on the top border."""
-    cv.section(x, y, w, h, c, title, tab="top", size=7.4, radius=2.0, lw=0.75)
-    if em and icon(em):
-        cv.image(icon(em), x + w - 4.2, y + h - 4.6, 4.2)
-    cv.text(x + 2.0, y + h - 5.4, sub, size=6.0, color=c["ink"], ha="left", style="italic")
+def draw(out, vector=False):
+    S.VECTOR = vector
+    cv = Canvas(W, H)
+    blue, slate = ROLE[CONTEXT], ROLE[MODEL]
 
+    # ---- context construction: three always-on files and the on-invoke skill feed the context ----------------
+    frame(cv, 2, 11.5, 64.5, 77.5, CONTEXT, "Context construction", "what enters the context, and when")
+    cx, cw = 4.4, 46.0
+    ys = [80.0 - CARD_H - i * (CARD_H + 2.9) for i in range(4)]
+    for k, y in zip((1, 2, 3, 6), ys):
+        file_card(cv, cx, y, cw, k)
+    mid = [y + CARD_H / 2 for y in ys]
 
-def comp(cv, x, y, w, h, cid, c):
-    _, name, path, act = COMPONENTS[cid]
-    cv.box(x, y, w, h, c, fill="white", lw=0.6, radius=1.3, shadow=True)
-    cv.ax.add_patch(Rectangle((x + 0.25, y + 0.6), 0.9, h - 1.2, fc=c["mark"], ec="none", zorder=5.5))
-    # an editable component file: generated file icon with a role badge, else the vector file glyph
-    png, tx = icon(f"f_{cid.lower()}"), x + 6.6
-    if png:
-        cv.image(png, x + 4.8, y + h - 4.8 if h > 16 else y + h / 2, 6.8)
-        tx = x + 9.4
-    else:
-        cv.doc(x + 1.8, y + h - 6.6, 3.6, 4.6, c, lines=2, fold=1.2, lw=0.45)
-    x0, wc = cv.chip(tx, y + h - 4.3, cid, c, size=6.0, solid=True, ha="left", pad=0.7)
-    cv.text(x0 + wc + 1.2, y + h - 4.3, name, size=7.0, color=c["ink"], weight="bold", ha="left")
-    cv.text(tx, y + 3.1, path, size=5.4, color="#3F4652", ha="left", family=MONO)
-    if act:
-        cv.chip(x + w - 1.4, y + 3.1, act, c, size=5.9, ha="right", pad=0.7)
+    # the context at one call: bands in the colour of the group that owns the text
+    sx, sw, bh, stop = 56.6, 8.6, 5.0, 75.0
+    bands = [("C1", CONTEXT, False), ("C2", CONTEXT, False), ("C3", CONTEXT, False), ("C4", TOOLS, False),
+             ("task", "neutral", False), ("C6", CONTEXT, True)]
+    sbot = stop - bh * len(bands)
+    cv.box(sx - 0.5, sbot - 0.5, sw + 1.0, stop - sbot + 1.0, fill="white", stroke=slate["ink"], lw=0.8, radius=1.0, z=5,
+           name="ctx")
+    for i, (lab, r, demand) in enumerate(bands):
+        c, by = ROLE[r], stop - (i + 1) * bh
+        cv.ax.add_patch(S.Rectangle((sx, by), sw, bh, fc="white" if demand else c["soft"], ec=c["stroke"], lw=0.5,
+                                    ls=(0, (2.2, 1.4)) if demand else "-", zorder=6))
+        cv.text(sx + sw / 2, by + bh / 2 - 0.05, lab, size=6.0, color=c["ink"], weight="normal" if r == "neutral" else "bold",
+                z=7)
+    cv.text(sx + sw / 2, stop + 2.2, "context", size=6.6, weight="bold", color=slate["ink"])
+    always = stop - 2 * bh  # middle of the four always-on bands
+    bus = cx + cw + 2.0
+    for m in mid[:3]:
+        cv.line([(cx + cw, m), (bus, m)], color=blue["mark"], lw=0.8)
+    cv.line([(bus, mid[2]), (bus, mid[0])], color=blue["mark"], lw=0.8)
+    cv.arrow([(bus, always), (sx - 0.5, always)], color=blue["mark"], lw=0.9, head=1.3, start_dot=True)
+    S.darrow(cv, [(cx + cw, mid[3]), (sx + sw / 2, mid[3]), (sx + sw / 2, sbot - 0.5)], color=blue["mark"])
 
+    # ---- hero: the frozen model reads that context on every call ----------------------------------------------
+    mx, my, mw, mh = 74.0, 45.0, 24.0, 28.0
+    mcy = my + mh / 2
+    cv.box(mx, my, mw, mh, MODEL, fill=slate["soft"], stroke=slate["ink"], lw=1.0, radius=2.2, shadow=True, z=5)
+    S.icon(cv, "model", mx + mw / 2, my + mh - 9.6, 12.0, MODEL)
+    cv.text(mx + mw / 2, my + 8.0, "Frozen model", size=7.8, weight="bold", color=slate["ink"], z=9)
+    cv.text(mx + mw / 2, my + 3.6, r"$\mathcal{M}$", size=8.6, color=slate["ink"], z=9)
+    cv.icon_snow(mx + mw - 3.0, my + mh - 3.0, 2.8, color=slate["mark"])
+    cv.arrow([(sx + sw + 0.5, mcy), (mx, mcy)], color=blue["mark"], lw=1.1, head=1.6)
 
-def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--out", default="out")
-    ap.add_argument("--vector-icons", action="store_true", help="ignore icons/*.png and draw vector glyphs")
-    a = ap.parse_args()
-    global NO_ICONS
-    NO_ICONS = a.vector_icons
-    assert len(COMPONENTS) == 8 and sorted(COMPONENTS) == [f"C{i}" for i in range(1, 9)]
-    cv = Canvas(W, H, family="serif", size=7.0)
+    # output: the execution record e = (tau, y)
+    rx, ry, rw, rh = 70.0, 78.6, 32.0, 10.4
+    cv.box(rx, ry, rw, rh, "neutral", fill="white", lw=0.7, radius=1.5, z=5)
+    S.record(cv, rx + 2.2, ry + 1.8, MODEL)
+    cv.text(rx + 9.2, ry + rh / 2 + 1.9, r"trajectory $\tau$", size=6.8, ha="left", z=9)
+    cv.text(rx + 9.2, ry + rh / 2 - 2.0, r"+ deliverable $y$", size=6.8, ha="left", z=9)
+    cv.arrow([(mx + mw / 2, my + mh), (mx + mw / 2, ry)], lw=0.8)
 
-    # context construction
-    card(cv, 2, 2, 48, 80.6, CTX, "Context construction", "what enters the context, and when", em="context")
-    for k, cid in enumerate(("C1", "C2", "C3", "C6")):
-        comp(cv, 4.0, 57.4 - k * 18.0, 44, 14.4, cid, CTX)
+    # ---- middleware: the plugin sits on the call and result wires ---------------------------------------------
+    ax_, aw = 106.5, 27.0
+    frame(cv, ax_, 37.0, aw, 52.0, MID, "Middleware", "hooks every tool call")
+    px, pw, py, ph = ax_ + 2.0, aw - 4.0, 50.0, 22.0
+    cv.box(px, py, pw, ph, MID, fill="white", lw=0.8, radius=1.5, z=5)
+    S.icon(cv, "f_c8", px + pw / 2, py + ph - 6.0, 8.6, MID, tint=True)
+    head(cv, px + pw / 2, py + 8.2, 8, MID, ha="center")
+    cv.text(px + pw / 2, py + 3.6, COMP[8][1], size=5.9, z=9, **MONO)
+    S.tag(cv, px + pw - 1.6, py + ph, COMP[8][2], MID)
+    cv.text(ax_ + aw / 2, 46.0, "enforces a behavior,", size=6.2, style="italic", color=MUTED)
+    cv.text(ax_ + aw / 2, 43.0, "rather than instructs it", size=6.2, style="italic", color=MUTED)
+    ycall, yres = mcy + 2.6, mcy - 2.6
 
-    # frozen model at the centre: the hero, a soft halo in the context hue fading into the tool hue
-    mx, my = 76.5, 50.0
-    r = 11.5 if icon("model") else 10.0
-    cv.ax.add_patch(Circle((mx, my), r + 1.8, fc=CTX["fill"], ec=CTX["stroke"], lw=0.5, ls=(0, (3, 2)), zorder=3))
-    cv.ax.add_patch(Circle((mx, my), r, fc="white", ec=NEU["ink"], lw=1.2, zorder=4))
-    if icon("model"):
-        cv.text(mx, my + 6.6, "Frozen model", size=7.2, color=NEU["ink"], weight="bold")
-        cv.image(icon("model"), mx - 2.2, my - 1.6, 10.2)
-        cv.text(mx + 6.0, my - 2.6, r"$\mathcal{M}$", size=10, color=NEU["ink"])
-        cv.icon_snow(mx + 6.0, my - 7.0, 2.4, color="#4A90C8")
-    else:
-        cv.text(mx, my + 3.4, "Frozen model", size=7.2, color=NEU["ink"], weight="bold")
-        cv.text(mx, my - 1.6, r"$\mathcal{M}$", size=11, color=NEU["ink"])
-        cv.icon_snow(mx, my - 6.6, 2.6, color="#4A90C8")
-    cv.rich(mx, 72.6, [("Agent = ", INK, "bold"), ("model", NEU["ink"], "bold"), (" + ", INK, "bold"),
-                       ("harness", CTX["mark"], "bold")], size=6.8, ha="center")
-    cv.text(mx, 69.4, "8 editable files around a model", size=6.0, color=MUTED, style="italic")
-    cv.text(mx, 66.8, "whose weights never change", size=6.0, color=MUTED, style="italic")
+    # ---- tool interface --------------------------------------------------------------------------------------------
+    gx, gw = 136.5, 39.5
+    frame(cv, gx, 37.0, gw, 52.0, TOOLS, "Tool interface", "what the model can call, and how")
+    tx, tw = gx + 2.0, gw - 4.0
+    ty, th = mcy - 4.6, 9.2
+    c4 = file_card(cv, tx, ty + th + 3.5, tw, 4, h=12.2)
+    c7 = file_card(cv, tx, ty - 3.5 - 12.2, tw, 7, h=12.2)
+    cv.box(tx, ty, tw, th, TOOLS, fill=ROLE[TOOLS]["soft"], lw=0.8, radius=1.5, z=5)
+    S.icon(cv, "tools", tx + 6.0, ty + th / 2, 7.6, TOOLS)
+    cv.text(tx + 11.6, ty + th / 2 + 1.9, "Tools", size=7.2, weight="bold", color=ROLE[TOOLS]["ink"], ha="left", z=9)
+    cv.text(tx + 11.6, ty + th / 2 - 2.0, "existing tools, bash", size=6.2, color=INK, ha="left", z=9)
+    rel = tx + tw * 0.62  # relation arrows: a file configures the node it points at
+    cv.arrow([(rel, c4[1]), (rel, ty + th)], color=MUTED, lw=0.6, head=1.1)
+    cv.text(rel - 1.2, (c4[1] + ty + th) / 2, "guides use", size=5.9, style="italic", color=MUTED, ha="right")
+    cv.arrow([(rel, c7[1] + c7[3]), (rel, ty)], color=MUTED, lw=0.6, head=1.1)
+    cv.text(rel - 1.2, (c7[1] + c7[3] + ty) / 2, "adds a capability", size=5.9, style="italic", color=MUTED, ha="right")
 
-    # (1) context in: the window the model reads each call, assembled from the context components + the task
-    cv.text(55.4, 62.6, "context", size=6.1, color=CTX["ink"], style="italic")
-    for k, (lab, c) in enumerate((("C1", CTX), ("C2", CTX), ("C3", CTX), ("C6", CTX), (r"$q$", NEU))):
-        cv.cuboid(52.4, 56.2 - k * 4.4, 5.6, 3.4, d=1.3, r=c, title=lab, size=5.8)
-    cv.arrow([(59.4, my), (mx - r - 2.0, my)], color=CTX["mark"], lw=1.0, head=1.2)
-    cv.line([(50.0, my), (52.4, my)], color=CTX["mark"], lw=1.0)
+    # call goes out through the plugin, the result comes back through it
+    cv.arrow([(mx + mw, ycall), (px, ycall)], lw=0.9)
+    cv.arrow([(px + pw, ycall), (tx, ycall)], lw=0.9)
+    cv.arrow([(tx, yres), (px + pw, yres)], lw=0.9)
+    cv.arrow([(px, yres), (mx + mw, yres)], lw=0.9)
+    lx = (mx + mw + ax_) / 2
+    cv.text(lx, ycall + 1.7, "call", size=6.2, style="italic", color=INK)
+    cv.text(lx, yres - 1.8, "result", size=6.2, style="italic", color=INK)
 
-    # middleware + tool interface
-    card(cv, 98, 37, 78, 45.2, MID, "Middleware", "hooks every tool call, outside the model's discretion", em="plugin")
-    comp(cv, 99.6, 41.0, 28.4, 26.0, "C8", MID)
-    cv.chip(113.8, 55.4, "inside the tool loop", MID, size=5.9, pad=0.7)
-    cv.text(113.8, 51.6, "tool calls + turn", size=5.9, color=MID["ink"])
-    cv.text(113.8, 49.0, "boundaries", size=5.9, color=MID["ink"])
-    cv.section(129.5, 39.0, 44.5, 31.0, TOOL, "Tool interface", tab="top", size=7.0, radius=1.6, lw=0.7)
-    if icon("tools"):
-        cv.image(icon("tools"), 129.5 + 44.5 - 4.0, 39.0 + 31.0 - 4.2, 4.0)
-    cv.text(131.3, 65.4, "what the model can call, and how", size=5.9, color=TOOL["ink"], ha="left", style="italic")
-    comp(cv, 130.8, 51.2, 42.2, 12.2, "C4", TOOL)
-    comp(cv, 130.8, 40.2, 42.2, 10.4, "C7", TOOL)
-    # (2) call -> plugin hook -> (3) tool ; (4) result back
-    cv.arrow([(mx + r + 0.4, my + 4.0), (99.6, my + 4.0)], color=MID["mark"], lw=1.0, head=1.3)
-    cv.text(93.6, my + 6.2, "tool call", size=6.1, color=MID["ink"], style="italic")
-    cv.arrow([(128.0, 47.6), (130.8, 47.6)], color=TOOL["mark"], lw=0.8, head=1.1)
-    cv.arrow([(130.8, 43.0), (128.0, 43.0)], color=TOOL["mark"], lw=0.8, head=1.1)
-    cv.icon_cycle(92.4, my, 2.8, color=MID["mark"])
-    cv.arrow([(99.6, my - 4.0), (mx + r + 0.4, my - 4.0)], color=MID["mark"], lw=1.0, head=1.3)
-    cv.text(93.6, my - 6.4, "result", size=6.1, color=MID["ink"], style="italic")
+    # ---- orchestration: a subagent is a new context, defined by AGENT.md ----------------------------------------
+    ox, oy, ow, oh = 70.5, 11.5, 105.5, 22.5
+    frame(cv, ox, oy, ow, oh, ORCH, "Orchestration", "when work is delegated to a new agent, and how", tx=ax_ + 2.4,
+          inline=True)
+    nx, ny, nw, nh = ox + 2.0, oy + 2.2, 33.0, 14.6
+    cv.box(nx, ny, nw, nh, ORCH, fill=ROLE[ORCH]["soft"], lw=0.8, radius=1.5, z=5)
+    S.icon(cv, "subagent", nx + 6.4, ny + nh / 2, 11.0, ORCH, fit="height")
+    cv.text(nx + 12.6, ny + nh / 2 + 2.2, "Subagent", size=7.2, weight="bold", color=ROLE[ORCH]["ink"], ha="left", z=9)
+    cv.text(nx + 12.6, ny + nh / 2 - 2.0, "own context window", size=6.2, color=INK, ha="left", z=9)
+    c5 = file_card(cv, ox + ow - 2.0 - 47.0, ny, 47.0, 5, h=CARD_H)
+    cv.arrow([(c5[0], ny + nh / 2 - 0.5), (nx + nw, ny + nh / 2 - 0.5)], color=MUTED, lw=0.6, head=1.1)
+    cv.text((c5[0] + nx + nw) / 2, ny + nh / 2 + 1.2, "defines", size=5.9, style="italic", color=MUTED)
+    dx, ux = mx + 7.0, mx + mw - 7.0
+    S.darrow(cv, [(dx, my), (dx, ny + nh)], color=ROLE[ORCH]["mark"], lw=0.9, head=1.4)
+    cv.arrow([(ux, ny + nh), (ux, my)], color=ROLE[ORCH]["mark"], lw=0.9)
+    ly = (my + oy + oh) / 2 + 0.2
+    cv.text(dx - 1.3, ly, "delegates", size=6.2, style="italic", color=ROLE[ORCH]["ink"], ha="right")
+    cv.text(ux + 1.3, ly, "result only", size=6.2, style="italic", color=ROLE[ORCH]["ink"], ha="left")
 
-    # orchestration
-    card(cv, 98, 2, 78, 31.4, ORC, "Orchestration", "when work is delegated to a new agent, and how", em="orchestration")
-    comp(cv, 100.5, 6.4, 49.0, 14.4, "C5", ORC)
-    if icon("subagent"):
-        cv.image(icon("subagent"), 163.0, 15.6, 10.0, fit="height")
-    else:
-        cv.icon_robot(163.0, 15.0, 6.4, color=ORC["mark"])
-    cv.text(163.0, 7.8, "new agent", size=6.0, color=ORC["ink"], style="italic")
-    cv.arrow([(151.4, 13.6), (157.8, 13.6)], color=ORC["mark"], lw=0.8, head=1.0)
-    # delegation from the model
-    cv.arrow([(mx + 6.0, my - r + 2.0), (92.0, 26.0), (92.0, 13.6), (100.5, 13.6)], color=ORC["mark"],
-             lw=0.9, head=1.2, dashed=True, radius=1.4, both=True)
-    cv.text(86.0, 33.4, "delegate", size=6.0, color=ORC["ink"], ha="right", style="italic")
+    # ---- key ---------------------------------------------------------------------------------------------------------
+    S.key(cv, 2, 1.0, 174, h=8.6, size=6.5, items=[
+        (lambda x, y: cv.icon_snow(x, y, 2.8, color=slate["mark"]), 3.0, "frozen weights"),
+        (lambda x, y: S.icon(cv, "f_c1", x, y, 5.6, CONTEXT), 5.6, "editable file; an edit is a diff"),
+        (lambda x, y: S.tag(cv, x, y, "tag", "neutral", ha="center"), 6.6, "active on every call"),
+        (lambda x, y: S.tag(cv, x, y, "tag", "neutral", dashed=True, ha="center"), 6.6, "on demand"),
+        (lambda x, y: S.rack(cv, x - 7.3, y - 3.38, groups=True, cell=(3.4, 2.9)), 14.6,
+         r"harness $\mathcal{H}=(c_1,\ldots,c_8)$, in group colours"),
+    ])
 
-    # output
-    cv.arrow([(mx - 7.0, my - (r * r - 49.0) ** 0.5), (mx - 7.0, 24.0)], color=INK, lw=1.0, head=1.3)
-    if icon("f_out"):
-        cv.image(icon("f_out"), mx - 7.0, 17.4, 9.6)
-    else:
-        cv.doc(mx - 10.2, 11.0, 6.4, 13.0, NEU, lines=4, fold=2.0)
-    cv.text(mx - 0.8, 20.4, r"trajectory $\tau$", size=6.7, color=INK, ha="left")
-    cv.text(mx - 0.8, 15.4, r"+ deliverable $y$", size=6.7, color=INK, ha="left")
-    cv.text(mx, 5.6, r"output of $\mathcal{A}(q;\,\mathcal{M},\mathcal{H})$", size=6.2, color=MUTED)
-
-    lift(cv, KEY)
-    cv.legend(2, 1.2, 174, [("snow", "#4A90C8", "frozen: weights never change"),
-                            ("cycle", MID["mark"], "tool loop: call, plugin hook, tool, result"),
-                            ("dash", ORC["mark"], "delegation to a subagent"),
-                            ("abbr", "C1–C8", "editable harness component files"),
-                            ("cuboid", CTX, r"context entry ($q$ = task)")], size=6.0, gap=3.4)
-    assert not cv.wire_crossings(), cv.wire_crossings()
-    print("\n".join(cv.save(os.path.join(a.out, "harness2_fig2_components"))))
     assert not cv.overlaps(), cv.overlaps()
     assert not cv.text_overlaps(), cv.text_overlaps()
+    assert not cv.wire_crossings(), cv.wire_crossings()
+    return cv.save(os.path.join(out, STEM))
 
 
 if __name__ == "__main__":
-    main()
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--out", default=".")
+    ap.add_argument("--vector-icons", action="store_true", help="draw vector stand-ins instead of the raster icons")
+    a = ap.parse_args()
+    print(draw(a.out, a.vector_icons))

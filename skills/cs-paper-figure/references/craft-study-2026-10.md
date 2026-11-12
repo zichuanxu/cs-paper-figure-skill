@@ -55,21 +55,23 @@ rays; matrix memory and gates as text boxes; green also used for a readout box; 
 for new projections; ~250 pt looping state wires; slogans in the art; the time evolution (the key
 idea) as the smallest inset; a separate inventory box of hyper-memory parameters.
 
-**Fig. 4 redesign** (`scripts/examples/memt/render_fig4.py`, 170 × 108 mm): locator stack with zoom
-wedge → block with parallel attentions → a memory *pillar* holding `M_t` (3 slabs) → read panel
-(amber trapezoids = φ, `QM/√d_k` readout, RMSNorm ⊙ SoftCapSiLU gate) and write panel (token-level
-chain of state grids, one step drawn on the grid: forget fade → erase row → ⊕ outer-product write)
-→ timeline strip (turn 1 with `M = 0`, read every token, write at turn end). White 62 %, tint 29 %,
-ink 2.9 %; min text 5.8 pt; math ≥ 6.2 pt; one zoom-ray pair; no crossing wires.
+**Fig. 4 redesign** (`scripts/examples/memt/render_fig4.py`, 178 × 117 mm): four framed panels over
+a glyph key. (a) locator stack with zoom wedge → block with parallel attentions; (b) time axis with
+the state rail `M_1 = 0 … M_t → M_{t+1}` (3 slabs each), read arrows under every token, one write per
+turn; (c) read panel (amber trapezoids = φ, `Q` weighting the rows of `M`, `QM/√d_k` readout,
+RMSNorm ⊙ SoftCapSiLU gate); (d) write panel (one token-level step drawn on the grid: forget fade →
+erase row → ⊕ outer-product write). The grid cells come from a toy trajectory run through the
+paper's update rule. White 25 %, tint 64 %, ink 4.6 %; min text 5.9 pt; math ≥ 6.5 pt; one zoom-ray
+pair; the script asserts no overlaps and no wire through an object.
 
 **Fig. 3 original**: two log-scale horizontal-bar latency panels (128K, 256K) and a storage panel;
 bars start at an arbitrary 10 s / 10 MiB floor, so lengths encode nothing; ratios are not shown;
 the scaling with context is split across panels; web-style rounded cards + gradient hero bars.
 
-**Fig. 3 redesign** (`render_fig3.py`, 170 × 66 mm): (a) slope chart on a log axis, 128K → 256K,
-direct labels, hero blue, brackets with `4.0×` and `59×` at 256K and growth factors ×1.46 / ×3.14 /
-×2.00; (b) area-true waffle with one cell = 40 MiB (Full Context 129.6 cells, Temp-LoRA 4.3, MemT 1),
-"too large at 1M" stated as reported, and a hero callout `130×` / `4.3×`.
+**Fig. 3 redesign** (`render_fig3.py`, 178 × 70 mm): (a) slope chart on a log axis, 128K → 256K,
+direct labels, hero blue, the gap to Full Context shaded and labelled `1.86×` and `3.99×`, and growth
+factors ×1.46 / ×3.14 / ×2.00; (b) area-true waffle with one cell = 40 MiB (Full Context 129.6 cells,
+Temp-LoRA 4.3, MemT 1), "too large at 1M" stated as reported, and a hero callout `130×` / `4.3×`.
 
 ## 3. Chart craft observed across the corpus
 

@@ -1,479 +1,393 @@
-"""Restyle of the `attention` example: causal cache attention over a key/value bank.
+#!/usr/bin/env python3
+"""Causal cache attention: one column grid for the cache, the mask and a worked read.
 
-Content (from inputs.json only):
-  bank columns  P0 P1 | S1 S2 | t9 t10 t11 t12   (prefix, completed-chunk summaries, current chunk)
-  S1 summarizes t1-t4, S2 summarizes t5-t8; S3 (t9-t12) is absent for q9-q12, eligible after sealing
-  M_ij = 0 if key j is prefix/summary or a local token with index <= i, else -inf
-  A = rowsoftmax(QK^T / sqrt(d_k) + M),  O = AV
-  worked query q10: six supplied scaled logits, six 2-D value vectors -> o10
-Every number is recomputed here (60-digit Decimal) and asserted against numerical_checks.json.
-k/v cell shading in the bank glyphs is an illustrative texture, not data.
+Source: gallery/before/attention.png (an original schematic with an illustrative numerical
+example; it makes no empirical claim) and the bundled data/attention/inputs.json and
+numerical_checks.json.
 
-    python render_attention.py [--inputs inputs.json] [--out dir]
+Content kept from the source
+  * the eight cache slots in canonical order: prefix P0/P1, completed-chunk summaries S1/S2
+    (of t1-t4 and t5-t8) and the current chunk's local keys t9-t12, each holding a key and a value;
+  * the 4 x 8 additive mask M for queries q9-q12 (0 = permitted, -inf = blocked; a local key
+    t_j is readable iff j <= i, the current token included) and its row counts 5, 6, 7, 8;
+  * A = rowsoftmax(Q K^T / sqrt(d_k) + M), O = A V and the tensor shapes;
+  * the worked read for q10: six supplied logits, their softmax weights, the six 2-D value
+    vectors, the weighted contributions and o10 = (0.600050, 0.730184) shown to three decimals;
+  * the availability rule for S3: absent from the key bank for q9-q12, formed from t9-t12 once
+    chunk 3 is sealed, eligible for later reads.
+
+Design
+  * Five-second message: every query reads the prefix, the finished summaries and its own causal
+    past; nothing from the future. The hero is the mask, whose staircase is the claim.
+  * One column grid is shared by the cache slots, the mask and the worked row, so a key keeps its
+    x position from the object that stores it to the weight it receives. An amber wire carries
+    the q10 row from the mask into panel (c).
+  * One hue per key group everywhere (slot, mask cell, bar, value cell, scatter marker):
+    blue = prefix, purple = chunk summary, green = current-chunk local key. Amber is the worked
+    query q10 and its output only. Grey hatching is "blocked / not instantiated" only.
+  * Panel (c) replaces the six-decimal table by the calculation drawn on the grid (logits, weight
+    bars, value vectors, weighted vectors, row sum) and a value-space scatter whose marker areas
+    are the weights, so o10 reads as the weighted mean of the six points.
+  * Every number is computed here from inputs.json and asserted against numerical_checks.json.
+    The invented numbers carry an in-figure "illustrative values" tag; schematic status and the
+    illustrative key/value shading belong in the caption.
 """
+from __future__ import annotations
+
 import argparse
 import json
+import math
 import os
 import sys
 from decimal import Decimal, getcontext
+from pathlib import Path
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parents[1]))
 import matplotlib  # noqa: E402
-from matplotlib.patches import FancyBboxPatch, Rectangle  # noqa: E402
+from matplotlib.patches import Circle, FancyBboxPatch, PathPatch, Polygon, Rectangle  # noqa: E402
+from paperkit import INK, MUTED, ROLE, Canvas, _round_top_rect  # noqa: E402
 
-from paperkit import Canvas, ROLE, INK, MUTED, LINE  # noqa: E402
-
-E_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "attention")
-PRE, SUM, LOC, QRY, BANK = ROLE["blue"], ROLE["purple"], ROLE["memory"], ROLE["amber"], ROLE["frozen"]
-BLK = dict(fill="#F1F3F5", hatch="#AEB6C0", ink="#7A838E", stroke="#B5BCC5")
-W, H = 178, 138    # rows (a)/(b), (d), (e); the overview row (c) adds ROW above (d)
-ROW = 35.0
-SW, SG, GG = 8.6, 1.6, 4.4          # slot width, slot gap, group gap (mm)
-X0 = 16.0                           # left edge of the first bank column
+DATA = HERE / "data" / "attention"
+PRE, SUM, LOC, QRY = "blue", "purple", "memory", "amber"
+HATCH_FC, HATCH_EC = "#F1F2F5", "#AEB5BF"
 
 
 # ------------------------------------------------------------------ data ---
-def compute(inp, chk):
-    getcontext().prec = 60
-    keys, qs = inp["key_order"], inp["query_indices"]
-    always = set(inp["prefix_keys"]) | {s["id"] for s in inp["completed_summaries"]}
-    loc = {f"t{i}": i for i in inp["local_token_indices"]}
-    perm = [[1 if (k in always or loc.get(k, 99) <= q) else 0 for k in keys] for q in qs]
-    assert perm == chk["permitted_mask"], "mask mismatch"
-    assert [sum(r) for r in perm] == chk["permitted_counts"]
-    ex = inp["example"]
-    qrow = perm[qs.index(ex["query_index"])]
-    assert [k for k, p in zip(keys, qrow) if p] == ex["allowed_keys"]
-    assert [k for k, p in zip(keys, qrow) if not p] == ex["masked_keys"]
-    logits = [Decimal(s) for s in ex["scaled_logits_decimal"]]
-    exps = [l.exp() for l in logits]
-    Z = sum(exps)
-    a = [e / Z for e in exps]
-    vals = ex["value_vectors"]
-    contrib = [[w * v for v in vec] for w, vec in zip(a, vals)]
-    out = [sum(c[d] for c in contrib) for d in range(2)]
+def derive(inputs, checks):
+    """Rebuild the mask and the q10 read from the inputs; assert every value against the checks."""
+    I, C = json.loads(Path(inputs).read_text()), json.loads(Path(checks).read_text())
+    keys, qs = I["key_order"], I["query_indices"]
+    assert keys == C["key_order"] and qs == C["query_indices"]
+    summaries = {s["id"]: s["covers"] for s in I["completed_summaries"]}
+    always = set(I["prefix_keys"]) | set(summaries)
+    local = {f"t{j}": j for j in I["local_token_indices"]}
+    assert set(keys) == always | set(local)
+    group = {k: PRE if k in I["prefix_keys"] else SUM if k in summaries else LOC for k in keys}
+    permitted = [[int(k in always or local.get(k, math.inf) <= i) for k in keys] for i in qs]
+    assert permitted == C["permitted_mask"]
+    assert [[0 if p else "-Infinity" for p in row] for row in permitted] == C["additive_mask"]
+    counts = [sum(r) for r in permitted]
+    assert counts == C["permitted_counts"]
+    s3 = I["excluded_summary"]
+    assert s3["id"] not in keys and s3["excluded_from_queries"] == qs and s3["covers"] == qs
+
+    ex = I["example"]
+    row = qs.index(ex["query_index"])
+    assert [k for k, p in zip(keys, permitted[row]) if p] == ex["allowed_keys"]
+    assert [k for k, p in zip(keys, permitted[row]) if not p] == ex["masked_keys"]
+    getcontext().prec = 70
     tol = Decimal("1e-50")
-    ref = chk["q10"]
-    for got, want in [(Z, ref["softmax_normalizer"])] + list(zip(a, ref["softmax_weights"])) + \
-            list(zip(out, ref["weighted_output"])) + \
-            [(g, w) for gc, wc in zip(contrib, ref["weighted_value_contributions"]) for g, w in zip(gc, wc)]:
-        assert abs(got - Decimal(want)) < tol, (got, want)
-    assert abs(sum(a) - 1) < tol
-    assert "S3" not in keys and inp["excluded_summary"]["excluded_from_queries"] == qs
-    return dict(keys=keys, qs=qs, perm=perm, logits=ex["scaled_logits_decimal"], a=[float(x) for x in a],
-                vals=vals, contrib=[[float(x) for x in c] for c in contrib], out=[float(x) for x in out],
-                Z=float(Z), allowed=ex["allowed_keys"], q=ex["query_index"])
+    logits = [Decimal(s) for s in ex["scaled_logits_decimal"]]
+    exps = [x.exp() for x in logits]
+    Z = sum(exps)
+    w = [e / Z for e in exps]
+    contrib = [[a * v for v in vv] for a, vv in zip(w, ex["value_vectors"])]
+    out = [sum(c[d] for c in contrib) for d in range(I["dimensions"]["example_value_dimension"])]
+    q = C["q10"]
+    assert abs(Z - Decimal(q["softmax_normalizer"])) < tol
+    assert all(abs(a - Decimal(b)) < tol for a, b in zip(w, q["softmax_weights"]))
+    assert all(abs(a - Decimal(b)) < tol for a, b in zip(w + [Decimal(0)] * 2, C["q10_full_attention"]))
+    assert all(abs(a - Decimal(b)) < tol for r, s in zip(contrib, q["weighted_value_contributions"])
+               for a, b in zip(r, s))
+    assert all(abs(a - Decimal(b)) < tol for a, b in zip(out, q["weighted_output"]))
+    assert abs(sum(w) - 1) < tol and C["checks"]["passed"]
+    return dict(I=I, keys=keys, qs=qs, group=group, permitted=permitted, counts=counts, row=row,
+                summaries=summaries, s3=s3, logits=[float(x) for x in logits], Z=float(Z),
+                w=[float(x) for x in w], values=ex["value_vectors"],
+                contrib=[[float(x) for x in r] for r in contrib], out=[float(x) for x in out])
 
 
-CMIN, CMAX = -0.16, 0.42   # amber ramp span covering every a_j v_j term (min -0.1554, max 0.4195)
+def num(x, nd=3):
+    """0.232, 0, -0.155 with a true minus."""
+    s = "0" if abs(x) < 5 * 10 ** -(nd + 1) else f"{x:.{nd}f}"
+    return s.replace("-", "−")
 
 
-def kind(k):
-    return PRE if k.startswith("P") else SUM if k.startswith("S") else LOC
+# --------------------------------------------------------------- helpers ---
+def hatch(cv, x, y, w, h, z=6.0, dashed=False):
+    """Blocked / not-instantiated cell: grey hatching (the only meaning of hatching here)."""
+    cv.ax.add_patch(Rectangle((x, y), w, h, fc=HATCH_FC, ec=HATCH_EC, hatch="////", lw=0, zorder=z))
+    cv.ax.add_patch(Rectangle((x, y), w, h, fc="none", ec=HATCH_EC, lw=0.45, zorder=z + 0.05,
+                              ls=(0, (2, 1.4)) if dashed else "-"))
 
 
-def col_x(keys):
-    """Left edges of the 8 bank columns; shared by panels (a), (c) and (d)."""
-    xs, x, prev = [], X0, None
-    for k in keys:
-        if prev is not None:
-            x += SW + (GG if kind(k) is not kind(prev) else SG)
-        xs.append(x)
-        prev = k
-    return xs
+def cell(cv, x, y, w, h, r, s=None, z=6.0, size=6.5, weight="normal", strong=False):
+    c = ROLE[r]
+    cv.ax.add_patch(Rectangle((x, y), w, h, fc=c["soft"] if strong else c["fill"], ec=c["stroke"], lw=0.45, zorder=z))
+    if s is not None:
+        cv.text(x + w / 2, y + h / 2 - 0.05, s, size=size, color=c["ink"], weight=weight, z=z + 1)
 
 
-def sub(k):  # 't10' -> '$t_{10}$', 'P0' -> '$P_{0}$'
-    return f"${k[0]}_{{{k[1:]}}}$"
+def slot(cv, x, y, w, h, r, label, seed=0, ghost=False):
+    """Cache slot as an object: solid name band over a key strip and a value strip."""
+    c = ROLE[r]
+    hb = 3.5
+    cv.box(x, y, w, h, r, fill="white", lw=0.7, radius=1.0, dashed=ghost, z=5)
+    if ghost:
+        cv.text(x + w / 2, y + h - hb / 2 - 0.2, label, size=6.6, weight="bold", color=c["ink"], z=7)
+        cv.icon_lock(x + w / 2, y + (h - hb) / 2 + 0.1, 2.9, color=c["stroke"])
+        return
+    cv.ax.add_patch(PathPatch(_round_top_rect(x, y + h - hb, w, hb, 1.0), fc=c["mark"], ec=c["mark"], lw=0.7, zorder=5.2))
+    cv.text(x + w / 2, y + h - hb / 2 - 0.05, label, size=6.6, weight="bold", color="white", z=7)
+    cs = 1.25
+    x0, yy = x + (w - 5 * cs - 1.2) / 2, y + (h - hb - cs) / 2
+    cv.vec(x0, yy, n=3, cell=cs, r=r, seed=seed)                 # key  (d_k cells, illustrative shading)
+    cv.vec(x0 + 3 * cs + 1.2, yy, n=2, cell=cs, r=r, seed=seed + 50)  # value (d_v cells)
 
 
-# ------------------------------------------------------------ primitives ---
-def card(cv, x, y, w, h, title, r="frozen", letter=None):
-    """Module frame: tinted field + dashed border in the panel's own hue, title on a pill tab."""
-    cv.section(x, y, w, h, r, title, letter=letter, tab="top", size=7.6, radius=2.0)
+# ------------------------------------------------------------------ draw ---
+def draw(d):
+    W, H = 178.0, 118.0
+    cv = Canvas(W, H)
+    matplotlib.rcParams["hatch.linewidth"] = 0.45
+    keys, qs, grp, K = d["keys"], d["qs"], d["group"], len(d["keys"])
+    amber = ROLE[QRY]
 
+    # shared column grid: 8 key columns, a small gap between the three key groups
+    CW, GX, GAP = 10.0, 28.0, 1.4
+    order = [PRE, SUM, LOC]
+    xs = [GX + j * CW + GAP * order.index(grp[k]) for j, k in enumerate(keys)]
+    span = {g: (min(x for x, k in zip(xs, keys) if grp[k] == g), max(x for x, k in zip(xs, keys) if grp[k] == g) + CW)
+            for g in order}
+    XR = xs[-1] + CW
 
-def hatched(cv, x, y, w, h, z=6, lw=0.35):
-    cv.ax.add_patch(Rectangle((x, y), w, h, fc=BLK["fill"], ec=BLK["stroke"], lw=lw, zorder=z))
-    cv.ax.add_patch(Rectangle((x, y), w, h, fc="none", ec=BLK["hatch"], lw=0, hatch="//////", zorder=z + 0.01))
+    # ============================== (a) cache and mask ==========================================
+    AX, AY, AW, AH = 1.5, 60.5, 118.5, 54.7
+    cv.section(AX, AY, AW, AH, "neutral", "Cache slots and causal mask", letter="a", fill="#FAFBFC")
+    names = {PRE: "Prefix", SUM: "Chunk summaries", LOC: "Current chunk: local keys"}
+    for g in order:
+        x0, x1 = span[g]
+        cv.text((x0 + x1) / 2, 110.9, names[g], size=7.0, weight="bold", color=ROLE[g]["ink"])
+        cv.ax.plot([x0 + 0.5, x1 - 0.5], [109.0, 109.0], color=ROLE[g]["mark"], lw=1.1, zorder=4, solid_capstyle="round")
+    cv.text(sum(span[PRE]) / 2, 106.4, "always readable", size=6.5, style="italic", color=MUTED)
+    cv.text(sum(span[LOC]) / 2, 106.4, r"$t_j$ readable iff $j \leq i$ (self included)", size=6.5,
+            style="italic", color=MUTED)
 
-
-def slot(cv, x, y, k, r, seed, h=12.8, lw=0.6):
-    """One cache slot, drawn as a thin pseudo-3D block: id over a key vector (3 cells) and a value vector (2)."""
-    cv.cuboid(x, y, SW, h, d=1.3, r=r, lw=lw, z=5)
-    cv.text(x + SW / 2, y + h - 2.3, sub(k), size=7.0, color=r["ink"])
-    cv.vec(x + SW / 2 - 1.95, y + 5.6, n=3, cell=1.3, r=r, seed=seed)
-    cv.vec(x + SW / 2 - 1.3, y + 1.6, n=2, cell=1.3, r=r, seed=seed + 50)
-
-
-def mini(cv, x, y, rows, cols, fills, cell=1.15, lw=0.3):
-    """Shape glyph for a matrix: fills(i, j) -> colour or None (hatched)."""
-    for i in range(rows):
-        for j in range(cols):
-            cx, cy = x + j * cell, y + (rows - 1 - i) * cell
-            f = fills(i, j)
-            if f is None:
-                hatched(cv, cx, cy, cell, cell, z=7, lw=lw * 0.7)
-            else:
-                cv.ax.add_patch(Rectangle((cx, cy), cell, cell, fc=f, ec="white", lw=lw, zorder=7))
-    cv.ax.add_patch(Rectangle((x, y), cols * cell, rows * cell, fc="none", ec=INK, lw=0.45, zorder=7.5))
-    return cols * cell, rows * cell
-
-
-# ---------------------------------------------------------------- panels ---
-def panel_a(cv, d, xs):
-    card(cv, 2, 100, 110, 35.4, "Key/value cache bank", "frozen", "a")
-    y0, h = 109.6, 12.8
-    cv.box(xs[0] - 1.6, y0 - 1.0, xs[-1] + SW - xs[0] + 3.2, h + 2.0, "neutral", fill="#F7F8FA",
-           stroke=BANK["stroke"], lw=0.7, radius=1.6, z=3)
-    for j, (k, x) in enumerate(zip(d["keys"], xs)):
-        slot(cv, x, y0, k, kind(k), seed=j)
-    cv.text(xs[0] - 2.6, y0 + 6.25, r"$\mathbf{k}_j$", size=6.8, color=INK, ha="right")
-    cv.text(xs[0] - 2.6, y0 + 2.25, r"$\mathbf{v}_j$", size=6.8, color=INK, ha="right")
-    # provenance of the completed-chunk summaries
-    for x, rng in ((xs[2], "$t_1$–$t_4$"), (xs[3], "$t_5$–$t_8$")):
-        cs = cv.tokens(x + 0.05, 125.9, 4, w=1.85, h=1.85, gap=0.37, r="neutral", lw=0.4)
-        cv.text(x + SW / 2, 129.6, rng, size=6.6, color=SUM["ink"])
-        cv.arrow([(x + SW / 2, 125.9), (x + SW / 2, y0 + h + 1.0)], color=SUM["stroke"], lw=0.6, head=1.0)
-    cv.text((xs[0] + xs[1] + SW) / 2, 127.2, "always readable", size=6.1, color=PRE["ink"], style="italic")
-    cv.rich((xs[4] + xs[7] + SW) / 2, 127.2, [(r"$t_j$", LOC["ink"]), (r" readable iff ", LOC["ink"]),
-                                               (r"$j\leq i$", LOC["ink"])], size=6.5, ha="center")
-    # group brackets
-    for a_, b_, r, lab in ((0, 1, PRE, "prefix"), (2, 3, SUM, "summaries"), (4, 7, LOC, "current chunk")):
-        xa, xb = xs[a_], xs[b_] + SW
-        cv.line([(xa, 107.0), (xb, 107.0)], color=r["mark"], lw=0.9)
-        cv.text((xa + xb) / 2, 104.3, lab, size=6.5, color=r["ink"], weight="bold")
-
-
-def panel_b(cv, d):
-    card(cv, 115, 100, 61, 35.4, "Summary availability", "purple", "b")
-    y0, h = 109.6, 12.8
-    qw, qg, qx = 6.2, 1.2, 118.0
-    yq = y0 + h / 2
-    for n in range(3):  # thread the query steps through the gaps only, never behind a chip
-        gx0 = qx + (n + 1) * qw + n * qg
-        cv.line([(gx0, yq), (gx0 + qg, yq)], color=QRY["stroke"], lw=0.6, z=4)
-    for n, q in enumerate(d["qs"]):
-        x = qx + n * (qw + qg)
-        hero = q == d["q"]
-        cv.box(x, yq - 2.7, qw, 5.4, "amber", f"$q_{{{q}}}$", weight="normal", size=6.8,
-               lw=1.0 if hero else 0.55, fill=QRY["soft"] if hero else QRY["fill"], radius=1.0)
-    xe = qx + 4 * qw + 3 * qg
-    cv.text((qx + xe) / 2, 127.2, "query steps", size=6.1, color=QRY["ink"], style="italic")
-    # S3 is absent from K for every query of the chunk
-    hatched(cv, qx, 103.4, xe - qx, 4.2, z=5, lw=0.45)
-    cv.rich((qx + xe) / 2, 105.5, [(r"$S_3\notin\mathbf{K}$", SUM["ink"]), (r"  for $q_9$–$q_{12}$", INK)],
-            size=6.6, ha="center", z=21)
-    # seal boundary, then S3 is finalized from t9-t12
-    xs_ = 152.4
-    cv.line([(xs_, 102.4), (xs_, 128.2)], color=INK, lw=0.7, dashed=True, z=4)
-    cv.text(xs_, 129.8, "seal", size=6.6, weight="bold", color=INK)
-    x3 = 159.0
-    cv.tokens(x3 + 0.05, 125.9, 4, w=1.85, h=1.85, gap=0.37, r="memory", lw=0.4)
-    cv.text(x3 + SW / 2, 129.6, "$t_9$–$t_{12}$", size=6.6, color=LOC["ink"])
-    cv.arrow([(x3 + SW / 2, 125.9), (x3 + SW / 2, y0 + h + 0.85)], color=SUM["stroke"], lw=0.6, head=1.0)
-    slot(cv, x3, y0, "S3", SUM, seed=9, lw=0.9)
-    cv.arrow([(xe, yq), (x3, yq)], color=LINE, lw=0.6, head=1.1)
-    cv.text(x3 + SW / 2, 105.6, "later reads", size=6.1, color=SUM["ink"], style="italic")
-
-
-def panel_c(cv, d, xs):
-    card(cv, 2, 52, 174, 44.4, "Additive causal mask over the bank", "rose", "d")
-    keys, qs, perm = d["keys"], d["qs"], d["perm"]
-    rh, top = 5.6, 83.2
-    cw = SW + 1.0
-    for a_, b_, r, lab in ((0, 1, PRE, "prefix"), (2, 3, SUM, "summaries"), (4, 7, LOC, "local causal block")):
-        xa, xb = xs[a_] - 0.5, xs[b_] + SW + 0.5
-        cv.line([(xa, 88.1), (xb, 88.1)], color=r["mark"], lw=0.9)
-        cv.text((xa + xb) / 2, 90.1, lab, size=6.6, color=r["ink"], weight="bold")
-    for k, x in zip(keys, xs):
-        cv.text(x + SW / 2, 85.7, sub(k), size=7.0, color=kind(k)["ink"])
-    cv.text(xs[-1] + SW + 4.6, 85.7, "reads", size=6.1, color=MUTED, style="italic")
-    for i, q in enumerate(qs):
-        yb = top - (i + 1) * rh
-        hero = q == d["q"]
-        cv.chip(9.0, yb + rh / 2, f"$q_{{{q}}}$", "amber", size=6.8, solid=hero, pad=1.0, h=4.0)
-        for j, (k, x) in enumerate(zip(keys, xs)):
-            cx = x - 0.5
-            if perm[i][j]:
-                cv.ax.add_patch(Rectangle((cx, yb), cw, rh, fc=kind(k)["soft"], ec="white", lw=0.6, zorder=6))
-                cv.text(cx + cw / 2, yb + rh / 2, "$0$", size=6.8, color=kind(k)["ink"])
-            else:
-                hatched(cv, cx + 0.15, yb + 0.15, cw - 0.3, rh - 0.3)
-                cv.text(cx + cw / 2, yb + rh / 2, r"$-\infty$", size=6.6, color=BLK["ink"],
-                        bbox=dict(fc=BLK["fill"], ec="none", pad=0.4))
-        cv.text(xs[-1] + SW + 4.6, yb + rh / 2, f"{sum(perm[i])}", size=6.8, color=INK)
-    # staircase boundary of the local causal block (j <= i)
-    pts = []
-    for i in range(len(qs)):
-        xr = xs[4 + i] + SW + 0.5
-        pts += [(xr, top - i * rh), (xr, top - (i + 1) * rh)]
-    cv.line(pts, color=LOC["ink"], lw=1.1, radius=0, z=9)
-    # q10 row: the worked example
-    i10 = qs.index(d["q"])
-    cv.ax.add_patch(Rectangle((xs[0] - 0.8, top - (i10 + 1) * rh - 0.3), xs[-1] + SW - xs[0] + 1.6, rh + 0.6,
-                              fc="none", ec=QRY["mark"], lw=1.1, zorder=10))
-    # key strip: every glyph of panels (c)-(d) defined once (hatching, staircase edge, circled product)
-    ly, kx0, kx1 = 56.6, xs[0] - 1.6, 110.6
-    cv.ax.add_patch(FancyBboxPatch((kx0, ly - 2.6), kx1 - kx0, 5.2, boxstyle="round,pad=0,rounding_size=1.4",
-                                   fc="white", ec=ROLE["rose"]["stroke"], lw=0.55, ls=(0, (3, 2)), zorder=5))
-    items = [("perm", "$0$ permitted"), ("block", r"$-\infty$ blocked"), ("edge", r"$j\leq i$ edge"),
-             ("op", "product"), ("plus", r"add $\mathbf{M}$")]
-    tw = [4.4 + cv.text_width(t, 6.4) for _, t in items]
-    gap_ = (kx1 - kx0 - 3.0 - sum(tw)) / (len(items) - 1)
-    gx = kx0 + 1.5
-    assert gap_ >= 2.0, gap_
-    for (kd, t), w_ in zip(items, tw):
-        if kd == "perm":
-            for n_, r in enumerate((PRE, SUM, LOC)):
-                cv.ax.add_patch(Rectangle((gx + n_ * 1.15, ly - 1.4), 1.15, 2.8, fc=r["soft"], ec="none", zorder=6))
-        elif kd == "block":
-            hatched(cv, gx, ly - 1.4, 3.4, 2.8)
-        elif kd == "edge":
-            cv.line([(gx, ly), (gx + 3.4, ly)], color=LOC["ink"], lw=1.1)
-        else:
-            cv.op(gx + 1.7, ly, "x" if kd == "op" else "+", d=2.4, lw=0.5)
-        cv.text(gx + 4.4, ly, t, size=6.4, color=INK, ha="left")
-        gx += w_ + gap_
-    # ---- right: the mask definition (the operator chain it feeds is the overview row (c))
-    xR = 116.0
-    cv.line([(xR - 3.0, 55.0), (xR - 3.0, 90.6)], color="#E1E5EA", lw=0.5)
-    xm = (xR + 176.0) / 2
-    cv.rich(xm, 79.0, [(r"$M_{ij}=0$  if  $j\in\{$", INK), (r"$P_0,P_1,$", PRE["ink"]), (r"$S_1,S_2$", SUM["ink"]),
-                       (r"$\}$  or  ", INK), (r"$t_j$ with $j\leq i$", LOC["ink"])], size=6.6, ha="center")
-    cv.text(xm, 73.6, r"$M_{ij}=-\infty$  otherwise", size=6.6, color=INK)
-    cv.text(xm, 66.4, "added to the scaled logits before the row softmax,", size=6.2, color=MUTED, style="italic")
-    cv.text(xm, 63.0, r"so a blocked key gets weight exactly $0$", size=6.2, color=MUTED, style="italic")
-
-
-def striped(cv, x, y, w, h, fills, vertical=False, z=6.5):
-    """Front face of a tensor cuboid split into rows (or columns) coloured per query / key."""
-    n = len(fills)
-    for k, f in enumerate(fills):
-        if vertical:
-            cv.ax.add_patch(Rectangle((x + k * w / n, y), w / n, h, fc=f, ec="white", lw=0.35, zorder=z))
-        else:
-            cv.ax.add_patch(Rectangle((x, y + h - (k + 1) * h / n), w, h / n, fc=f, ec="white", lw=0.35, zorder=z))
-    cv.ax.add_patch(Rectangle((x, y), w, h, fc="none", ec=INK, lw=0.45, zorder=z + 0.1))
-
-
-def panel_ops(cv, d):
-    """Overview row: the masked attention operator on 3-D tensors; A carries the computed q10 weights."""
-    card(cv, 2, 100.5, 174, 31.0, "Masked attention over the bank", "teal", "c")
-    keys, qs, perm = d["keys"], d["qs"], d["perm"]
-    i10 = qs.index(d["q"])
-    roles = [kind(k) for k in keys]
-    y0, h, dep = 105.6, 12.0, 1.6
-    yt, yd = 122.4, 103.0                 # tensor names above, shapes below
-    qrows = [QRY["mark"] if i == i10 else QRY["soft"] for i in range(len(qs))]
-    x = 7.0
-
-    def tensor(w, name, dims, r, fills, vertical=False, nc=None):
-        nonlocal x
-        cv.cuboid(x, y0, w, h, d=dep, r=r, z=6)
-        striped(cv, x, y0, w, h, fills, vertical)
-        cv.text(x + w / 2, yt, name, size=7.4, color=nc or r["ink"])
-        cv.text(x + w / 2, yd, dims, size=6.4, color=MUTED)
-        x += w + dep * 0.77
-
-    def op(sym, wid=5.0):
-        nonlocal x
-        cv.op(x + wid / 2, y0 + h / 2, sym, d=2.8, lw=0.55)
-        x += wid
-
-    def arr(wid, lab=None):
-        nonlocal x
-        cv.arrow([(x + 0.5, y0 + h / 2), (x + wid - 0.5, y0 + h / 2)], head=1.0, lw=0.6)
-        if lab:
-            cv.text(x + wid / 2, y0 + h / 2 + 2.2, lab, size=6.2, color=INK)
-        x += wid
-
-    tensor(6.0, r"$\mathbf{Q}$", r"$4\times d_k$", QRY, qrows)
-    op("x")
-    tensor(17.0, r"$\mathbf{K}^{\!\top}$", r"$d_k\times 8$", BANK, [r_["soft"] for r_ in roles], vertical=True)
-    arr(8.6, r"$/\sqrt{d_k}$")
-    op("+")
-    # M: the real 4x8 additive mask (hatched = -inf)
-    mc = 1.45
-    mini(cv, x, y0 + h / 2 - 2 * mc, 4, 8, lambda i, j: ROLE["rose"]["soft"] if perm[i][j] else None, mc)
-    cv.text(x + 4 * mc, yt, r"$\mathbf{M}$", size=7.4, color=ROLE["rose"]["ink"])
-    cv.text(x + 4 * mc, yd, r"$4\times 8$", size=6.4, color=MUTED)
-    x += 8 * mc
-    arr(4.0)
-    # row softmax as a narrowing projection
-    cv.trap(x, y0, 6.6, h, "teal", narrow="right", ratio=0.7)
-    cv.text(x + 3.0, y0 + h / 2, "softmax", size=6.2, color=ROLE["teal"]["ink"], rotation=90)
-    x += 6.6
-    arr(4.0)
-    # A: 4x8 attention weights; the q10 row is the computed one, the other rows show only their mask
-    cw_, ch_ = 5.9, h / 4
-    ax0 = x + 4.6
-    for i, q in enumerate(qs):
-        cv.text(ax0 - 0.8, y0 + h - (i + 0.5) * ch_, f"$q_{{{q}}}$", size=5.9, color=QRY["ink"], ha="right")
-    cv.cuboid(ax0, y0, 8 * cw_, h, d=dep, r="amber", z=5)
-    for i in range(len(qs)):
-        for j in range(8):
-            cx, cy = ax0 + j * cw_, y0 + h - (i + 1) * ch_
-            if i == i10:
-                continue
-            if perm[i][j]:
-                cv.ax.add_patch(Rectangle((cx, cy), cw_, ch_, fc=roles[j]["fill"], ec="white", lw=0.4, zorder=6))
-            else:
-                hatched(cv, cx, cy, cw_, ch_, z=6, lw=0.3)
-    a_row = d["a"] + [0.0] * (8 - len(d["a"]))
-    win = max(range(8), key=lambda j: a_row[j])
-    cv.num_matrix(ax0, y0 + h - (i10 + 1) * ch_, [a_row], cell=cw_, ch=ch_, r="amber", fmt="{:.3f}",
-                  size=5.9, hi=[(0, win)], vmin=0.0, vmax=max(a_row), z=6.6)
-    cv.ax.add_patch(Rectangle((ax0, y0), 8 * cw_, h, fc="none", ec=INK, lw=0.45, zorder=7))
-    # right edge stops inside the front face so the frame never spills onto the cuboid's side face
-    cv.ax.add_patch(Rectangle((ax0 - 0.3, y0 + h - (i10 + 1) * ch_ - 0.25), 8 * cw_ + 0.3 - 0.18, ch_ + 0.5,
-                              fc="none", ec=QRY["mark"], lw=1.0, zorder=7.2))
-    cv.text(ax0 + 4 * cw_, yt, r"$\mathbf{A}$", size=7.4, color=QRY["ink"])
+    BY, BH = 93.4, 9.0
     for j, k in enumerate(keys):
-        cv.text(ax0 + (j + 0.5) * cw_, y0 + h + 2.4, sub(k), size=5.9, color=roles[j]["ink"])
-    cv.text(ax0 + 4 * cw_, yd, r"$4\times 8$;  only the $q_{10}$ row is computed", size=6.2, color=MUTED,
-            style="italic")
-    x = ax0 + 8 * cw_ + dep * 0.77
-    op("x", 4.6)
-    tensor(5.6, r"$\mathbf{V}$", r"$8\times d_v$", BANK, [r_["soft"] for r_ in roles])
-    arr(4.0)
-    tensor(5.6, r"$\mathbf{O}$", r"$4\times d_v$", QRY, qrows)
-    # hero: the q10 output row
-    o = d["out"]
-    cv.box(x + 0.6, y0 + 2.0, 176.0 - 2.2 - x - 0.6, h - 4.0, "amber", fill=QRY["mark"], stroke=QRY["ink"],
-           lw=0.6, radius=1.2, z=6)
-    cv.text((x + 174.4) / 2 + 0.3, y0 + h / 2 + 1.7, r"$\mathbf{o}_{10}$", size=7.2, color="white", weight="bold", z=8)
-    cv.text((x + 174.4) / 2 + 0.3, y0 + h / 2 - 1.8, f"$({o[0]:.4f},{o[1]:.4f})$", size=5.9, color="white", z=8)
-    cv.rich(89.0, 126.2 - 0.4, [(r"$\mathbf{A}=\mathrm{rowsoftmax}($", INK), (r"$\mathbf{Q}$", QRY["ink"]),
-                                (r"$\mathbf{K}^{\!\top}$", BANK["ink"]), (r"$/\sqrt{d_k}\,+\,$", INK),
-                                (r"$\mathbf{M}$", ROLE["rose"]["ink"]), (r"$)$,", INK),
-                                (r"$\ \ \mathbf{O}=\mathbf{A}$", INK), (r"$\mathbf{V}$", BANK["ink"])],
-            size=7.0, ha="center")
-    assert x < 160.0, x
+        slot(cv, xs[j] + 0.5, BY, CW - 1.0, BH, grp[k], k, seed=j)
+        if k in d["summaries"]:  # the finished chunk each summary stands for
+            cover = d["summaries"][k]
+            tw, tg = 2.3, 0.25
+            tx = xs[j] + (CW - len(cover) * tw - (len(cover) - 1) * tg) / 2
+            cv.tokens(tx, 104.9, len(cover), w=tw, h=3.0, r="neutral", gap=tg, labels=[f"t{i}" for i in cover], size=5.8)
+            cv.arrow([(xs[j] + CW / 2, 104.9), (xs[j] + CW / 2, BY + BH)], lw=0.65, head=1.2)
+    cv.text(26.3, 100.5, "Cache slots", size=6.8, weight="bold", ha="right")
+    cv.text(26.3, 97.7, "key | value each", size=5.9, style="italic", color=MUTED, ha="right")
+    cv.text(26.3, 94.9, r"$\mathbf{K}$: 8$\times$$d_k$   $\mathbf{V}$: 8$\times$$d_v$", size=6.5, ha="right")
 
+    MT, RH = 91.0, 5.5
+    for i, q in enumerate(qs):
+        y = MT - (i + 1) * RH
+        hot = i == d["row"]
+        cv.box(17.0, y + 0.65, 9.0, RH - 1.3, QRY if hot else "neutral", f"q{q}", size=6.6, radius=0.9,
+               fill=amber["mark"] if hot else None, title_color="white" if hot else None, name=f"q{q}")
+        for j, k in enumerate(keys):
+            if d["permitted"][i][j]:
+                cell(cv, xs[j], y, CW, RH, grp[k], "0", strong=True)
+            else:
+                hatch(cv, xs[j], y, CW, RH)
+                cv.text(xs[j] + CW / 2, y + RH / 2, "−∞", size=6.5, color="#59616D", z=7,
+                        bbox=dict(fc=HATCH_FC, ec="none", pad=0.5))
+        cv.text(XR + 4.4, y + RH / 2, f"{d['counts'][i]} keys", size=6.2, color=amber["ink"] if hot else MUTED,
+                weight="bold" if hot else "normal")
+    cv.text(XR + 4.4, MT + 1.6, "readable", size=5.9, style="italic", color=MUTED)
+    cv.solids.append((xs[0], MT - len(qs) * RH, XR - xs[0], len(qs) * RH, "mask matrix", None))
+    yh = MT - (d["row"] + 1) * RH
+    cv.ax.add_patch(Rectangle((xs[0] - 0.35, yh - 0.05), XR - xs[0] + 0.7, RH + 0.1, fc="none", ec=amber["mark"],
+                              lw=1.3, zorder=9))
+    cv.text(7.0, MT - len(qs) * RH / 2, r"mask $\mathbf{M}$ (4 $\times$ 8)", size=6.4, rotation=90, color=INK)
 
-def lift(cv, dy):
-    """Move everything drawn so far up by dy mm (frees the band for the overview row).
-    ponytail: covers the artist kinds this script draws (patches, lines, texts) and the chip audit list."""
-    from matplotlib.transforms import Affine2D
-    for p in cv.ax.patches:
-        p.set_transform(Affine2D().translate(0, dy) + cv.ax.transData)
-    for ln in cv.ax.lines:
-        ln.set_ydata([y + dy for y in ln.get_ydata()])
-    for t in cv.ax.texts:
-        x, y = t.get_position()
-        t.set_position((x, y + dy))
-    cv.chips[:] = [(x, y + dy, w, h, s, reg and (reg[0], reg[1] + dy, reg[2], reg[3] + dy))
-                   for x, y, w, h, s, reg in cv.chips]
-    assert not cv.ax.collections and not cv.ax.images
+    cv.text(GX, 64.8, r"$\mathbf{A}=\mathrm{rowsoftmax}(\mathbf{Q}\mathbf{K}^{\top}/\sqrt{d_k}+\mathbf{M})$,"
+            r"   $\mathbf{O}=\mathbf{A}\mathbf{V}$", size=6.9, ha="left")
+    lx = 82.5
+    for n, g in enumerate(order):
+        cv.ax.add_patch(Rectangle((lx + n * 1.5, 63.5), 1.5, 2.6, fc=ROLE[g]["soft"], ec=ROLE[g]["stroke"], lw=0.4, zorder=6))
+    cv.text(lx + 5.3, 64.8, "0: permitted", size=6.0, ha="left", color=INK)
+    hatch(cv, lx + 19.5, 63.5, 3.4, 2.6)
+    cv.text(lx + 23.7, 64.8, "−∞: blocked", size=6.0, ha="left", color=INK)
 
+    # ============================== (b) summary availability ===================================
+    BX, BW = 123.0, 53.5
+    cv.section(BX, AY, BW, AH, SUM, "Summary availability", letter="b")
+    s3 = d["s3"]
+    seal, tw, tg, tx0 = 152.6, 5.8, 0.7, 125.6
+    cv.text(tx0 + (4 * tw + 3 * tg) / 2, 110.9, "chunk 3 open", size=6.8, weight="bold", color=ROLE[LOC]["ink"])
+    cv.text((seal + BX + BW) / 2 + 2.6, 110.9, "sealed", size=6.8, weight="bold", color=ROLE[SUM]["ink"])
+    cv.line([(seal, 69.8), (seal, 108.6)], color="#3A4250", lw=0.8, dashed=True)
+    cv.tab(seal - 3.6, 108.6, 7.2, 3.6, "neutral", "seal", size=6.2, solid=True)
+    cv.text(tx0, 106.6, "query step", size=5.9, style="italic", color=MUTED, ha="left")
+    for n, q in enumerate(qs):
+        hot = n == d["row"]
+        cv.box(tx0 + n * (tw + tg), 100.6, tw, 4.2, QRY if hot else "neutral", f"q{q}", size=6.2, radius=0.9,
+               fill=amber["mark"] if hot else None, title_color="white" if hot else None)
+    cv.text(tx0, 97.3, "local keys written", size=5.9, style="italic", color=MUTED, ha="left")
+    cv.tokens(tx0, 91.2, 4, w=tw, h=4.2, r=LOC, gap=tg, labels=[f"t{i}" for i in s3["covers"]], size=6.2)
+    cv.text(tx0, 87.9, f"summary {s3['id']}", size=5.9, style="italic", color=MUTED, ha="left")
+    gx1 = tx0 + 4 * tw + 3 * tg
+    cv.box(tx0, 80.0, gx1 - tx0, 6.0, SUM, fill="white", dashed=True, radius=1.0, lw=0.7)
+    cv.icon_lock(tx0 + 3.2, 83.0, 2.8, color=ROLE[SUM]["stroke"])
+    cv.text(tx0 + 5.6, 83.0, f"{s3['id']} withheld", size=6.6, weight="bold", color=ROLE[SUM]["ink"], ha="left")
+    cv.text(tx0, 76.8, f"{s3['id']} $\\notin$ key bank for q{qs[0]}–q{qs[-1]}", size=6.0, ha="left")
+    # sealing: the four local keys are summarised into S3 (the summariser itself is unspecified -> neutral)
+    cv.arrow([(gx1, 93.3), (155.4, 93.3)], lw=0.7, head=1.3)
+    cv.trap(155.4, 90.3, 11.0, 6.0, "neutral", narrow="right", title="summarize", size=5.9)
+    sx = 165.0
+    cv.arrow([(166.4, 93.3), (sx + 4.8, 93.3), (sx + 4.8, 87.0)], lw=0.7, head=1.3, color=ROLE[SUM]["mark"])
+    slot(cv, sx, 78.0, 9.6, 9.0, SUM, s3["id"], seed=9)
+    zc = (seal + BX + BW) / 2
+    cv.text(zc, 75.4, f"covers t{s3['covers'][0]}–t{s3['covers'][-1]}", size=6.0)
+    cv.text(zc, 72.6, "eligible for later reads", size=6.0, color=ROLE[SUM]["ink"], weight="bold")
+    cv.arrow([(tx0, 66.6), (BX + BW - 2.4, 66.6)], color=MUTED, lw=0.6, head=1.3)
+    cv.text(BX + BW - 2.6, 64.3, "time", size=5.9, style="italic", color=MUTED, ha="right")
 
-def panel_d(cv, d, xs):
-    card(cv, 2, 2, 174, 46.4, r"Worked readout for query $q_{10}$", "amber", "e")
-    keys = d["keys"]
-    n = len(d["allowed"])
-    cw = SW + 1.0
-    yid, yl, base, yv, ya1, ya2 = 41.0, 36.8, 22.2, 18.4, 14.4, 10.8
-    k_bar = 9.0 / max(d["a"])
-    lx = 4.0
-    cv.text(lx, yl, r"$\ell_j+M_{10,j}$", size=6.6, ha="left")
-    cv.text(lx, base + 5.0, r"weight $a_j$", size=6.6, ha="left")
-    cv.text(lx, yv, r"value $\mathbf{v}_j$", size=6.6, ha="left")
-    cv.text(lx, (ya1 + ya2) / 2, r"$a_j\mathbf{v}_j$", size=6.6, ha="left")
-    cv.line([(xs[0] - 1.0, base), (xs[-1] + SW + 1.0, base)], color="#9AA0A8", lw=0.5)
-    for j, (k, x) in enumerate(zip(keys, xs)):
-        r, cx = kind(k), x + SW / 2
-        cv.text(cx, yid, sub(k), size=7.0, color=r["ink"])
-        if j < n:
-            cv.text(cx, yl, f"${d['logits'][j]}$", size=6.8, color=INK)
-            hb = d["a"][j] * k_bar
-            cv.box(cx - 2.6, base, 5.2, hb, r, fill=r["mark"], stroke=r["ink"], lw=0.4, radius=0.25, z=6)
-            cv.text(cx, base + hb + 1.5, f"{d['a'][j]:.4f}", size=6.2, color=r["ink"])
-            v = d["vals"][j]
-            cv.text(cx, yv, f"$({v[0]},\\,{v[1]})$", size=6.6, color=INK)
-            # a_j v_j as a 2x1 numeric column on the amber ramp; the largest term per output dim is bold-bordered
-            c2 = d["contrib"][j]
-            hi = [(r_, 0) for r_ in (0, 1) if c2[r_] == max(cc[r_] for cc in d["contrib"])]
-            cv.num_matrix(x - 0.5, ya2 - 1.8, [[c2[0]], [c2[1]]], cell=cw, ch=3.6, r="amber", fmt="{:.4f}",
-                          size=6.2, hi=hi, vmin=CMIN, vmax=CMAX, lw=0.6)
+    # ============================== (c) worked read for q10 ====================================
+    CY, CH = 1.5, 54.5
+    cv.section(AX, CY, W - 2 * AX, CH, QRY, f"Worked read for q{qs[d['row']]}", letter="c")
+    allowed = d["permitted"][d["row"]]
+    it = iter(range(K))
+    col = [next(it) if p else None for p in allowed]  # column -> index into the six permitted keys
+
+    # row 0: which key each column is
+    cv.box(9.0, 48.1, 9.0, 4.2, QRY, f"q{qs[d['row']]}", size=6.6, radius=0.9, fill=amber["mark"], title_color="white")
+    for j, k in enumerate(keys):
+        c = ROLE[grp[k]]
+        cv.ax.add_patch(FancyBboxPatch((xs[j] + 0.5, 48.4), CW - 1.0, 3.6, boxstyle="round,pad=0,rounding_size=0.9",
+                                       fc=c["soft"] if allowed[j] else "white", ec=c["stroke"], lw=0.5, zorder=6))
+        cv.text(xs[j] + CW / 2, 50.15, k, size=6.3, weight="bold", color=c["ink"] if allowed[j] else MUTED, z=7)
+    cv.text(26.3, 50.2, "key", size=6.4, ha="right")
+    # the mask row of q10 feeds this panel
+    cv.arrow([(17.0, yh + RH / 2), (13.5, yh + RH / 2), (13.5, 52.3)], color=amber["mark"], lw=0.95, head=1.5)
+
+    # row 1: scaled logits + mask
+    L0, LH = 42.6, 5.0
+    for j, k in enumerate(keys):
+        if allowed[j]:
+            cell(cv, xs[j], L0, CW, LH, grp[k], f"{d['logits'][col[j]]:.1f}", strong=True)
         else:
-            hatched(cv, x - 0.5 + 0.15, yl - 2.0, cw - 0.3, 4.0)
-            cv.text(cx, yl, r"$-\infty$", size=6.6, color=BLK["ink"], bbox=dict(fc=BLK["fill"], ec="none", pad=0.4))
-            cv.text(cx, base + 1.5, "0", size=6.4, color=BLK["ink"])
-            for yy in (yv, ya1, ya2):
-                cv.text(cx, yy, "–", size=6.4, color=BLK["ink"])
-    # column brackets for the value vector pair
-    bx0, bx1 = xs[0] - 1.6, xs[-1] + SW + 1.6
-    for xx, s in ((bx0, 1), (bx1, -1)):
-        cv.line([(xx + s * 0.6, ya1 + 2.0), (xx, ya1 + 2.0), (xx, ya2 - 2.0), (xx + s * 0.6, ya2 - 2.0)],
-                color="#9AA0A8", lw=0.5, radius=0)
-    # sums
-    xS = xs[-1] + SW + 6.0
-    cv.text(xS, yid, r"$\Sigma$", size=7.2, color=INK)
-    cv.text(xS, base + 1.6, "$1$", size=6.6, color=INK)
-    for yy, c in ((ya1, d["out"][0]), (ya2, d["out"][1])):
-        cv.text(xS, yy, f"{c:.4f}", size=6.6, color=QRY["ink"], weight="bold")
-    cv.rich(lx, 5.2, [(r"$a_j=\exp(\ell_j)/Z,\quad Z=\Sigma_j\exp(\ell_j)=$", INK),
-                      (f"${d['Z']:.5f}$", INK)], size=6.6)
-    # ---- right: 2-D value space with the hero output vector
-    xR = 116.0
-    cv.line([(xR - 3.0, 4.0), (xR - 3.0, 42.6)], color="#E1E5EA", lw=0.5)
-    cv.rich(145.0, 39.6, [(r"$\mathbf{o}_{10}=\Sigma_j\, a_j\mathbf{v}_j=$", QRY["ink"]),
-                          (f"$({d['out'][0]:.6f},\\,{d['out'][1]:.6f})$", QRY["ink"], "bold")], size=7.4, ha="center")
-    u, ox, oy = 10.5, 135.0, 9.0
-    P = lambda v1, v2: (ox + u * v1, oy + u * v2)  # noqa: E731
-    gl = "#E6E9ED"
-    for t in (-1, 1, 2):
-        cv.line([P(t, -0.05), P(t, 2.25)], color=gl, lw=0.45, z=2)
-    for t in (1, 2):
-        cv.line([P(-1.3, t), P(2.35, t)], color=gl, lw=0.45, z=2)
-    cv.arrow([P(-1.35, 0), P(2.45, 0)], color="#9AA0A8", lw=0.55, head=1.0)
-    cv.arrow([P(0, -0.12), P(0, 2.4)], color="#9AA0A8", lw=0.55, head=1.0)
-    for t in (-1, 1, 2):
-        cv.text(*P(t, -0.2), f"${t}$", size=6.0, color=MUTED, va="top")
-    for t in (1, 2):
-        cv.text(ox - 1.8, oy + u * t, f"${t}$", size=6.0, color=MUTED, ha="right")
-    cv.text(*P(2.55, 0), r"$v_1$", size=6.6, color=MUTED, ha="left")
-    cv.text(ox + 1.0, oy + u * 2.4, r"$v_2$", size=6.6, color=MUTED, ha="left")
-    off = {"P0": (0.0, 0.17, "center"), "P1": (0.12, 0.0, "left"), "S1": (0.12, 0.0, "left"),
-           "S2": (-0.12, 0.0, "right"), "t9": (0.0, 0.17, "center"), "t10": (0.12, 0.0, "left")}
-    for k, v, a in zip(d["allowed"], d["vals"], d["a"]):
-        r = kind(k)
-        cv.line([P(0, 0), P(*v)], color=r["stroke"], lw=0.35, z=4, alpha=0.45)  # light: o10 runs near the S1 spoke
-        cv.dot(*P(*v), color=r["mark"], d=1.4, z=9)
+            hatch(cv, xs[j], L0, CW, LH)
+            cv.text(xs[j] + CW / 2, L0 + LH / 2, "−∞", size=6.5, color="#59616D", z=7,
+                    bbox=dict(fc=HATCH_FC, ec="none", pad=0.5))
+    cv.text(26.3, L0 + LH / 2, r"logit $\ell$ + mask", size=6.4, ha="right")
+
+    # row 2: softmax weights as bars on a common zero baseline
+    B0, BMAX = 29.0, 8.6
+    top = max(d["w"])
+    cv.ax.plot([xs[0], XR], [B0, B0], color="#9AA0A8", lw=0.6, zorder=5)
+    for j, k in enumerate(keys):
+        c = ROLE[grp[k]]
+        if allowed[j]:
+            a = d["w"][col[j]]
+            bh = BMAX * a / top
+            cv.ax.add_patch(Rectangle((xs[j] + 1.9, B0), CW - 3.8, bh, fc=c["mark"], ec=c["ink"], lw=0.4, zorder=6))
+            cv.text(xs[j] + CW / 2, B0 + bh + 1.45, num(a), size=6.3, color=c["ink"], weight="bold")
+        else:
+            cv.text(xs[j] + CW / 2, B0 + 1.45, "0", size=6.3, color=MUTED)
+    cv.text(26.3, 34.6, r"weight $a = e^{\ell}/Z$", size=6.5, ha="right")
+    cv.text(26.3, 31.6, f"$Z$ = {d['Z']:.2f}", size=6.0, ha="right", color=MUTED)
+    cv.text(XR + 1.4, 31.2, r"$\sum a = 1$", size=6.2, ha="left", color=MUTED)
+
+    # rows 3-4: value vectors and weighted vectors (two components each)
+    V0, A0, SH = 18.6, 8.2, 3.8
+    for j, k in enumerate(keys):
+        for comp in range(2):
+            yv, ya = V0 + (1 - comp) * SH, A0 + (1 - comp) * SH
+            if allowed[j]:
+                cell(cv, xs[j] + 2.4, yv, CW - 4.8, SH, grp[k], num(d["values"][col[j]][comp], 0), size=6.4)
+                cell(cv, xs[j] + 0.5, ya, CW - 1.0, SH, grp[k], num(d["contrib"][col[j]][comp]), size=6.3)
+            else:
+                hatch(cv, xs[j] + 2.4, yv, CW - 4.8, SH, dashed=True)
+                hatch(cv, xs[j] + 0.5, ya, CW - 1.0, SH, dashed=True)
+    cv.text(26.3, V0 + SH, r"value $\mathbf{v}$", size=6.4, ha="right")
+    cv.text(26.3, A0 + SH, r"weighted $a\,\mathbf{v}$", size=6.4, ha="right")
+    for comp in range(2):
+        cv.text(XR + 1.4, V0 + (1.5 - comp) * SH, f"$v_{comp + 1}$", size=6.5, ha="left", color=MUTED)
+    cv.solids.append((xs[0], A0, XR - xs[0], 2 * SH, "weighted-value row", None))
+    ym = A0 + SH
+    ox = XR + 8.6
+    cv.arrow([(XR - 0.5, ym), (XR + 2.7, ym)], color=amber["mark"], lw=0.9, head=1.3)
+    cv.op(XR + 4.4, ym, "Σ", r=QRY, d=3.4)
+    cv.arrow([(XR + 6.1, ym), (ox, ym)], color=amber["mark"], lw=0.9, head=1.3)
+    for comp in range(2):
+        cv.ax.add_patch(Rectangle((ox, A0 + (1 - comp) * SH), 9.0, SH, fc=amber["soft"], ec=amber["mark"], lw=0.8, zorder=6))
+        cv.text(ox + 4.5, A0 + (1.5 - comp) * SH - 0.05, num(d["out"][comp]), size=6.6, weight="bold", color=amber["ink"], z=7)
+    cv.solids.append((ox, A0, 9.0, 2 * SH, "o10", None))
+    cv.text(ox + 4.5, A0 + 2 * SH + 1.7, f"o{qs[d['row']]}", size=6.8, weight="bold", color=amber["ink"])
+
+    cv.chip(3.6, 4.5, "ILLUSTRATIVE VALUES", "neutral", size=5.8, ha="left")
+    cv.text(XR, 4.5, f"masked {', '.join(d['I']['example']['masked_keys'])}: weight 0, value not instantiated",
+            size=5.9, style="italic", color=MUTED, ha="right")
+
+    # value space: the six permitted values, marker area = weight, o10 = their weighted mean
+    S, PX, PY, V1, V2 = 11.2, 135.0, 11.4, (-1.25, 2.25), (-0.3, 2.3)
+    P = lambda a, b: (PX + (a - V1[0]) * S, PY + (b - V2[0]) * S)  # noqa: E731
+    x0, y0 = P(V1[0], V2[0])
+    x1, y1 = P(V1[1], V2[1])
+    cv.ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fc="white", ec="none", zorder=3))
+    for t in range(-1, 3):
+        gx = P(t, 0)[0]
+        cv.ax.plot([gx, gx], [y0, y1], color="#E3E6EA" if t else "#B7BDC6", lw=0.5 if t else 0.7, zorder=3.1)
+        cv.ax.plot([gx, gx], [y0, y0 - 0.9], color="#9AA0A8", lw=0.6, zorder=4)
+        cv.text(gx, y0 - 2.4, num(t, 0), size=6.0, color="#4A5059")
+    for t in range(0, 3):
+        gy = P(0, t)[1]
+        cv.ax.plot([x0, x1], [gy, gy], color="#E3E6EA" if t else "#B7BDC6", lw=0.5 if t else 0.7, zorder=3.1)
+        cv.ax.plot([x0, x0 - 0.9], [gy, gy], color="#9AA0A8", lw=0.6, zorder=4)
+        cv.text(x0 - 1.6, gy, num(t, 0), size=6.0, color="#4A5059", ha="right")
+    cv.ax.plot([x0, x0, x1], [y1, y0, y0], color="#9AA0A8", lw=0.6, zorder=4)
+    cv.text(x1, y0 - 2.4, "$v_1$", size=6.5, ha="right")
+    cv.text(x0 - 1.6, y1 - 0.6, "$v_2$", size=6.5, ha="right")
+    o = P(*d["out"])
+    off = {"P0": (2.6, 2.4, "left"), "P1": (-2.6, 0, "right"), "S1": (2.6, 0.6, "left"), "S2": (0, 3.2, "center"),
+           "t9": (0, 3.3, "center"), "t10": (2.8, 0, "left")}
+    for j, k in enumerate(keys):
+        if not allowed[j]:
+            continue
+        c, a = ROLE[grp[k]], d["w"][col[j]]
+        px, py = P(*d["values"][col[j]])
+        area = 9.5 * a / top  # mm^2: marker area is proportional to the weight
+        kw = dict(fc=c["mark"], ec="white", lw=0.5, zorder=7)
+        if grp[k] == PRE:
+            s = math.sqrt(area)
+            cv.ax.add_patch(Rectangle((px - s / 2, py - s / 2), s, s, **kw))
+        elif grp[k] == SUM:
+            s = math.sqrt(4 * area / math.sqrt(3))
+            hh = s * math.sqrt(3) / 2
+            cv.ax.add_patch(Polygon([(px - s / 2, py - hh / 3), (px + s / 2, py - hh / 3), (px, py + 2 * hh / 3)], **kw))
+        else:
+            cv.ax.add_patch(Circle((px, py), math.sqrt(area / math.pi), **kw))
         dx, dy, ha = off[k]
-        cv.text(*P(v[0] + dx, v[1] + dy), sub(k), size=6.6, color=r["ink"], ha=ha,
-                va="bottom" if dy else "center")
-    o = d["out"]
-    cv.arrow([P(0, 0), P(*o)], color=QRY["mark"], lw=1.3, head=1.6, z=10)
-    cv.text(*P(0.2, 0.66), r"$\mathbf{o}_{10}$", size=7.2, color=QRY["ink"], ha="center", va="center",
-            weight="bold")
-    cv.text(*P(2.45, 2.2), r"value space, $d_v=2$", size=6.5, color=MUTED, style="italic", ha="right")
+        cv.text(px + dx, py + dy, k, size=6.3, weight="bold", color=c["ink"], ha=ha)
+    org = P(0, 0)
+    for q in ((o[0], org[1]), (org[0], o[1])):  # o10's two coordinates, dropped onto the zero axes
+        cv.ax.plot([o[0], q[0]], [o[1], q[1]], color=amber["mark"], lw=0.5, ls=(0, (2, 1.5)), zorder=5)
+    cv.arrow([org, o], color=amber["mark"], lw=1.1, head=1.6, z=8)
+    cv.ax.add_patch(Circle(o, 0.95, fc=amber["mark"], ec="white", lw=0.5, zorder=9))
+    cv.text(o[0] + 2.6, o[1] - 2.3, f"o{qs[d['row']]}", size=6.8, weight="bold", color=amber["ink"], ha="left")
+    cv.text(x0 - 3.6, 51.0, r"Value space ($d_v$ = 2)", size=6.9, weight="bold", ha="left")
+    cv.rich(x0 - 3.6, 45.6, [(r"$\mathbf{o}_{10}=\Sigma_j\,a_j\mathbf{v}_j$ = ", INK),
+                             (f"({num(d['out'][0])}, {num(d['out'][1])})", amber["ink"], "bold")], size=6.9,
+            va="baseline")
+    cv.text(x1, 4.5, r"marker area $\propto$ weight $a$", size=5.9, style="italic", color=MUTED, ha="right")
+    return cv
+
+
+def build(inputs=DATA / "inputs.json", checks=DATA / "numerical_checks.json"):
+    return draw(derive(inputs, checks))
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--inputs", default=os.path.join(E_DIR, "inputs.json"))
-    ap.add_argument("--checks", default=None, help="numerical_checks.json (default: next to --inputs)")
-    ap.add_argument("--out", default="out")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--out", default="figures/attention")
+    ap.add_argument("--inputs", default=str(DATA / "inputs.json"))
+    ap.add_argument("--checks", default=str(DATA / "numerical_checks.json"))
     a = ap.parse_args()
-    inp = json.load(open(a.inputs))
-    chk = json.load(open(a.checks or os.path.join(os.path.dirname(a.inputs), "numerical_checks.json")))
-    d = compute(inp, chk)
-    matplotlib.rcParams["hatch.linewidth"] = 0.35
-    cv = Canvas(W, H + ROW, family="serif", size=7.0)
-    xs = col_x(d["keys"])
-    panel_a(cv, d, xs)
-    panel_b(cv, d)
-    lift(cv, ROW)          # top row moves up; the overview row (c) takes the freed band
-    panel_ops(cv, d)
-    panel_c(cv, d, xs)
-    panel_d(cv, d, xs)
-    assert CMIN <= min(min(c) for c in d["contrib"]) and max(max(c) for c in d["contrib"]) <= CMAX
+    cv = build(a.inputs, a.checks)
     assert not cv.overlaps(), cv.overlaps()
     assert not cv.text_overlaps(), cv.text_overlaps()
     assert not cv.wire_crossings(), cv.wire_crossings()
-    print("\n".join(cv.save(os.path.join(a.out, "causal_cache_attention"))))
+    print("\n".join(cv.save(os.path.join(a.out, "attention"))))
 
 
 if __name__ == "__main__":

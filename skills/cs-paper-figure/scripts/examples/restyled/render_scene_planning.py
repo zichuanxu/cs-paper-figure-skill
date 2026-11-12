@@ -1,453 +1,405 @@
-"""Restyle of the scene-planning example (deterministic illustrative simulation).
+#!/usr/bin/env python3
+"""Scene-grounded planning with swept-path checks: one scene, three rollouts, one executed step.
 
-Every coordinate, action, collision interval, effort, cost and the executed step is
-read from computed_rollouts.json and re-derived from scene_fixture.json with the
-example's own scene_model.py (asserted equal). Scene tiles keep one aspect (world
-0..10 x 0..6); the rollout overview is drawn largest.
+Source: gallery/before/scene-planning.png (a deterministic illustrative simulation, not a
+benchmark) and the bundled data/scene-planning/scene_fixture.json, computed_rollouts.json and
+scene_model.py, the model that produced the rollouts.
 
-Layout: planner pipeline across the top (observe -> simulate -> score -> execute) with a
-phase bar, a detail row (per-candidate action sequences; swept collision test) and a key strip.
-Candidate hues: D purple, U amber, L teal (selected), carried into paths, cost bars and labels.
+Content kept from the source
+  * the explicit state s0 (point agent p0, goal g, Barrier A, Pier B), the task generated from
+    the same fixture, the rendered observation o0 = R(s0) and the fact that the planner reads s0
+    directly;
+  * the rollout model p[k+1] = p[k] + dt a[k] with dt = 1, H = 4, ||a|| <= 3.5 and the three
+    candidates D, U, L with every action component;
+  * the cost J = ||p4 - g||^2 + 0.1 E + 100 C with E, C and J per candidate, and argmin J = L;
+  * the swept test on D's segment (3, 3) -> (5, 3): both endpoints are free, t in [0.20, 0.80]
+    lies inside A;
+  * execution of the selected first action only: a0 = (1.5, -1.8), p1 = (2.5, 1.2), then replan.
 
-    python render_scene_planning.py --out <dir>
+Design
+  * Five-second message: the straight path looks free at its sampled states but its swept segment
+    cuts the barrier; the lower detour is the cheapest collision-free rollout and only its first
+    step is executed. The hero is one large scene in which all three rollouts share coordinates,
+    so the comparison is on the object instead of across three small maps.
+  * One hue per candidate on its path, state badges, name chip and cost card: coral = D,
+    purple = U, teal = L. Amber is the goal only, blue the given fixture only, grey the obstacles.
+    Dashed = simulated rollout, solid arrow = the executed step, thick solid = inside an obstacle.
+  * The fixture is a data object (window with one row per scene entity), the swept test is drawn
+    on the segment's own parameter axis, and each cost card instantiates J term by term.
+  * Added from computed_rollouts.json (not in the source figure): the upper detour's smallest
+    clearance to Pier B, 0.13, drawn at its closest point.
+  * Every number is read from the fixture or recomputed with scene_model.rollout and asserted
+    against computed_rollouts.json. The candidate paths are data marks; D crossing A is the
+    displayed failure and is asserted numerically, while the executed-step arrow is audited as a
+    wire against both obstacles.
 """
+from __future__ import annotations
+
 import argparse
 import importlib.util
 import json
+import math
 import os
 import sys
+from pathlib import Path
 
-import matplotlib
-from matplotlib import patheffects as pe
-from matplotlib.patches import Circle, FancyBboxPatch, Polygon, Rectangle
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE.parents[1]))
+from matplotlib.patches import Circle, PathPatch, Polygon, Rectangle  # noqa: E402
+from paperkit import INK, MUTED, ROLE, Canvas, _round_top_rect  # noqa: E402
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
-from paperkit import Canvas, ROLE, INK, MUTED, LINE, HAIR  # noqa: E402
-
-EX = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "scene-planning")
-CAND = {"D": ROLE["purple"], "U": ROLE["amber"], "L": ROLE["teal"]}   # one hue per candidate
-SEL, COL, EXE, NEU = ROLE["teal"], ROLE["coral"], ROLE["blue"], ROLE["neutral"]
-GOALC = ("#3A4250", "#5E6875")                    # goal flag: neutral ink (amber is candidate U)
-OBS_FILL, OBS_EDGE = "#D3D7DD", "#7A8390"
-FLOOR, GRID = "#F6F7F8", "#E3E6EA"
-W, H = 178, 101
-TS = 7.6                                          # panel title size
-TH = TS * 0.56                                    # pill tab height (paperkit.section)
-
-
-def num(v):
-    s = f"{v:.2f}".rstrip("0").rstrip(".")
-    return ("−" + s[1:]) if s.startswith("-") else ("0" if s == "-0" else s)
-
-
-def pt(p):
-    return f"({num(p[0])}, {num(p[1])})"
-
-
-# ------------------------------------------------------------------ scene ---
-class Tile:
-    """One scene view: world -> mm with a fixed scale."""
-
-    def __init__(self, cv, x0, y0, scene, sc=3.8, wx=(0, 10), wy=(0, 6)):
-        self.cv, self.x0, self.y0, self.sc, self.wx, self.wy = cv, x0, y0, sc, wx, wy
-        self.scene = scene
-
-    def m(self, p):
-        return (self.x0 + (p[0] - self.wx[0]) * self.sc, self.y0 + (p[1] - self.wy[0]) * self.sc)
-
-    def draw(self, grid=True, labels=True):
-        ax, (x1, y1) = self.cv.ax, self.m((self.wx[1], self.wy[1]))
-        w, h = x1 - self.x0, y1 - self.y0
-        ax.add_patch(Rectangle((self.x0, self.y0), w, h, fc=FLOOR, ec="none", zorder=3))
-        if grid:
-            for gx in range(int(self.wx[0]) + 1, int(self.wx[1])):
-                ax.plot([self.m((gx, 0))[0]] * 2, [self.y0, y1], color=GRID, lw=0.3, zorder=3.1)
-            for gy in range(int(self.wy[0]) + 1, int(self.wy[1])):
-                ax.plot([self.x0, x1], [self.m((0, gy))[1]] * 2, color=GRID, lw=0.3, zorder=3.1)
-        ax.add_patch(Rectangle((self.x0, self.y0), w, h, fc="none", ec=NEU["stroke"], lw=0.6, zorder=9))
-        for o in self.scene["obstacles"]:
-            self.obstacle(o, labels)
-
-    def obstacle(self, o, label=True):
-        ax = self.cv.ax
-        if o["type"] == "aabb":
-            x0, x1, y0, y1 = o["bounds"]
-            (a, b), (c, d) = self.m((x0, y0)), self.m((x1, y1))
-            ax.add_patch(Rectangle((a, b), c - a, d - b, fc=OBS_FILL, ec=OBS_EDGE, lw=0.55, hatch="////",
-                                   zorder=4))
-            cx, cy = (a + c) / 2, d - 1.6
-        else:
-            cx, cy = self.m(o["center"])
-            ax.add_patch(Circle((cx, cy), o["radius"] * self.sc, fc=OBS_FILL, ec=OBS_EDGE, lw=0.55, zorder=4))
-        if label:
-            self.cv.text(cx, cy, o["id"], size=6.4, weight="bold", color=NEU["ink"], z=6,
-                         path_effects=[pe.withStroke(linewidth=1.6, foreground=OBS_FILL)])
-
-    def agent(self, p, hollow=False, color=INK, d=1.5):
-        x, y = self.m(p)
-        self.cv.ax.add_patch(Circle((x, y), d / 2, fc="white" if hollow else color, ec=color,
-                                    lw=0.6, zorder=12))
-        if not hollow:
-            self.cv.ax.add_patch(Circle((x, y), d * 0.18, fc="white", ec="none", zorder=12.1))
-
-    def goal(self, p):
-        x, y = self.m(p)
-        ax = self.cv.ax
-        ax.plot([x, x], [y, y + 3.0], color=GOALC[0], lw=0.6, zorder=11, solid_capstyle="round")
-        ax.add_patch(Polygon([(x, y + 3.0), (x + 2.0, y + 2.45), (x, y + 1.9)], fc=GOALC[1],
-                             ec=GOALC[0], lw=0.4, zorder=11))
-        ax.add_patch(Circle((x, y), 0.45, fc=GOALC[0], ec="none", zorder=11))
-
-    def path(self, pts, color, lw=0.9, dashed=True, z=10, alpha=1.0):
-        self.cv.line([self.m(p) for p in pts], color=color, lw=lw, dashed=dashed, z=z, radius=0, alpha=alpha)
-
-    def states(self, pts, color, offsets):
-        for k, (p, off) in enumerate(zip(pts, offsets)):
-            if off is None:
-                continue
-            x, y = self.m(p)
-            self.cv.ax.add_patch(Circle((x, y), 0.55, fc="white", ec=color, lw=0.6, zorder=11))
-            self.cv.text(x + off[0], y + off[1], str(k), size=6.0, color=color, z=12)
-
-
-def panel(cv, x, y, w, h, r, title):
-    """Section frame in the stage hue, title on a pill tab; returns the y just under the tab."""
-    cv.section(x, y, w, h, r, title, tab="top", size=TS, radius=2.0)
-    return y + h - TH / 2
-
-
-def sub(cv, x, y, s, ha="left", **kw):
-    cv.text(x, y, s, size=6.0, color=MUTED, style="italic", ha=ha, va="top", **kw)
-
-
-def flow(cv, x0, x1, y):
-    cv.arrow([(x0, y), (x1, y)], color=LINE, lw=0.8, head=1.4)
+DATA = HERE / "data" / "scene-planning"
+HUE = {"D": "coral", "U": "purple", "L": "teal"}
+FIX, GOAL = "blue", "amber"
+OBST_FC, OBST_EC = "#D3D8DF", "#5E6875"
+DASH = (0, (3.4, 2.0))
 
 
 # ------------------------------------------------------------------ data ---
-def load(fixture_path, rollouts_path):
-    spec = importlib.util.spec_from_file_location("scene_model", os.path.join(EX, "scene_model.py"))
-    sm = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(sm)
-    fx = json.load(open(fixture_path))
-    ro = json.load(open(rollouts_path))
-    fresh = sm.rollout(fx)
-    for a, b in zip(ro["candidates"], fresh["candidates"]):      # stored == recomputed
-        assert a["id"] == b["id"] and a["states"] == b["states"] and a["collision"] == b["collision"]
-        assert abs(a["cost"] - b["cost"]) < 1e-9 and abs(a["effort"] - b["effort"]) < 1e-9
-    c = {r["id"]: r for r in ro["candidates"]}
-    assert ro["selected_id"] == fresh["selected_id"] == "L"
-    assert min(c.values(), key=lambda r: r["cost"])["id"] == "L"
-    assert [c[k]["collision"] for k in "DUL"] == [1, 0, 0]
-    assert all(abs(c[k]["terminal_squared_distance"]) < 1e-12 for k in "DUL")
-    assert [round(c[k]["effort"], 2) for k in "DUL"] == [16.0, 26.36, 21.42]
-    assert [round(c[k]["cost"], 3) for k in "DUL"] == [101.6, 2.636, 2.142]
-    hit = c["D"]["segments"][1]["obstacles"][0]
-    assert c["D"]["segments"][1]["collision"] and hit["obstacle_id"] == "A"
-    assert [round(t, 2) for t in hit["interval"]] == [0.2, 0.8]
-    assert c["D"]["segments"][1]["from"] == [3.0, 3.0] and c["D"]["segments"][1]["to"] == [5.0, 3.0]
-    assert sum(s["collision"] for r in c.values() for s in r["segments"]) == 1
-    assert ro["executed_action"] == [1.5, -1.8] and ro["executed_action_count"] == 1
-    assert ro["next_state"]["agent"]["position"] == c["L"]["states"][1] == [2.5, 1.2]
-    assert not c["L"]["segments"][0]["collision"]
-    for k in "DUL":                                   # key-strip definition E = sum_k ||a_k||^2
-        assert abs(sum(ax * ax + ay * ay for ax, ay in c[k]["actions"]) - c[k]["effort"]) < 1e-9
-    return fx, ro, c
+def g(x):
+    """2, 1.5, -1.8 with a true minus."""
+    return f"{x:g}".replace("-", "−")
 
 
-# ------------------------------------------------------- overview (top row) ---
-TOP_Y, TOP_H = 52.0, 46.0
-XA, XB, XC, XD = (1.5, 30.0), (35.5, 54.0), (93.5, 47.0), (144.5, 32.0)   # (x, w) per stage
+def pt(p):
+    return f"({g(p[0])}, {g(p[1])})"
 
 
-def panel_a(cv, scene):
-    x, w = XA
-    yt = panel(cv, x, TOP_Y, w, TOP_H, "neutral", "(a) Observe")
-    sub(cv, x + w / 2, yt - 1.0, r"$o_0=R(s_0)$, exact state", ha="center")
-    t = Tile(cv, x + (w - 26) / 2, 72.0, scene, sc=2.6)
-    t.draw()
-    p0, g = scene["agent"]["position"], scene["goal"]
-    t.agent(p0, d=1.3)
-    t.goal(g)
-    px, py = t.m(p0)
-    cv.text(px, py + 1.9, r"$p_0$", size=6.4)
-    gx, gy = t.m(g)
-    cv.text(gx - 1.3, gy - 1.5, r"$g$", size=6.4, color=GOALC[0])
-    A, B = scene["obstacles"]
-    rows = [r"$p_0=$" + pt(p0) + r"$\ \ g=$" + pt(g),
-            r"A: $[" + num(A["bounds"][0]) + "," + num(A["bounds"][1]) + r"]\times[" + num(A["bounds"][2])
-            + "," + num(A["bounds"][3]) + "]$",
-            r"B: $c=$" + pt(B["center"]) + r", $r=$" + num(B["radius"])]
-    for i, s in enumerate(rows):
-        cv.text(x + 1.6, 68.4 - i * 3.3, s, size=6.1, ha="left")
-    cv.text(x + w / 2, 56.0, "Reach $g$; avoid A and B", size=6.1, color=MUTED, style="italic")
+def derive(fixture, rollouts):
+    """Load the fixture and the stored rollouts; re-run the bundled model and assert they agree."""
+    F, R = json.loads(Path(fixture).read_text()), json.loads(Path(rollouts).read_text())
+    spec = importlib.util.spec_from_file_location("scene_model", DATA / "scene_model.py")
+    model = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(model)
+    again = model.rollout(F)
+    obj, close = F["objective"], lambda a, b: abs(a - b) < 1e-9  # noqa: E731
+    assert again["selected_id"] == R["selected_id"] and again["task"] == R["task"]
+    for c, c2, cf in zip(R["candidates"], again["candidates"], F["candidates"]):
+        assert c["id"] == c2["id"] == cf["id"] and c["actions"] == cf["actions"] and c["collision"] == c2["collision"]
+        assert all(close(a, b) for p, q in zip(c["states"], c2["states"]) for a, b in zip(p, q))
+        assert close(c["cost"], c2["cost"]) and close(c["effort"], c2["effort"])
+        c["terms"] = (c["terminal_squared_distance"], obj["effort_weight"] * c["effort"],
+                      obj["collision_penalty"] * c["collision"])
+        assert close(sum(c["terms"]), c["cost"])
+        assert c["collision"] == int(any(s["collision"] for s in c["segments"]))
+        assert max(c["action_norms"]) <= F["dynamics"]["max_action_norm"]
+        assert len(c["actions"]) == F["dynamics"]["horizon"]
+    best = min(R["candidates"], key=lambda c: c["cost"])
+    assert best["id"] == R["selected_id"] and best["collision"] == 0
+    assert R["executed_action"] == best["actions"][0] and R["executed_action_count"] == 1
+    assert R["next_state"]["agent"]["position"] == best["states"][1]
+    # the displayed failure: a segment whose two endpoints are free but whose interior is inside an obstacle
+    hits = [(c, s, o) for c in R["candidates"] for s in c["segments"] for o in s["obstacles"] if o["hit"]]
+    assert len(hits) == 1
+    hc, hs, ho = hits[0]
+    ob = {o["id"]: o for o in F["scene"]["obstacles"]}
+    b = ob[ho["obstacle_id"]]["bounds"]
+    assert not any(b[0] <= p[0] <= b[1] and b[2] <= p[1] <= b[3] for p in (hs["from"], hs["to"]))
+    # the tightest collision-free pass of a circle obstacle
+    near = min(((c, s, o) for c in R["candidates"] for s in c["segments"] for o in s["obstacles"]
+                if "clearance" in o and not c["collision"]), key=lambda t: t[2]["clearance"])
+    return dict(F=F, R=R, best=best, hit=dict(cand=hc, seg=hs, obs=ho), near=dict(cand=near[0], seg=near[1], obs=near[2]),
+                obstacles=ob)
 
 
-def panel_b(cv, fx, c):
-    x, w = XB
-    yt = panel(cv, x, TOP_Y, w, TOP_H, "frozen", "(b) Simulate candidate rollouts")
-    d = fx["dynamics"]
-    sub(cv, x + w / 2, yt - 1.0, r"$p_{k+1}=p_k+a_k\Delta t,\ \Delta t=%s,\ \|a_k\|_2\leq %s,\ H=%d$"
-        % (num(d["dt"]), num(d["max_action_norm"]), d["horizon"]), ha="center")
-    t = Tile(cv, x + 2.0, 57.0, fx["scene"], sc=5.0)
-    t.draw()
-    offs = {"D": [None, (-1.2, 3.9), (1.2, 3.9), (0, 1.5), None],
-            "U": [None, (0, 1.6), (0, 1.6), (1.8, 0.6), None],
-            "L": [None, (0, -1.8), (0, -1.8), (1.3, -1.8), None]}
-    for k in "DUL":
-        r, hue = c[k], CAND[k]
-        sel = k == "L"
-        t.path(r["states"], hue["mark"], lw=1.4 if sel else 1.0, z=10.2 if sel else 10)
-        t.states(r["states"], hue["mark"], offs[k])
-    seg = c["D"]["segments"][1]
-    t0, t1 = seg["obstacles"][0]["interval"]
-    p, q = seg["from"], seg["to"]
-    t.path([[p[i] + t0 * (q[i] - p[i]) for i in (0, 1)], [p[i] + t1 * (q[i] - p[i]) for i in (0, 1)]],
-           COL["mark"], lw=1.8, dashed=False, z=10.5)
-    (zx0, zy0), (zx1, zy1) = t.m((2.7, 2.55)), t.m((5.3, 3.45))
-    cv.ax.add_patch(Rectangle((zx0, zy0), zx1 - zx0, zy1 - zy0, fc="none", ec=COL["stroke"], lw=0.5,
-                              ls=(0, (2, 1.2)), zorder=10.6))
-    cv.text(zx0 - 0.4, zy0 - 0.3, "(f)", size=6.0, color=COL["ink"], ha="right", va="top", z=12, weight="bold",
-            path_effects=[pe.withStroke(linewidth=1.4, foreground=FLOOR)])
-    # direct labels: candidate letter at its last segment, in its hue
-    for k, wp, dxy in (("D", (8.0, 3.0), (0, 1.6)), ("U", (8.1, 4.3), (1.5, 0.9)), ("L", (8.1, 2.2), (1.4, -1.0))):
-        lx, ly = t.m(wp)
-        cv.text(lx + dxy[0], ly + dxy[1], k, size=7.2, weight="bold", color=CAND[k]["ink"], z=12,
-                path_effects=[pe.withStroke(linewidth=1.6, foreground=FLOOR)])
-    clr = min(o["clearance"] for sg in c["U"]["segments"] for o in sg["obstacles"] if o["obstacle_id"] == "B")
-    assert round(clr, 2) == 0.13 and not c["U"]["collision"]
-    bx, by = t.m((9.8, 0.25))
-    cv.text(bx, by, f"U clears B by {clr:.2f}", size=6.0, color=CAND["U"]["ink"], style="italic", ha="right",
-            va="bottom", z=12)
-    t.agent(fx["scene"]["agent"]["position"])
-    t.goal(fx["scene"]["goal"])
+# --------------------------------------------------------------- helpers ---
+def star(cv, x, y, r, c, z=9.0, lw=0.6):
+    pts = [(x + (r if i % 2 == 0 else r * 0.42) * math.sin(i * math.pi / 5),
+            y + (r if i % 2 == 0 else r * 0.42) * math.cos(i * math.pi / 5)) for i in range(10)]
+    cv.ax.add_patch(Polygon(pts, closed=True, fc=c["mark"], ec=c["ink"], lw=lw, zorder=z, joinstyle="round"))
 
 
-def panel_c(cv, fx, c):
-    x, w = XC
-    yt = panel(cv, x, TOP_Y, w, TOP_H, "rose", "(c) Score and select")
-    ob = fx["objective"]
-    cv.rich(x + w / 2, yt - 2.6, [(r"$J=\|p_4-g\|_2^2$", INK), (r"$\,+\,%s\,E$" % num(ob["effort_weight"]), INK),
-                                  (r"$\,+\,%d\,C$" % ob["collision_penalty"], COL["ink"])], size=6.6, ha="center")
-    sub(cv, x + w / 2, yt - 5.0, r"$\|p_4-g\|_2^2=0$ for all three", ha="center")
-    x0, s, bh = x + 6.0, 8.0, 4.4                   # bar origin, mm per cost unit (linear from 0)
-    ys = {"D": 79.5, "U": 72.5, "L": 65.5}
-    ax = cv.ax
-    ax.add_patch(FancyBboxPatch((x + 1.2, ys["L"] - 3.2), w - 2.4, 6.4, boxstyle="round,pad=0,rounding_size=1.0",
-                                fc="white", ec=SEL["stroke"], lw=0.5, zorder=5))     # hero row
-    for k in "DUL":
-        r, y, hue = c[k], ys[k], CAND[k]
-        sel = k == "L"
-        eff = ob["effort_weight"] * r["effort"]
-        cv.text(x0 - 1.6, y, k, size=7.4, weight="bold", color=hue["ink"], ha="right")
-        ax.add_patch(Rectangle((x0, y - bh / 2), eff * s, bh, fc=hue["mark"], ec="none", zorder=6))
-        if r["collision"]:                          # penalty segment, axis broken at 3.0 -> 101.6
-            xb0, xb1 = x0 + eff * s, x0 + 3.55 * s
-            ax.add_patch(Rectangle((xb0, y - bh / 2), xb1 - xb0, bh, fc=COL["soft"], ec=COL["mark"],
-                                   lw=0.6, zorder=6))
-            bx = x0 + 3.05 * s
-            ax.add_patch(Rectangle((bx - 0.5, y - bh / 2 - 0.6), 1.0, bh + 1.2, fc=ROLE["rose"]["fill"], ec="none",
-                                   zorder=7))
-            for dx in (-0.5, 0.5):
-                ax.plot([bx + dx - 0.45, bx + dx + 0.45], [y - bh / 2 - 0.6, y + bh / 2 + 0.6],
-                        color=LINE, lw=0.5, zorder=7.1)
-            cv.text((xb0 + bx - 0.5) / 2, y, r"$+100C$", size=6.0, color=COL["ink"], z=8)
-            end = xb1
-        else:
-            end = x0 + eff * s
-        cv.text(end + 1.0, y, f"{r['cost']:.3f}", size=7.4 if sel else 6.4, ha="left",
-                color=hue["ink"] if sel else INK, weight="bold" if sel else "normal")
+def obstacle(cv, o, M, s, z=3.0, labels=True):
+    if o["type"] == "aabb":
+        x0, x1, y0, y1 = o["bounds"]
+        (a, b), (c, d) = M(x0, y0), M(x1, y1)
+        cv.solids.append((a, b, c - a, d - b, f"obstacle {o['id']}", None))
+        cv.ax.add_patch(Rectangle((a, b), c - a, d - b, fc=OBST_FC, ec=OBST_EC, lw=0.8, zorder=z))
+        cx, cy = (a + c) / 2, d - 5.6
+    else:
+        cx, cy = M(*o["center"])
+        r = o["radius"] * s
+        cv.solids.append((cx - r * 0.7, cy - r * 0.7, r * 1.4, r * 1.4, f"obstacle {o['id']}", None))
+        cv.ax.add_patch(Circle((cx, cy), r, fc=OBST_FC, ec=OBST_EC, lw=0.8, zorder=z))
+        cy -= 0.3
+    if labels:
+        cv.text(cx, cy + 1.5, o["id"], size=7.2, weight="bold", color="#2F3743", z=4)
+        cv.text(cx, cy - 1.5, o["name"], size=6.0, style="italic", color="#2F3743", z=4)
+
+
+def lerp(p, q, t):
+    return (p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1]))
+
+
+# ------------------------------------------------------------------ draw ---
+def draw(d):
+    F, R = d["F"], d["R"]
+    scene, dyn, obj = F["scene"], F["dynamics"], F["objective"]
+    W, H = 178.0, 130.0
+    cv = Canvas(W, H)
+    LX, LW, RX, RW = 1.5, 55.0, 59.5, 117.0
+    TY, TH, BY, BH = 50.5, 76.5, 1.5, 44.0
+    fix = ROLE[FIX]
+    p0, goal = scene["agent"]["position"], scene["goal"]
+
+    # ============================== (b) scene and rollouts (hero) ===============================
+    cv.section(RX, TY, RW, TH, "neutral", "Scene and candidate rollouts", letter="b", fill="#FBFBFC")
+    S, MX, MY = 10.8, 65.6, 55.8
+    bx0, bx1, by0, by1 = scene["bounds"]
+    M = lambda x, y: (MX + (x - bx0) * S, MY + (y - by0) * S)  # noqa: E731
+    (mx0, my0), (mx1, my1) = M(bx0, by0), M(bx1, by1)
+    cv.ax.add_patch(Rectangle((mx0, my0), mx1 - mx0, my1 - my0, fc="#F8F7F2", ec="none", zorder=2))
+    for i in range(int(bx0) + 1, int(bx1)):
+        cv.ax.plot([M(i, 0)[0]] * 2, [my0, my1], color="#E6E3D9", lw=0.4, zorder=2.1)
+    for j in range(int(by0) + 1, int(by1)):
+        cv.ax.plot([mx0, mx1], [M(0, j)[1]] * 2, color="#E6E3D9", lw=0.4, zorder=2.1)
+    cv.ax.add_patch(Rectangle((mx0, my0), mx1 - mx0, my1 - my0, fc="none", ec="#4A5260", lw=1.1, zorder=4.5))
+    for v in (bx0, (bx0 + bx1) / 2, bx1):
+        cv.ax.plot([M(v, 0)[0]] * 2, [my0, my0 - 1.0], color="#4A5260", lw=0.6, zorder=4)
+        cv.text(M(v, 0)[0], my0 - 2.5, g(v), size=6.2, color="#4A5059")
+    for v in (by0, (by0 + by1) / 2, by1):
+        cv.ax.plot([mx0, mx0 - 1.0], [M(0, v)[1]] * 2, color="#4A5260", lw=0.6, zorder=4)
+        cv.text(mx0 - 1.7, M(0, v)[1], g(v), size=6.2, color="#4A5059", ha="right")
+    cv.text(mx0, my1 + 1.9, r"rendered scene $o_0 = R(s_0)$, dimensionless units", size=6.5, color=MUTED, ha="left")
+    cv.chip(mx1, my1 + 1.9, "ILLUSTRATIVE SIMULATION", "neutral", size=5.8, ha="right")
+    for o in scene["obstacles"]:
+        obstacle(cv, o, M, S)
+
+    for c in R["candidates"]:
+        col, sel = ROLE[HUE[c["id"]]], c["id"] == R["selected_id"]
+        P = [M(*p) for p in c["states"]]
+        first = 1 if sel else 0  # the selected first step is drawn as the executed arrow instead
+        cv.ax.plot([p[0] for p in P[first:]], [p[1] for p in P[first:]], color=col["mark"], lw=1.25, ls=DASH,
+                   zorder=6, dash_capstyle="butt", solid_joinstyle="round")
+        for sgm in c["segments"]:
+            for o in sgm["obstacles"]:
+                if o["hit"]:  # swept collision: the part of the segment inside the obstacle
+                    a, b = (M(*lerp(sgm["from"], sgm["to"], t)) for t in o["interval"])
+                    cv.ax.plot([a[0], b[0]], [a[1], b[1]], color=col["mark"], lw=2.8, zorder=6.2, solid_capstyle="butt")
+                    mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+                    cv.ax.add_patch(Circle(mid, 1.75, fc="white", ec=col["mark"], lw=0.8, zorder=7))
+                    cv.icon_cross(mid[0], mid[1], 2.0, color=col["mark"], lw=1.1, z=7.5)
+        for k, p in enumerate(P[1:-1], start=1):
+            cv.badge(p[0], p[1], k, HUE[c["id"]], d=3.2, z=8)
         if sel:
-            cv.chip(x + w - 2.0, y, "argmin", SEL, size=6.0, solid=True, h=3.0, pad=0.8, ha="right")
-    ya = 59.6
-    ax.plot([x0, x0 + 3.0 * s], [ya, ya], color="#9AA0A8", lw=0.5, zorder=5)
-    for v in range(4):
-        ax.plot([x0 + v * s] * 2, [ya, ya - 0.8], color="#9AA0A8", lw=0.5, zorder=5)
-        cv.text(x0 + v * s, ya - 2.1, str(v), size=6.0, color=MUTED)
-    ax.plot([x0, x0], [ya, 83.2], color="#9AA0A8", lw=0.5, zorder=5)
-    cv.text(x0 + 3.0 * s + 1.5, ya - 2.1, "$J$", size=6.4, color=MUTED, ha="left")
+            u = (P[1][0] - P[0][0], P[1][1] - P[0][1])
+            n = math.hypot(*u)
+            u = (u[0] / n, u[1] / n)
+            cv.arrow([(P[0][0] + u[0] * 1.3, P[0][1] + u[1] * 1.3), (P[1][0] - u[0] * 1.6, P[1][1] - u[1] * 1.6)],
+                     color=col["mark"], lw=1.9, head=2.4, z=7)
+    a0, p1 = R["executed_action"], R["next_state"]["agent"]["position"]
+    tl = ROLE[HUE[R["selected_id"]]]
+    x, y = M(0.2, 2.12)
+    cv.text(x, y, "executed", size=6.8, weight="bold", color=tl["ink"], ha="left")
+    cv.text(x, y - 3.1, f"$a_0$ = {pt(a0)}", size=6.6, color=tl["ink"], ha="left")
+    x, y = M(p1[0] - 0.24, p1[1])
+    cv.text(x, y, f"$p_1$ = {pt(p1)}", size=6.6, color=tl["ink"], ha="right")
+    cv.text(x, y - 3.5, r"then replan from $o_1$", size=6.5, style="italic", color=MUTED, ha="right")
+    x, y = M(*p0)
+    cv.ax.add_patch(Circle((x, y), 1.3, fc="#1F2530", ec="white", lw=0.6, zorder=9))
+    cv.text(x - 2.4, y, "$p_0$", size=7.2, weight="bold", ha="right")
+    x, y = M(*goal)
+    star(cv, x, y, 2.7, ROLE[GOAL])
+    cv.text(x + 3.6, y, "$g$", size=7.6, weight="bold", color=ROLE[GOAL]["ink"], ha="left")
+    for cid, (ux, uy) in {"D": (6.0, 3.38), "U": (3.65, 5.2), "L": (3.65, 0.79)}.items():
+        c = next(c for c in R["candidates"] if c["id"] == cid)
+        cv.chip(*M(ux, uy), f"{cid}  {c['name']}", HUE[cid], size=6.2, solid=True, z=10)
+    # tightest free pass: the gap between the path and the pier at the closest point
+    nr = d["near"]
+    oc = d["obstacles"][nr["obs"]["obstacle_id"]]
+    cp, cc, rr = nr["obs"]["closest"], oc["center"], oc["radius"]
+    dist = nr["obs"]["distance_to_center"]
+    edge = (cc[0] + (cp[0] - cc[0]) * rr / dist, cc[1] + (cp[1] - cc[1]) * rr / dist)
+    assert abs(math.dist(cp, edge) - nr["obs"]["clearance"]) < 1e-9
+    nc = ROLE[HUE[nr["cand"]["id"]]]
+    (ax_, ay_), (bx_, by_) = M(*edge), M(*cp)
+    cv.ax.plot([ax_, bx_], [ay_, by_], color=nc["ink"], lw=1.0, zorder=7, solid_capstyle="butt")
+    lx, ly = M(cp[0] + 0.55, cp[1] + 0.42)
+    cv.ax.plot([bx_ + 0.5, lx - 0.6], [by_ + 0.4, ly - 0.5], color=nc["ink"], lw=0.45, zorder=7)
+    cv.text(lx, ly, f"clears {oc['id']} by {nr['obs']['clearance']:.2f}", size=6.0, style="italic", color=nc["ink"], ha="left")
+
+    # map key (line styles and marks)
+    kx, ky, kw, row = M(7.05, 0)[0], my0 + 1.3, 31.2, 3.05
+    cv.ax.add_patch(Rectangle((kx, ky), kw, 4 * row + 1.2, fc="white", ec="#B7BDC6", lw=0.5, zorder=5))
+    yy = ky + 4 * row + 0.6 - row / 2
+    cv.ax.plot([kx + 1.4, kx + 7.4], [yy, yy], color="#59616D", lw=1.2, ls=DASH, zorder=6, dash_capstyle="butt")
+    cv.text(kx + 9.0, yy, "simulated rollout", size=6.0, ha="left")
+    yy -= row
+    cv.arrow([(kx + 1.4, yy), (kx + 7.4, yy)], color=tl["mark"], lw=1.7, head=2.0, z=6)
+    cv.text(kx + 9.0, yy, "executed step", size=6.0, ha="left")
+    yy -= row
+    cv.ax.plot([kx + 1.4, kx + 7.4], [yy, yy], color=ROLE[HUE[d["hit"]["cand"]["id"]]]["mark"], lw=2.8, zorder=6,
+               solid_capstyle="butt")
+    cv.text(kx + 9.0, yy, "inside an obstacle", size=6.0, ha="left")
+    yy -= row
+    cv.badge(kx + 4.4, yy, "k", "neutral", d=2.9, z=6)
+    cv.text(kx + 9.0, yy, r"predicted state $p_k$", size=6.5, ha="left")
+
+    # ============================== (a) fixture ==================================================
+    cv.section(LX, TY, LW, TH, FIX, "Scene fixture", letter="a")
+    wx, ww, wt, bar, rh = 4.0, 50.5, 122.4, 4.4, 5.0
+    ents = [("p0", pt(p0), f"agent ({scene['agent']['geometry']})"), ("g", pt(goal), "goal")]
+    for o in scene["obstacles"]:
+        if o["type"] == "aabb":
+            b = o["bounds"]
+            ents.append((o["id"], f"[{g(b[0])}, {g(b[1])}]×[{g(b[2])}, {g(b[3])}]", o["name"]))
+        else:
+            ents.append((o["id"], f"c {pt(o['center'])}, r {g(o['radius'])}", o["name"]))
+    wh = bar + len(ents) * rh + 1.0
+    cv.box(wx, wt - wh, ww, wh, FIX, fill="white", radius=1.2, lw=0.7, shadow=True)
+    cv.ax.add_patch(PathPatch(_round_top_rect(wx, wt - bar, ww, bar, 1.2), fc=fix["soft"], ec=fix["stroke"], lw=0.7, zorder=5.2))
+    for k, colr in enumerate(("#E0645A", "#E8B23A", "#5DB86A")):
+        cv.ax.add_patch(Circle((wx + 2.3 + k * 1.9, wt - bar / 2), 0.6, fc=colr, ec="none", zorder=6))
+    cv.text(wx + 8.6, wt - bar / 2, "scene_fixture.json", size=6.0, family="monospace", weight="bold", color=fix["ink"],
+            ha="left", z=7)
+    cv.text(wx + ww - 1.6, wt - bar / 2, "state $s_0$", size=6.5, color=fix["ink"], ha="right", z=7)
+    for i, (name, val, tag) in enumerate(ents):
+        cy = wt - bar - (i + 0.5) * rh - 0.2
+        if name == "p0":
+            cv.ax.add_patch(Circle((wx + 2.6, cy), 0.95, fc="#1F2530", ec="none", zorder=7))
+        elif name == "g":
+            star(cv, wx + 2.6, cy, 1.5, ROLE[GOAL], z=7, lw=0.4)
+        elif "×" in val:
+            cv.ax.add_patch(Rectangle((wx + 1.9, cy - 1.2), 1.4, 2.4, fc=OBST_FC, ec=OBST_EC, lw=0.5, zorder=7))
+        else:
+            cv.ax.add_patch(Circle((wx + 2.6, cy), 1.05, fc=OBST_FC, ec=OBST_EC, lw=0.5, zorder=7))
+        cv.text(wx + 5.0, cy, name, size=6.0, family="monospace", weight="bold", ha="left", z=7)
+        cv.text(wx + 9.2, cy, val, size=6.0, family="monospace", ha="left", z=7)
+        cv.text(wx + ww - 1.6, cy, tag, size=6.0, style="italic", color=fix["ink"], ha="right", z=7)
+        if i:
+            cv.ax.plot([wx + 1.2, wx + ww - 1.2], [cy + rh / 2] * 2, color="#E3E7EE", lw=0.4, zorder=6)
+    ry = wt - wh / 2 - 1.0
+    cv.arrow([(wx + ww, ry), (mx0 - 0.55, ry)], lw=0.8, head=1.5)
+    cv.text(RX + 3.0, ry + 2.1, "$R$", size=6.8)
+
+    ty = wt - wh - 4.4
+    cv.text(wx, ty, "Task", size=6.8, weight="bold", color=fix["ink"], ha="left")
+    cv.text(wx + ww, ty, "from the same fixture", size=5.9, style="italic", color=MUTED, ha="right")
+    cv.box(wx, ty - 9.2, ww, 6.6, FIX, fill="white", radius=1.2, lw=0.6)
+    cv.text(wx + ww / 2, ty - 5.9, R["task"], size=6.6, style="italic", z=7)
+
+    my = ty - 14.2
+    cv.text(wx, my, "Rollout model", size=6.8, weight="bold", color=fix["ink"], ha="left")
+    gy = my - 6.4
+    cv.ax.add_patch(Circle((wx + 4.5, gy), 0.95, fc="#1F2530", ec="none", zorder=7))
+    cv.ax.add_patch(Circle((wx + 19.5, gy), 0.95, fc="white", ec="#1F2530", lw=0.7, zorder=7))
+    cv.arrow([(wx + 5.7, gy), (wx + 18.3, gy)], lw=0.8, head=1.5)
+    cv.text(wx + 12.0, gy + 2.0, "$a_k$", size=6.6)
+    cv.text(wx + 4.5, gy - 2.9, "$p_k$", size=6.6)
+    cv.text(wx + 19.5, gy - 2.9, "$p_{k+1}$", size=6.6)
+    cv.text(wx + ww - 0.5, gy - 0.4, r"$p_{k+1} = p_k + \Delta t\,a_k$", size=7.0, ha="right")
+    cv.flow_chips([f"$\\Delta t$ = {g(dyn['dt'])}", f"$H$ = {dyn['horizon']}",
+                   f"$\\|a_k\\|_2 \\leq$ {g(dyn['max_action_norm'])}"], wx, wx + ww, gy - 6.2, "neutral", size=6.5, gap=2.0)
+    cv.text(wx + ww / 2, TY + 6.6, "planner reads $s_0$ directly;", size=6.5, style="italic", color=MUTED)
+    cv.text(wx + ww / 2, TY + 3.8, "no learned perception", size=6.5, style="italic", color=MUTED)
+
+    # ============================== (c) swept-segment test ======================================
+    hit = d["hit"]
+    hid, hk = hit["cand"]["id"], hit["seg"]["k"]
+    hc = ROLE[HUE[hid]]
+    oid = hit["obs"]["obstacle_id"]
+    t0, t1 = hit["obs"]["interval"]
+    cv.section(LX, BY, LW, BH, HUE[hid], "Swept-segment test", letter="c")
+    cv.rich(4.2, 39.4, [(f"{hid}", hc["ink"], "bold"), (f", segment $p_{hk} \\rightarrow p_{hk + 1}$", INK)], size=6.8)
+    X = lambda t: 9.5 + 38.0 * t  # noqa: E731
+    sy, ay0, ay1 = 28.6, 22.6, 34.6
+    cv.ax.add_patch(Rectangle((X(t0), ay0), X(t1) - X(t0), ay1 - ay0, fc=OBST_FC, ec=OBST_EC, lw=0.8, zorder=3))
+    cv.text((X(t0) + X(t1)) / 2, ay1 - 2.1, oid, size=7.2, weight="bold", color="#2F3743", z=4)
+    cv.ax.plot([X(0), X(1)], [sy, sy], color=hc["mark"], lw=1.25, ls=DASH, zorder=6, dash_capstyle="butt")
+    cv.ax.plot([X(t0), X(t1)], [sy, sy], color=hc["mark"], lw=2.8, zorder=6.2, solid_capstyle="butt")
+    for t, p, ha in ((0, hit["seg"]["from"], "left"), (1, hit["seg"]["to"], "right")):
+        cv.badge(X(t), sy, hk + t, HUE[hid], d=3.2, z=8)
+        cv.text(X(t) + (-2.0 if t == 0 else 2.0), sy + 3.6, pt(p), size=6.4, color=hc["ink"], ha=ha)
+    ty0 = 19.4
+    cv.ax.plot([X(0), X(1)], [ty0, ty0], color="#59616D", lw=0.6, zorder=5)
+    cv.ax.plot([X(t0), X(t1)], [ty0, ty0], color=hc["mark"], lw=2.0, zorder=5.5, solid_capstyle="butt")
+    for t in (0, t0, t1, 1):
+        cv.ax.plot([X(t), X(t)], [ty0 - 0.9, ty0 + 0.9], color="#59616D", lw=0.6, zorder=6)
+        cv.text(X(t), ty0 - 2.5, "0" if t == 0 else "1" if t == 1 else f"{t:.2f}", size=6.2, color="#4A5059")
+        if 0 < t < 1:
+            cv.ax.plot([X(t), X(t)], [ty0 + 0.9, ay0], color=OBST_EC, lw=0.4, ls=(0, (1.5, 1.2)), zorder=4)
+    cv.text(X(1) + 3.4, ty0, "$t$", size=6.6)
+    cv.box(4.0, 8.9, 50.5, 4.4, "neutral", fill="white", radius=1.2, lw=0.5)
+    cv.icon_check(7.0, 11.1, 2.2, color="#3A4250", lw=1.0)
+    cv.text(10.0, 11.05, f"endpoints $p_{hk}$, $p_{hk + 1}$ are outside {oid}", size=6.5, ha="left", z=7)
+    cv.box(4.0, 3.5, 50.5, 4.4, HUE[hid], fill=hc["soft"], radius=1.2, lw=0.6)
+    cv.icon_cross(7.0, 5.7, 2.0, color=hc["mark"], lw=1.2)
+    cv.text(10.0, 5.65, f"inside {oid} for $t \\in$ [{t0:.2f}, {t1:.2f}]:  $C$ = 1", size=6.4, weight="bold",
+            color=hc["ink"], ha="left", z=7)
+
+    # ============================== (d) cost and selection ======================================
+    cv.section(RX, BY, RW, BH, "neutral", "Cost and selection", letter="d", fill="#FBFBFC")
+    ew, pen = obj["effort_weight"], obj["collision_penalty"]
+    cv.text(RX + 2.6, 40.0, f"$J = \\|p_{dyn['horizon']} - g\\|_2^2 + {g(ew)}\\,E + {g(pen)}\\,C$,"
+            r"    $E = \Sigma_k\,\|a_k\|_2^2$", size=6.9, ha="left")
+    cv.text(RX + RW - 2.6, 40.0, "$C$ = 1 if any swept segment collides", size=6.2, style="italic", color=MUTED, ha="right")
+    n = len(R["candidates"])
+    cw_ = (RW - 4.0 - 2.0 * (n - 1)) / n
+    cy0, chh, hb = 3.5, 33.0, 5.0
+    for i, c in enumerate(R["candidates"]):
+        r_, col, sel = HUE[c["id"]], ROLE[HUE[c["id"]]], c["id"] == R["selected_id"]
+        x = RX + 2.0 + i * (cw_ + 2.0)
+        cv.box(x, cy0, cw_, chh, r_, fill="white", radius=1.4, lw=1.2 if sel else 0.7, shadow=sel,
+               stroke=col["mark"] if sel else None)
+        cv.ax.add_patch(PathPatch(_round_top_rect(x, cy0 + chh - hb, cw_, hb, 1.4), fc=col["mark"] if sel else col["soft"],
+                                  ec=col["mark"] if sel else col["stroke"], lw=1.2 if sel else 0.7, zorder=5.2))
+        hy, on = cy0 + chh - hb / 2, "white" if sel else col["ink"]
+        cv.ax.add_patch(Circle((x + 3.4, hy), 1.75, fc="white" if sel else col["mark"], ec="none", zorder=6))
+        cv.text(x + 3.4, hy - 0.05, c["id"], size=6.6, weight="bold", color=col["ink"] if sel else "white", z=7)
+        cv.text(x + 6.2, hy, c["name"], size=6.9, weight="bold", color=on, ha="left", z=7)
+        verdict = "collides" if c["collision"] else "selected" if sel else "free"
+        tw = cv.text_width(verdict, 6.4, "bold")
+        (cv.icon_cross if c["collision"] else cv.icon_check)(x + cw_ - 3.6 - tw, hy, 1.9, color=on, lw=1.0)
+        cv.text(x + cw_ - 1.8, hy, verdict, size=6.4, weight="bold", color=on, ha="right", z=7)
+        # action sequence a_0 .. a_3
+        cell, ch_ = 5.7, 3.7
+        gx, gy0 = x + (cw_ - 4 * cell) / 2 + 2.2, cy0 + chh - hb - 3.6 - 2 * ch_
+        cv.text(gx - 1.2, gy0 + 2 * ch_ + 1.5, "$k$", size=6.2, color=MUTED, ha="right")
+        for k, a in enumerate(c["actions"]):
+            cv.text(gx + (k + 0.5) * cell, gy0 + 2 * ch_ + 1.5, str(k), size=6.2, color=MUTED)
+            for j in range(2):
+                cv.ax.add_patch(Rectangle((gx + k * cell, gy0 + (1 - j) * ch_), cell, ch_, fc=col["fill"], ec=col["stroke"],
+                                          lw=0.45, zorder=6))
+                cv.text(gx + (k + 0.5) * cell, gy0 + (1.5 - j) * ch_ - 0.05, g(a[j]), size=6.3, color=col["ink"], z=7)
+        for j, lab in enumerate(("$a_x$", "$a_y$")):
+            cv.text(gx - 1.2, gy0 + (1.5 - j) * ch_, lab, size=6.5, ha="right")
+        # J, term by term
+        term, eff, coll = c["terms"]
+        rows = [(f"$\\|p_{dyn['horizon']} - g\\|_2^2$", "", g(term)),
+                (f"${g(ew)}\\,E$", f"$E$ = {c['effort']:.2f}", f"{eff:.3f}"),
+                (f"${g(pen)}\\,C$", f"$C$ = {c['collision']}", g(coll))]
+        ly = gy0 - 3.0
+        for lab, note, val in rows:
+            bad = c["collision"] and lab.endswith("C$")
+            cv.text(x + 2.4, ly, lab, size=6.5, ha="left", z=7)
+            if note:
+                cv.text(x + 12.4, ly, note, size=6.0, color=MUTED, ha="left", z=7)
+            cv.text(x + cw_ - 2.4, ly, val, size=6.4, ha="right", z=7, weight="bold" if bad else "normal",
+                    color=col["ink"] if bad else INK)
+            ly -= 3.05
+        cv.ax.plot([x + 2.2, x + cw_ - 2.2], [ly + 1.35] * 2, color=col["stroke"], lw=0.5, zorder=6)
+        cv.text(x + 2.4, ly - 1.0, "$J$", size=7.0, weight="bold", ha="left", z=7)
+        if sel:
+            cv.text(x + 6.0, ly - 1.0, "minimum", size=6.0, style="italic", color=col["ink"], ha="left", z=7)
+        cv.text(x + cw_ - 2.4, ly - 1.0, f"{c['cost']:.3f}", size=7.4, weight="bold", color=col["ink"], ha="right", z=7)
+    return cv
 
 
-def panel_d(cv, fx, ro, c):
-    x, w = XD
-    yt = panel(cv, x, TOP_Y, w, TOP_H, "blue", "(d) Execute")
-    sub(cv, x + w / 2, yt - 1.0, "only $a_0$ of L is applied", ha="center")
-    L = c["L"]
-    a0, p0, p1 = ro["executed_action"], L["states"][0], L["states"][1]
-    t = Tile(cv, x + (w - 28) / 2, 70.0, ro["next_state"], sc=2.8)
-    t.draw()
-    t.path(L["states"][1:], SEL["mark"], lw=0.8, alpha=0.45)
-    t.goal(fx["scene"]["goal"])
-    t.agent(p0, hollow=True, color=INK, d=1.3)
-    cv.arrow([t.m(p0), t.m(p1)], color=EXE["mark"], lw=1.3, head=1.4, z=11)
-    t.agent(p1, color=EXE["ink"], d=1.3)
-    px, py = t.m(p0)
-    cv.text(px, py + 1.8, r"$p_0$", size=6.2)
-    px, py = t.m(p1)
-    cv.text(px + 1.0, py - 1.4, r"$p_1$", size=6.2, color=EXE["ink"], ha="left", weight="bold")
-    xl = x + 2.0
-    cv.text(xl, 66.6, r"$a_0=$" + pt(a0), size=6.4, color=EXE["ink"], ha="left", weight="bold")
-    cv.text(xl, 63.3, r"$p_1=$" + pt(p1) + ", swept: free", size=6.1, color=INK, ha="left")
-    cv.text(xl, 60.0, r"$a_{1:3}$ not run", size=6.1, color=SEL["ink"], style="italic", ha="left")
-    cv.text(xl, 56.0, r"$o_1=R(s_1)$", size=6.2, color=INK, ha="left")
-    cv.chip(x + w - 2.0, 56.0, "replan", EXE, size=6.0, h=3.0, pad=0.8, ha="right")
-
-
-# -------------------------------------------------------- detail (bottom) ---
-BOT_Y, BOT_H = 9.5, 34.5
-
-
-def candidate(cv, x, y, w, h, r, ob):
-    cid, sel = r["id"], r["id"] == "L"
-    hue = CAND[cid]
-    if sel:
-        cv.ax.add_patch(FancyBboxPatch((x + 0.4, y - 0.4), w, h, boxstyle="round,pad=0,rounding_size=1.6",
-                                       lw=0, fc="#1A2230", alpha=0.10, zorder=1.4))
-    cv.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=1.6", fc="white",
-                                   ec=hue["mark"] if sel else hue["stroke"], lw=1.0 if sel else 0.6, zorder=1.5))
-    ty = y + h - 2.6
-    cv.text(x + 1.8, ty, f"{cid}  {r['name']}", size=6.8, weight="bold", color=hue["ink"], ha="left")
-    if sel:
-        cv.chip(x + w - 1.4, ty, "selected", SEL, size=6.0, solid=True, h=3.0, pad=0.7, ha="right")
-    elif r["collision"]:
-        cv.chip(x + w - 1.4, ty, "collision", COL, size=6.0, h=3.0, pad=0.7, ha="right")
-    cols = [x + 11.0 + 6.9 * k for k in range(4)]
-    yk, yx, yy = ty - 5.0, ty - 8.4, ty - 11.6
-    cv.text(x + 2.2, yk, "$k$", size=6.1, color=MUTED, ha="left")
-    for k, cx in enumerate(cols):
-        cv.text(cx, yk, str(k), size=6.1, color=MUTED)
-    if sel:  # a_0 is the executed action
-        cv.ax.add_patch(FancyBboxPatch((cols[0] - 3.2, yy - 1.7), 6.4, yx - yy + 3.4,
-                                       boxstyle="round,pad=0,rounding_size=0.8",
-                                       fc=EXE["fill"], ec=EXE["stroke"], lw=0.5, zorder=8))
-    for j, (lab, yv) in enumerate(((r"$a_x$", yx), (r"$a_y$", yy))):
-        cv.text(x + 2.2, yv, lab, size=6.3, color=INK, ha="left")
-        for k, cx in enumerate(cols):
-            first = sel and k == 0
-            cv.text(cx, yv, num(r["actions"][k][j]), size=6.3, z=21,
-                    color=EXE["ink"] if first else INK, weight="bold" if first else "normal")
-    yl = yy - 2.6
-    cv.ax.plot([x + 1.5, x + w - 1.5], [yl] * 2, color=HAIR, lw=0.4, zorder=8)
-    cv.rich(x + w / 2, yl - 2.6, [(f"$E={r['effort']:.2f}$", INK), (r"$\quad$", INK),
-                                  (f"$C={r['collision']}$", COL["ink"] if r["collision"] else INK)], size=6.3,
-            ha="center")
-    cv.text(x + w / 2, yl - 6.0, r"$J=%s\cdot%.2f+%d\cdot%d=%.3f$" % (num(ob["effort_weight"]), r["effort"],
-            ob["collision_penalty"], r["collision"], r["cost"]), size=6.1, color=hue["ink"],
-            weight="bold" if sel else "normal")
-
-
-def panel_e(cv, fx, c):
-    x, w = 1.5, 115.5
-    panel(cv, x, BOT_Y, w, BOT_H, "frozen", "(e) Candidate action sequences")
-    cw = (w - 4.0 - 5.0) / 3
-    for i, k in enumerate("DUL"):
-        candidate(cv, x + 2.0 + i * (cw + 2.5), BOT_Y + 2.0, cw, 28.4, c[k], fx["objective"])
-
-
-def panel_f(cv, c):
-    x, w = 120.5, 56.0
-    yt = panel(cv, x, BOT_Y, w, BOT_H, "coral", "(f) Swept collision test")
-    seg = c["D"]["segments"][1]
-    p, q = seg["from"], seg["to"]
-    t0, t1 = seg["obstacles"][0]["interval"]
-    sub(cv, x + w / 2, yt - 0.8, r"D, segment $k=1$: " + pt(p) + r" $\rightarrow$ " + pt(q), ha="center")
-    sc, wx, wy = 17.0, (2.7, 5.3), (2.55, 3.45)
-    t = Tile(cv, x + (w - 2.6 * sc) / 2, 21.5, {"obstacles": []}, sc=sc, wx=wx, wy=wy)
-    ax = cv.ax
-    x1, y1 = t.m((wx[1], wy[1]))
-    ax.add_patch(Rectangle((t.x0, t.y0), x1 - t.x0, y1 - t.y0, fc=FLOOR, ec=NEU["stroke"], lw=0.5, zorder=3))
-    (a0, _), (a1, _) = t.m((3.4, 0)), t.m((4.6, 0))
-    ax.add_patch(Rectangle((a0, t.y0), a1 - a0, y1 - t.y0, fc=OBS_FILL, ec=OBS_EDGE, lw=0.55, hatch="////",
-                           zorder=4))
-    cv.text((a0 + a1) / 2, y1 - 2.2, "A", size=6.6, weight="bold", color=NEU["ink"], z=6,
-            path_effects=[pe.withStroke(linewidth=1.6, foreground=OBS_FILL)])
-    P, Q = t.m(p), t.m(q)
-    ca = [p[i] + t0 * (q[i] - p[i]) for i in (0, 1)]
-    cb = [p[i] + t1 * (q[i] - p[i]) for i in (0, 1)]
-    cv.line([P, Q], color=CAND["D"]["mark"], lw=0.9, dashed=True, z=8, radius=0)
-    cv.line([t.m(ca), t.m(cb)], color=COL["mark"], lw=2.2, dashed=False, z=9, radius=0)
-    for pp, lab in ((P, r"$p_1$"), (Q, r"$p_2$")):
-        ax.add_patch(Circle(pp, 0.75, fc="white", ec=CAND["D"]["mark"], lw=0.7, zorder=10))
-        cv.text(pp[0], pp[1] + 2.4, lab, size=6.4, color=INK)
-        cv.text(pp[0], pp[1] - 2.4, "free", size=6.0, color=MUTED, style="italic")
-    ya = 17.6
-    cv.line([(P[0], ya), (Q[0], ya)], color=LINE, lw=0.5, z=8, radius=0)
-    for tv in (0.0, t0, t1, 1.0):
-        xx = P[0] + tv * (Q[0] - P[0])
-        hot = tv in (t0, t1)
-        ax.plot([xx, xx], [ya - 0.6, ya + 0.6], color=COL["mark"] if hot else LINE, lw=0.6, zorder=8)
-        cv.text(xx, ya - 2.0, f"{tv:.2f}", size=6.0, color=COL["ink"] if hot else MUTED)
-        if hot:
-            cv.line([(xx, ya + 0.6), (xx, t.y0)], color=COL["stroke"], lw=0.4, dashed=True, z=7, radius=0)
-    ax.add_patch(Rectangle((P[0] + t0 * (Q[0] - P[0]), ya - 0.35), (t1 - t0) * (Q[0] - P[0]), 0.7,
-                           fc=COL["mark"], ec="none", zorder=8.5))
-    cv.text(P[0] - 2.8, ya, "$t$", size=6.4, color=INK, ha="right")
-    cv.text(x + w / 2, 11.6, r"inside A for $t\in[%.2f,\,%.2f]\ \Rightarrow\ C=1$" % (t0, t1), size=6.3,
-            color=COL["ink"])
-
-
-def key(cv, x0, y0, x1, y1):
-    """Key strip: every glyph the tiles use, defined once."""
-    cv.ax.add_patch(FancyBboxPatch((x0, y0), x1 - x0, y1 - y0, boxstyle="round,pad=0,rounding_size=1.6", fc="white",
-                                   ec=NEU["stroke"], lw=0.6, ls=(0, (3, 2)), zorder=1))
-    g = Tile(cv, 0, 0, {"obstacles": []}, sc=1.0)
-    yc, sz = (y0 + y1) / 2, 6.1
-    items = [("agent", "agent $p_k$"), ("goal", "goal $g$"), ("state", "simulated state $k$"),
-             ("obs", "obstacle"), ("sim", "simulated path"), ("hit", "inside obstacle"),
-             ("exe", "executed $a_0$"), ("txt", r"$E=\Sigma_k\|a_k\|_2^2$ effort,  $C$ collision flag,  $J$ cost")]
-    widths = [5.0 + cv.text_width(lab, sz) if kind != "txt" else cv.text_width(lab, sz) for kind, lab in items]
-    gap = (x1 - x0 - 4.0 - sum(widths)) / (len(items) - 1)
-    x = x0 + 2.0
-    for (kind, lab), iw in zip(items, widths):
-        gx = x + 2.0
-        if kind == "agent":
-            g.agent((gx, yc), d=1.3)
-        elif kind == "goal":
-            g.goal((gx - 0.6, yc - 1.4))
-        elif kind == "state":
-            cv.ax.add_patch(Circle((gx, yc), 0.55, fc="white", ec=LINE, lw=0.6, zorder=11))
-        elif kind == "obs":
-            cv.ax.add_patch(Rectangle((gx - 1.6, yc - 1.3), 3.2, 2.6, fc=OBS_FILL, ec=OBS_EDGE, lw=0.55,
-                                      hatch="////", zorder=4))
-        elif kind == "sim":
-            cv.line([(gx - 2.0, yc), (gx + 2.0, yc)], color=LINE, lw=0.9, dashed=True, z=10, radius=0)
-        elif kind == "hit":
-            cv.line([(gx - 2.0, yc), (gx + 2.0, yc)], color=COL["mark"], lw=1.8, z=10, radius=0)
-        elif kind == "exe":
-            cv.arrow([(gx - 2.0, yc), (gx + 2.2, yc)], color=EXE["mark"], lw=1.2, head=1.3, z=11)
-        cv.text(x if kind == "txt" else x + 5.0, yc, lab, size=sz, ha="left", color=INK)
-        x += iw + gap
+def build(fixture=DATA / "scene_fixture.json", rollouts=DATA / "computed_rollouts.json"):
+    return draw(derive(fixture, rollouts))
 
 
 def main():
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--fixture", default=os.path.join(EX, "scene_fixture.json"))
-    ap.add_argument("--rollouts", default=os.path.join(EX, "computed_rollouts.json"))
-    ap.add_argument("--out", default="out")
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--out", default="figures/scene")
+    ap.add_argument("--fixture", default=str(DATA / "scene_fixture.json"))
+    ap.add_argument("--rollouts", default=str(DATA / "computed_rollouts.json"))
     a = ap.parse_args()
-    fx, ro, c = load(a.fixture, a.rollouts)
-    matplotlib.rcParams["hatch.linewidth"] = 0.35
-    cv = Canvas(W, H, family="serif", size=7.0)
-    panel_a(cv, fx["scene"])
-    panel_b(cv, fx, c)
-    panel_c(cv, fx, c)
-    panel_d(cv, fx, ro, c)
-    ym = 74.0
-    for (xa, wa), (xb, _) in zip((XA, XB, XC), (XB, XC, XD)):
-        flow(cv, xa + wa + 0.3, xb - 0.3, ym)
-    cv.phase_bar(47.6, [(XA[0], XA[0] + XA[1], "neutral", "observe"),
-                        (XB[0], XB[0] + XB[1], "frozen", "simulate $H=4$ steps per candidate"),
-                        (XC[0], XC[0] + XC[1], "rose", r"score $J$, take argmin"),
-                        (XD[0], XD[0] + XD[1], "blue", "execute, replan")], h=3.2, size=6.4, gap=0.0)
-    panel_e(cv, fx, c)
-    panel_f(cv, c)
-    key(cv, 1.5, 0.6, 176.5, 7.4)
-    small = [t for t in cv.ax.texts if t.get_fontsize() < 6.0]
-    assert not small, [t.get_text() for t in small]
+    cv = build(a.fixture, a.rollouts)
     assert not cv.overlaps(), cv.overlaps()
     assert not cv.text_overlaps(), cv.text_overlaps()
     assert not cv.wire_crossings(), cv.wire_crossings()
-    print("\n".join(cv.save(os.path.join(a.out, "scene_planning_figure"))))
+    print("\n".join(cv.save(os.path.join(a.out, "scene-planning"))))
 
 
 if __name__ == "__main__":

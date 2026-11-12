@@ -28,9 +28,9 @@ The previous examples were scientifically careful but read as flowcharts or comp
 
 Before polishing, state the one thing a reader should get in five seconds and make it the largest,
 most saturated, highest-contrast element. MemT Fig. 4 → "memory is read every token and written once
-per turn"; the redesign gives the state matrix its own column, colours the read path blue, the write
-path violet, the state teal, and adds a turn timeline. MemT Fig. 3 → "4× faster, 130× smaller"; the redesign prints
-those ratios in bold hero blue next to brackets. If nothing is visibly the hero, the figure is not done.
+per turn"; the redesign draws the state as the same green grid in every panel, colours the read path
+blue and the write path purple, and gives the turn timeline its own panel. MemT Fig. 3 → "4× faster, 130× smaller"; the redesign prints
+those ratios (`3.99×`, `130×`) in bold hero blue, the first inside the shaded gap to the baseline. If nothing is visibly the hero, the figure is not done.
 
 ## 2. Typography
 
@@ -56,18 +56,18 @@ role), `mark` (saturated, data marks and the hero). Text on a role is always tha
 pure black and never the stroke colour.
 
 - 3–5 hues, each with exactly one meaning, stated somewhere (legend row, caption, or panel title).
-  MemT redesign: grey = frozen backbone (recedes), teal = the memory state M only, blue = read path,
-  violet = write path, amber = parameters trained offline (φ), coral/grey = locally scoped gate terms.
-  Each panel's header band takes the colour of the path it explains, so the reader can match panels
-  to wires without a legend. A first draft used green for both the state and the read path; an
-  independent review flagged it, and splitting state from read was the single biggest clarity gain.
+  MemT redesign: grey = frozen backbone (recedes), green = the memory state M only, blue = read path,
+  purple = write path, amber = hyper-memory parameters φ (trained offline).
+  Each panel's frame and title tab take the colour of what the panel explains (grey model, green
+  state across turns, blue read, purple write), so the reader can match panels to wires without a
+  legend.
 - **Novel vs inherited.** Inherited parts neutral/slate; the paper's contribution gets the saturated
   hue, a 0.8–1.0 pt stroke, and optionally a soft shadow (`shadow=True`). Do not paint inherited
   and new parts with one hue (MemT original used "inherited" blue for its new K/V/Q projections).
 - **Ownership in place.** Instead of a separate inventory box ("Hyper Memory Block: W_Q, W_K …"),
   colour every component that owns those parameters (amber trapezoids). This deletes boxes and long wires.
 - **Local colour scope.** A colour may carry a second meaning inside one dashed callout if it is
-  labelled there (erase = coral, forget = teal chips in panel d).
+  labelled there.
 - Panel bodies white or near-white with a tinted header band; tint the panel body only when the panel
   *is* the role (the memory pillar). Measured tint share in crafted figures: 10–65 %; white 25–80 %.
 - Charts: one hero colour (method) + two greys for baselines (`#5E6875`, `#8E99A8`); the hero line is
@@ -147,7 +147,7 @@ ink < 120 in greyscale):
 | Gated DeltaNet / Kimi Linear | 39–43 | 50–53 | 6.0–6.4 |
 | DeepSeek-V3 / NSA | 67–82 | 11–14 | 5.2–8.4 |
 | MemT-1.0 Fig. 4 (original) | 43 | 50 | 2.5–2.8 (pale, generic) |
-| MemT Fig. 4 redesign | 62 | 29 | 2.9 (+ saturated glyphs) |
+| MemT Fig. 4 redesign | 25 | 64 | 4.6 |
 
 Targets: no empty region > 15 % of a panel; ink ≥ 2.5 % with dark text, or ≥ 5 % when the figure is
 mostly line art. Low ink with hairline coloured strokes is the "pale/generic" failure mode.

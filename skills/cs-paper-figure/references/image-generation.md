@@ -106,15 +106,18 @@ trims, pads to a square and resizes icons to 512 px (6-9 mm at 600 dpi needs at 
 scenes and vignettes are only flattened and keep full resolution. A Codex run for 3–6 icons takes a few minutes.
 
 Place icons with `cv.image(path, cx, cy, w)` (knocks out the white, so icons sit on tinted bands).
-Pattern used in `examples/harness2/render_fig3.py`:
+Pattern used in `examples/harness2/h2_style.py`, shared by `render_fig2.py` and `render_fig3.py`:
 
 ```python
-def robot(cv, x, y, c, name, s):
-    png = os.path.join(ICON_DIR, f"{name}.png")
-    if os.path.exists(png) and not NO_ICONS:
-        cv.image(png, x, y, s)
+def icon(cv, name, x, y, s, r="neutral", tint=False, fit="box", z=12):
+    png = os.path.join(ICONS, name + ".png")
+    if not VECTOR and os.path.exists(png):       # VECTOR is set by --vector-icons
+        cv.image(retint(name, r) if tint else png, x, y, s, fit=fit, z=z)   # retint: accent -> role r
+        return
+    c = ROLE[r]                                  # vector stand-ins
+    # ... branches for file pages ("f_*"), "model" and "tools" elided ...
     else:
-        cv.icon_robot(x, y, s, color=c["mark"])      # vector fallback
+        cv.icon_robot(x, y, s * 0.82, color=c["mark"], fill="white", z=z, lw=0.8)
 ```
 
 ## 5. Prompt anatomy (what `build_prompt` writes)

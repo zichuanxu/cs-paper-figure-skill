@@ -158,7 +158,7 @@ python <skill-root>/scripts/examples/proactive/render_spectrum.py --out figures/
 python <skill-root>/scripts/examples/proactive/render_overview.py --out figures/proactive     # Fig. 1 redesign
 python <skill-root>/scripts/examples/proactive/render_capabilities.py --out figures/proactive # Fig. 3 redesign
 python <skill-root>/scripts/examples/proactive/render_history.py --out figures/proactive      # Fig. 5 timeline
-python <skill-root>/scripts/examples/reharness/render_fig1.py --out figures/reharness         # diff panels
+python <skill-root>/scripts/examples/reharness/render_fig1.py --out figures/reharness         # two harnesses, one stream
 python <skill-root>/scripts/examples/paperbanana/render_fig5.py --out figures/paperbanana     # dumbbell chart
 python <skill-root>/scripts/paperkit.py swatches fig1.png fig2.png series_check.png          # palette drift
 
