@@ -14,7 +14,7 @@ Make the scientific argument visible and give it an intentional visual form. Opt
 ## Scope and resource map
 
 - **Create:** turn claims, methods or data into figures and reproducible source.
-- **Redesign:** preserve scientific meaning, values, topology and experimental conditions while improving the visual system.
+- **Redesign:** preserve scientific meaning, values, topology and experimental conditions while improving the visual system. First list what the original does well (depth, logos, illustrated objects, a chart whose shape is the claim) and keep or beat each one: a more correct but plainer figure is a failed redesign.
 - **Critique:** inspect the actual figure and caption, identify consequential defects, and propose specific fixes.
 - **Figure set:** assign each figure an evidential role and preserve consistent colors, symbols, terms and typography.
 - For a narrow edit, reuse its source and check the changed region plus final export. Do not rebuild an entire paper unnecessarily.
@@ -24,8 +24,9 @@ Make the scientific argument visible and give it an intentional visual form. Opt
 | **How to make it look good**: diagnosis, typography, role colours, glyph vocabulary, composition patterns, connectors, density targets, chart craft, beat-the-original protocol | [visual-craft.md](references/visual-craft.md) |
 | **Architecture register** for method figures: overview + detail row + key strip, dashed tinted section frames, cuboid tensors and slab layers, feature maps, numeric matrices, mini plots, branch colours carried into text (study of 23 CV/multimodal figures: Holmes, ReSet, CoPS, SemDiff, LFBNet, HFF-Net, VideoFusion, C2R, …) | [visual-craft.md §12](references/visual-craft.md#12-the-architecture-register-object-rich-method-figures), [architecture-study-2026-11.md](references/architecture-study-2026-11.md) |
 | **Contrast, state and construction figures** for benchmark and dataset papers: "existing vs ours" columns over shared claim rows with verdict pills, numbered jump arcs keyed to a request list, turn strips for a task cut, workspace file trees with status tags, lock-marked hidden inputs, numbered step cards with output-type tags, feedback rails (study of ARE-bench Figs. 1–3) | [visual-craft.md §13](references/visual-craft.md#13-contrast-state-and-construction-figures), [arebench-study-2026-11.md](references/arebench-study-2026-11.md); `cv.turn_strip`, `cv.filetree` |
+| **Showcase register** for teaser and overview figures: isometric plates for layering, logo tiles as identity marks, radar for envelope claims, bars with marks; and the redesign rule "strengths first: never ship a plainer figure than the source" (study of ToolSpace Fig. 1 and a failed redesign of it) | [visual-craft.md §14](references/visual-craft.md#14-the-showcase-register-plates-logos-radar-envelopes), [toolspace-study-2026-11.md](references/toolspace-study-2026-11.md) |
 | Evidence behind those rules: IdeaScientist/SkillOpt readings, measured architecture figures (Gated DeltaNet, Kimi Linear, Titans, NSA, DeepSeek-V3, Hymba, BLT, …), MemT critique | [craft-study-2026-10.md](references/craft-study-2026-10.md) |
-| Drawing primitives in mm: role palette, cards, nodes, matrices, vectors, trapezoids, operators, tokens, docs, icons, zoom rays, routed arrows, rich math, density/compare checks | [scripts/paperkit.py](scripts/paperkit.py) |
+| Drawing primitives in mm: role palette, cards, nodes, matrices, vectors, trapezoids, operators, tokens, docs, icons, zoom rays, routed arrows, rich math, isometric plates, logo tiles, radar, density/compare checks | [scripts/paperkit.py](scripts/paperkit.py) |
 | **Figure series** for surveys, frameworks and system reports: one taxonomy palette for every figure, chapter frames with "To next" tabs, running examples, gate stacks, spectra, timelines, illustrated scenes with vector dialogue, diff panels, typed-edge legends, a palette-drift check (studies of *Proactive AI*, PlugMem, StudentSim, PaperBanana, ReHarness) | [figure-series.md](references/figure-series.md), [scripts/examples/proactive/](scripts/examples/proactive/) |
 | Optional generated icon sets with Codex CLI: when to use them, rules from 11 top-lab figures, prompt anatomy, helper | [image-generation.md](references/image-generation.md), [scripts/codex_images.py](scripts/codex_images.py) |
 | Reference-quality redesigns (architecture + efficiency chart) | [scripts/examples/memt/](scripts/examples/memt/), [advanced-examples.md](references/advanced-examples.md#memt-10-redesigns) |
@@ -94,7 +95,7 @@ Prioritize 2025–2026 entries across the full catalog. Select references by the
 
 For new aesthetic observations, inspect the actual image. Use version/page/figure anchors. Extract colors, visible font roles, layout proportions, strokes, node vocabulary and arrow routes; label each as measured, estimated or recommended. Searchable invisible text is not proof of visible typography; declared SVG fonts do not prove a local preview used those fonts. Keep opacity and background with raw colors. Reject physically implausible transformed stroke widths as measurements. Record unknowns honestly.
 
-Borrow a transferable principle and produce an original composition. Keep source dates, affiliations and reuse permissions accurate. Do not reproduce artwork or company logos merely to imply quality.
+Borrow a transferable principle and produce an original composition. Keep source dates, affiliations and reuse permissions accurate. Do not reproduce artwork or company logos merely to imply quality; logos that identify a real product, service or model the figure is about are welcome as identity marks (official mark, unmodified, in a tile beside its name; [toolspace-study-2026-11.md](references/toolspace-study-2026-11.md)).
 
 ### 3. Choose the structure and visual grammar
 
@@ -159,6 +160,9 @@ python <skill-root>/scripts/examples/proactive/render_overview.py --out figures/
 python <skill-root>/scripts/examples/proactive/render_capabilities.py --out figures/proactive # Fig. 3 redesign
 python <skill-root>/scripts/examples/proactive/render_history.py --out figures/proactive      # Fig. 5 timeline
 python <skill-root>/scripts/examples/reharness/render_fig1.py --out figures/reharness         # two harnesses, one stream
+python <skill-root>/scripts/examples/groupassist/render_fig1.py --out figures/groupassist     # overview [--vector-icons]
+python <skill-root>/scripts/examples/groupassist/render_fig2.py --out figures/groupassist     # pipeline [--vector-icons]
+python <skill-root>/scripts/examples/toolspace/render_fig1.py --out figures/toolspace         # graph + evidence charts
 python <skill-root>/scripts/examples/paperbanana/render_fig5.py --out figures/paperbanana     # dumbbell chart
 python <skill-root>/scripts/paperkit.py swatches fig1.png fig2.png series_check.png          # palette drift
 

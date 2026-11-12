@@ -171,11 +171,20 @@ must come from the inputs; derived ratios are computed in code and asserted.
 - Axes: no top/right spines, light value-axis grid `#E6E9ED` 0.5 pt, tick labels `#5A626D` 6.2 pt,
   label only major decades on log axes; values formatted `1,401` / `23.7` (≤ 3 significant digits).
 - Hero method: saturated `mark`, bold value labels, larger marker (2.1 mm vs 1.6 mm) with white edge.
-- Model icons (logos) only when the venue allows; otherwise text labels.
+- **Logos are identity marks.** When the figure names real products, services or models, use the official
+  mark, unmodified and in its own colours, in a white tile beside the name (`cv.tile(image=...)`); one size
+  per row, never larger than a technical object. Keep a text fallback and check the venue's rules (§14).
+- **Radar for an envelope claim.** One model ahead on most of 5–8 axes, at most four polygons: keep the
+  radar (`cv.radar`), state the axis scaling, print the hero's value at each vertex and the winner's value
+  where the hero loses. Use aligned dot rows when the claim is a gap, a ratio or a ranking.
 - Cards: each chart in a rounded white card with a tinted header band, matching method figures.
 
 ## 10. Beat-the-original protocol (redesign tasks)
 
+0. **Strengths first.** List three to five things the original does well that a reader would miss:
+   a depth metaphor, logos, an illustrated object, a chart whose shape is the claim, a pleasant surface.
+   Each one is kept or replaced by something visibly stronger. A redesign that is more correct but
+   plainer has failed ([toolspace-study-2026-11.md](toolspace-study-2026-11.md)).
 1. Render the original figure region at print width; list concrete defects (zoom levels, crossings,
    min text size, colour meaning conflicts, hidden key idea, slogans, dead space, ink %).
 2. Re-read the method text and extract the governing equations and timing; the redesign must be at
@@ -185,6 +194,8 @@ must come from the inputs; derived ratios are computed in code and asserted.
    (`python scripts/paperkit.py compare original.png new.png out.png`) and with `density`.
 5. Fix overlaps and clipped labels found in the PNG; iterate until the side-by-side shows a clear win
    on message, hierarchy, faithfulness and legibility, not only on decoration.
+6. `parity` passing is not the end: look at both at one width and ask which one a reader would pick
+   for a slide. If the original wins the first glance, find out why before shipping.
 
 ## 12. The architecture register: object-rich method figures
 
@@ -246,7 +257,27 @@ Learned from ARE-bench Figs. 1–3 ([arebench-study-2026-11.md](arebench-study-2
   line; never through the step stack.
 - **Results figure.** One model = one colour in every panel (no sequential ramp on the bars and
   categorical colours on the radar). Declare a truncated radial or value axis in the caption. A radar
-  with more than four polygons becomes small multiples or a stage × model dot plot.
+  with more than four polygons becomes small multiples or a stage × model dot plot; with four or fewer
+  and an envelope claim it stays a radar (§14).
+
+## 14. The showcase register: plates, logos, radar envelopes
+
+Teaser and overview figures of system and benchmark papers sell one idea at a glance. Learned from
+ToolSpace Fig. 1 and from a redesign of it that came out tidier and uglier
+([toolspace-study-2026-11.md](toolspace-study-2026-11.md)).
+
+- **Layering gets depth.** "A layer between X and Y" is drawn as stacked isometric plates
+  (`cv.plate`), objects standing on them as tiles (`cv.tile`), calls and returns in the gap. The
+  plate names itself on its front edge. Everything that is not a layer stays flat.
+- **Real things get their marks.** Services, tools and models the reader knows by sight appear as
+  logo tiles with names (rules in §9 and the study). Generic operations get one glyph family.
+- **Envelope claims keep the radar**, made honest (`cv.radar`): one hero colour across panels, hero
+  drawn last and heavier, values at the vertices, the rival's value where the hero loses, scaling
+  stated in a note under the chart.
+- **Bars carry identity:** the model's mark above the bar, the value on it, a ghost outline for the
+  reference condition when the claim is a drop.
+- **Surface:** gradients on plates and bars only, pastel fields behind clusters, saturated colour
+  for the hero and the walk; panel titles bold, one per dashed rounded frame.
 
 ## 11. Anti-patterns checklist
 
@@ -260,7 +291,7 @@ Learned from ARE-bench Figs. 1–3 ([arebench-study-2026-11.md](arebench-study-2
 - [ ] Text < 5.8 pt, subscripts < 4.5 pt, or DejaVu Sans in a Times paper
 - [ ] Watermarks / audit receipts / slogans inside the art
 - [ ] Legend where direct labels fit; ratio claims without a visible ratio
-- [ ] Log-axis bars, unexplained hatching, or decorative 3-D
+- [ ] Log-axis bars, unexplained hatching, or decorative 3-D (depth that carries a layering relation is not decorative, §14)
 - [ ] Every panel the same grey-banded white card; modules not told apart by a hue of their own (§12)
 - [ ] Tensors and layer runs drawn as flat labelled rectangles instead of cuboids/slabs (§12)
 - [ ] A detail panel with no data object (map, numeric matrix, mini plot, tokens, thumbnail)
@@ -269,4 +300,7 @@ Learned from ARE-bench Figs. 1–3 ([arebench-study-2026-11.md](arebench-study-2
 - [ ] The "task / ours" accent hue reused by a stage or category; one model in two colours across panels
 - [ ] A task cut, file state or hidden input explained only in prose when a strip, tag or lock would show it
 - [ ] A radar with more than four overlapping polygons, or a truncated radial axis not stated in the caption
+- [ ] A redesign plainer than its source: depth, logos, illustrated objects or a shape-is-the-claim chart removed with nothing stronger in their place (§10 step 0, §14)
+- [ ] Well-known products or models named only in text boxes when their marks would be recognised faster; or a logo with no name, recoloured, or larger than the mechanism
+- [ ] A radar whose axis scaling is unstated, or whose envelope hides an axis the hero loses
 - [ ] Spelling errors in figure text (proof-read every label; verdict pills are read most)

@@ -14,6 +14,7 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | How it should look: typography, role colours, glyph vocabulary, composition, connectors, density, charts, anti-patterns |
 | [`architecture-study-2026-11.md`](skills/cs-paper-figure/references/architecture-study-2026-11.md) | What 23 vision/multimodal method figures (Holmes, ReSet, CoPS, SemDiff, LFBNet, HFF-Net, VideoFusion, …) do well and badly, and the rules taken from them |
 | [`arebench-study-2026-11.md`](skills/cs-paper-figure/references/arebench-study-2026-11.md) | What ARE-bench Figs. 1–3 do well and badly: contrast figures, task cut strips, workspace file trees, construction pipelines, results-chart colour identity |
+| [`toolspace-study-2026-11.md`](skills/cs-paper-figure/references/toolspace-study-2026-11.md) | What ToolSpace Fig. 1 does well (isometric plates, logos as identity marks, radar envelopes) and how a tidier redesign lost it: the "strengths first" rule for redesigns |
 | [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) plus `density`, `compare`, `parity` and `caption` checks (a redesign must not come out emptier, greyer or less illustrated than its original) |
 | [`figure-series.md`](skills/cs-paper-figure/references/figure-series.md) | Figure series for surveys and frameworks: one taxonomy palette, chapter frames, running examples, gate stacks, spectra, illustrated scenes with vector dialogue |
 | [`codex_images.py`](skills/cs-paper-figure/scripts/codex_images.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icons, scenes and vignettes generated with Codex CLI, embedded at full resolution |
@@ -74,13 +75,32 @@ Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-res
 
 [PDF](gallery/reharness/reharness_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/reharness/render_fig1.py)
 
-### PaperBanana, Figure 5 ([arXiv:2601.23265](https://arxiv.org/abs/2601.23265))
+### ToolSpace, Figure 1 ([arXiv:2611.05036](https://arxiv.org/abs/2611.05036))
 
 | Original | Redesign |
 | --- | --- |
-| <img src="gallery/paperbanana/original/paperbanana_original_fig5.png" width="420"> | <img src="gallery/paperbanana/paperbanana_fig5.png" width="420"> |
+| <img src="gallery/toolspace/original/toolspace_original_fig1.png" width="420"> | <img src="gallery/toolspace/toolspace_fig1_overview.png" width="420"> |
 
-Ten hatched bars on an axis starting at 30 become five rows on an axis centred on the human reference (50): a square for code and a disc for image generation, joined by a bar in the colour of the route that leads, with the lead printed at the right. The rows are grouped as the paper reads them, a blue Content band where code leads and an amber Presentation band where image generation leads, and the half of the axis where the human-made plot is preferred is darkened; Faithfulness is the only row with both marks in it. [PDF](gallery/paperbanana/paperbanana_fig5.pdf) · [source](skills/cs-paper-figure/scripts/examples/paperbanana/render_fig5.py)
+- What the original does well is kept: the tool space is a plate floating between the agent and a plate of MCP servers, with tools standing on it as tiles and the ten servers shown by their own logos; the two radar charts stay radars, because the claim is that one polygon encloses the others.
+- What it does badly is repaired. ToolSpace is blue in every panel. Each radar prints the ToolSpace value at every vertex and, on the one axis it loses (τ³-Bench Banking, 43.3 against 46.9), the winner's value beside it; the card states that each axis runs from 0 to its best score. All baseline values are from the paper's Table 1.
+- The upper plate opens by zoom rays into the largest panel, where one hue per environment is shared by a walk node, its cluster and its row in the tool chain: "8 calls across 4 environments". Panel (d) shows the drop the text claims, a pale bar to the Standard score and a blue bar to the Pro score for all seven models of Table 2, each row led by the model's mark; the original draws six models and no Standard scores.
+- A first redesign of this figure replaced the plates, logos and radars with a flat box, text labels and dot rows, and came out tidier and plainer. The lessons are in [`toolspace-study-2026-11.md`](skills/cs-paper-figure/references/toolspace-study-2026-11.md), and `paperkit` gained `plate`, `tile` and `radar`.
+
+[PDF](gallery/toolspace/toolspace_fig1_overview.pdf) · [source](skills/cs-paper-figure/scripts/examples/toolspace/render_fig1.py)
+
+### GroupAssistBench, Figures 1 and 2 ([arXiv:2611.04867](https://arxiv.org/abs/2611.04867))
+
+| Original | Redesign |
+| --- | --- |
+| <img src="gallery/groupassist/original/groupassist_original_fig1.png" width="420"> | <img src="gallery/groupassist/groupassist_fig1_overview.png" width="420"> |
+| <img src="gallery/groupassist/original/groupassist_original_fig2.png" width="420"> | <img src="gallery/groupassist/groupassist_fig2_pipeline.png" width="420"> |
+
+- Overview: the two task levels are two bands. Each begins as its row of the 2 × 3 taxonomy, one square per cell with area equal to the number of instances, and continues as the worked instance of that level, so "A is an L1 × M2 instance" is a position. The trip-planning thread is drawn once as a chat window; under it each instance shows the same thread as a strip of ten-message cells with its own cut (#104, #452).
+- A red rail joins A's reference fact "7:30 am on May 1" (#34) to B's −2 penalty row: the answer to the recall question is the superseded value in the use request.
+- Pipeline: five numbered step columns, each with its output counts from Appendix A under the header, so the row is also the funnel from 13,782 candidates to 2,395 instances. Every sub-step carries one glyph for who does it (rules, language model, humans) and an object from the same thread; feedback is a side rail whose "superseded value −2" chip points into B's penalty row.
+- One style module for both figures: amber anchor, red superseded, green current, blue L1, purple L2. Labels that disagreed with the paper's text are corrected (D1–D3 to M1–M3, "serve" to "memory use", "Quires", "two annotators · κ" to the three annotators and raw agreement the text reports).
+
+[PDFs](gallery/groupassist/) · [source](skills/cs-paper-figure/scripts/examples/groupassist/)
 
 ### MemT-1.0, Figures 3 and 4 ([arXiv:2610.26825](https://arxiv.org/abs/2610.26825))
 
@@ -173,4 +193,4 @@ python scripts/codex_images.py generate icons.json --out out/icons [--ref existi
 
 ## License
 
-[MIT](LICENSE), except the original figure crops in `gallery/*/original/`, each © its authors: MemT-1.0 (CC BY-NC-SA 4.0), Harness² and PaperBanana (CC BY 4.0), the Transformer (reproduced under Google's permission for scholarly use with attribution), and *Proactive AI for Superintelligent Agents* and ReHarness (reproduced for commentary and comparison; removed on request). All redesigns are independent demonstrations, not affiliated with the papers' authors.
+[MIT](LICENSE), except the original figure crops in `gallery/*/original/`, each © its authors: MemT-1.0 (CC BY-NC-SA 4.0), Harness² and GroupAssistBench (CC BY 4.0), the Transformer (reproduced under Google's permission for scholarly use with attribution), and *Proactive AI for Superintelligent Agents*, ReHarness and ToolSpace (reproduced for commentary and comparison; removed on request). All redesigns are independent demonstrations, not affiliated with the papers' authors. Product and model logos in the ToolSpace example are the marks embedded in that paper's figure; they are trademarks of their owners and are used only to identify the products.

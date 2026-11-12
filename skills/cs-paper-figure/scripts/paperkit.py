@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 from pathlib import Path as _P
 
 import matplotlib
@@ -318,7 +319,7 @@ class Canvas:
             (x0, y0), (x1, y1) = inv.transform(tx.get_window_extent(r).get_points())
             boxes.append((x0, y0, x1, y1, tx.get_text().replace("\n", " ")[:28]))
         tbox = list(boxes)
-        kids = self.ax.get_children()
+        kids = self.ax._children  # drawn artists only: get_children() appends spines, axes and titles
         for a, b, c, d, k, n in self.icons:
             art = kids[n] if n < len(kids) else None  # first artist the icon drew; it moves if the script lifts art
             if art is not None:
@@ -354,12 +355,12 @@ class Canvas:
         bad = []
         for pts, art in self.wires:
             pts = here(pts, art)
-            for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
-                for sx, sy, sw, sh, name in solids:
-                    a0, b0, a1, b1 = sx + inset, sy + inset, sx + sw - inset, sy + sh - inset
-                    if any(a0 < px < a1 and b0 < py < b1 for px, py in ((x0, y0), (x1, y1))):
-                        continue  # wire starts or ends inside: the object is its container (lane, frame)
-                    L = _clip_len(x0, y0, x1, y1, sx + inset, sy + inset, sx + sw - inset, sy + sh - inset)
+            for sx, sy, sw, sh, name in solids:
+                a0, b0, a1, b1 = sx + inset, sy + inset, sx + sw - inset, sy + sh - inset
+                if any(a0 < px < a1 and b0 < py < b1 for px, py in (pts[0], pts[-1])):
+                    continue  # the wire itself starts or ends inside: the object is its container (lane, frame)
+                for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+                    L = _clip_len(x0, y0, x1, y1, a0, b0, a1, b1)
                     if L > min_len:
                         bad.append(f"wire ({x0:.1f},{y0:.1f})->({x1:.1f},{y1:.1f}) crosses {name} for {L:.1f} mm")
         return sorted(set(bad))
@@ -597,6 +598,7 @@ class Canvas:
     def diamond(self, x, y, w, h, r="amber", title=None, z=6, lw=0.7):
         """Decision / gate."""
         c = role(r)
+        self.solids.append((x + w / 4, y + h / 4, w / 2, h / 2, f"diamond '{title or ''}'", None))  # inscribed box
         self.ax.add_patch(Polygon([(x, y + h / 2), (x + w / 2, y + h), (x + w, y + h / 2), (x + w / 2, y)],
                                   fc=c["soft"], ec=c["stroke"], lw=lw, zorder=z))
         if title:
@@ -620,7 +622,8 @@ class Canvas:
     def image(self, path, cx, cy, w, z=12, knockout_white=True, crop=True, fit="width", h=None, radius=0.0,
               focus=(0.5, 0.5), zoom=1.0):
         """Place a raster icon/illustration centred at (cx, cy) with width w mm (height from aspect).
-        Use only for illustrative content (agent mascots, scene photos), never for labels or data.
+        Use for illustrative content (agent mascots, scene photos) and for product marks inside a tile()
+        beside the product's name; never as the only label of a thing, and never for data.
         The icon is resampled exactly once, with Lanczos plus a light unsharp mask, to its printed size
         at RASTER_DPI, and placed on the output pixel grid with nearest-neighbour sampling, so the PNG
         export copies it 1:1 (a second resampling by matplotlib breaks thin outlines into dashes and
@@ -690,7 +693,11 @@ class Canvas:
         w, h = tw / ppm, th / ppm
         # "none" embeds these pixels unchanged in PDF/SVG; any other mode resamples them to the figure dpi (100)
         self.ax.imshow(np.dstack([a, alpha]), extent=(x0, x0 + w, y0, y0 + h), zorder=z, interpolation="none")
-        self.rasters.append((path, tw, th))
+        if x0 >= 0 and y0 >= 0 and x0 + w <= self.w and y0 + h <= self.h:
+            self.rasters.append((path, tw, th))
+        else:
+            print(f"paperkit: image {os.path.basename(str(path))} leaves the {self.w:g} x {self.h:g} mm canvas "
+                  f"and will be cropped (x {x0:.1f}..{x0 + w:.1f}, y {y0:.1f}..{y0 + h:.1f})")
         self.ax.set_xlim(0, self.w)
         self.ax.set_ylim(0, self.h)
         return h
@@ -698,7 +705,7 @@ class Canvas:
     # ---- icons (pure vector) -------------------------------------------------
     def icon_snow(self, x, y, s, color=LINE, lw=0.55, z=12):
         """Snowflake = frozen / not trained."""
-        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "snow icon", len(self.ax.get_children())])
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "snow icon", len(self.ax._children)])
         for k in range(3):
             a = k * math.pi / 3
             dx, dy = s / 2 * math.cos(a), s / 2 * math.sin(a)
@@ -711,18 +718,20 @@ class Canvas:
 
     def icon_check(self, x, y, s, color=LINE, lw=0.8, z=12):
         """Tick drawn as vectors (font-independent ✓)."""
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "check icon", len(self.ax._children)])
         self.ax.plot([x - s * 0.45, x - s * 0.1, x + s * 0.5], [y, y - s * 0.38, y + s * 0.42], color=color, lw=lw,
                      zorder=z, solid_capstyle="round", solid_joinstyle="round")
 
     def icon_cross(self, x, y, s, color=LINE, lw=0.8, z=12):
         """Cross drawn as vectors (font-independent ✗)."""
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "cross icon", len(self.ax._children)])
         for sg in (1, -1):
             self.ax.plot([x - s * 0.4, x + s * 0.4], [y - sg * s * 0.4, y + sg * s * 0.4], color=color, lw=lw,
                          zorder=z, solid_capstyle="round")
 
     def icon_flame(self, x, y, s, color="#E0702A", z=12):
         """Flame = trainable."""
-        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "flame icon", len(self.ax.get_children())])
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "flame icon", len(self.ax._children)])
         h, w = s, s * 0.72
         outer = [(x, y - h / 2), (x + w / 2, y - h * 0.25), (x + w * 0.42, y + h * 0.08), (x + w * 0.08, y + h / 2),
                  (x + w * 0.12, y + h * 0.14), (x - w * 0.08, y + h * 0.1), (x - w * 0.2, y + h * 0.26),
@@ -734,7 +743,7 @@ class Canvas:
 
     def icon_lock(self, x, y, s, color=LINE, z=12, lw=0.55):
         """Lock = fixed after offline training."""
-        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "lock icon", len(self.ax.get_children())])
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "lock icon", len(self.ax._children)])
         bw, bh = s * 0.74, s * 0.52
         self.ax.add_patch(Arc((x, y - s / 2 + bh), bw * 0.6, s * 0.7, theta1=0, theta2=180, ec=color,
                               lw=lw * 1.5, zorder=z))
@@ -744,7 +753,7 @@ class Canvas:
 
     def icon_cycle(self, x, y, s, color=LINE, z=12, lw=0.6):
         """Circular arrows = evolves online / recurrent."""
-        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "cycle icon", len(self.ax.get_children())])
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "cycle icon", len(self.ax._children)])
         rr = s * 0.4
         for a0 in (30, 210):
             self.ax.add_patch(Arc((x, y), 2 * rr, 2 * rr, theta1=a0, theta2=a0 + 125, ec=color, lw=lw, zorder=z))
@@ -758,6 +767,7 @@ class Canvas:
 
     def icon_robot(self, x, y, s, color=LINE, fill="white", z=12, lw=0.6):
         """Agent / model."""
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "robot icon", len(self.ax._children)])
         hw, hh = s * 0.8, s * 0.62
         self.ax.add_patch(FancyBboxPatch((x - hw / 2, y - hh / 2 - s * 0.08), hw, hh,
                           boxstyle=f"round,pad=0,rounding_size={s * 0.16}", fc=fill, ec=color, lw=lw, zorder=z))
@@ -767,6 +777,7 @@ class Canvas:
         self.ax.add_patch(Circle((x, y + s * 0.44), s * 0.07, fc=color, ec="none", zorder=z))
 
     def icon_clock(self, x, y, s, color=LINE, z=12, lw=0.55):
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "clock icon", len(self.ax._children)])
         self.ax.add_patch(Circle((x, y), s / 2, fc="white", ec=color, lw=lw, zorder=z))
         self.ax.plot([x, x], [y, y + s * 0.32], color=color, lw=lw, zorder=z + 0.1, solid_capstyle="round")
         self.ax.plot([x, x + s * 0.24], [y, y], color=color, lw=lw, zorder=z + 0.1, solid_capstyle="round")
@@ -873,6 +884,7 @@ class Canvas:
         v = np.asarray(values, float)
         R, C = v.shape
         ch = ch or cell
+        self.solids.append((x, y, C * cell, R * ch, "num_matrix", None))
         lo, top = (v.min() if vmin is None else vmin), (v.max() if vmax is None else vmax)
         cm = mcolors.LinearSegmentedColormap.from_list("n", [c["fill"], c["soft"], c["mark"]])
         s = size or self.size - 1.0
@@ -980,6 +992,132 @@ class Canvas:
                           color=rc["ink"], z=z + 1)
         return H
 
+    # ---- showcase devices: layered plates, logo tiles, radar (toolspace-study-2026-11.md) ----
+    def plate(self, x, y, w, d, *, skew=None, t=2.8, r="blue", label=None, size=None, grad=None, lw=0.5, z=3,
+              shadow=True, label_color="white"):
+        """Isometric platform: a layer that objects stand on (ToolSpace Fig. 1, a tool layer floating over an
+        environment layer). (x, y) is the front-left corner of the top face, w its width and d its depth on the
+        page; the back edge is shifted right by skew (default 0.55 d). t is the slab thickness, drawn as a darker
+        front face and right face; label is set on the front face. grad=(front, back) overrides the top-face
+        gradient. Stand tiles on it with the returned at(u, v): u along the front edge, v from front (0) to back
+        (1). A plate is a container: wires may land on it. Returns a namespace with at, top (corners), front."""
+        from types import SimpleNamespace
+        c = role(r)
+        skew = 0.55 * d if skew is None else skew
+        A, B, C, D = (x, y), (x + w, y), (x + w + skew, y + d), (x + skew, y + d)
+        if shadow:
+            self.ax.add_patch(Polygon([(px + 0.5, py - t - 0.8) for px, py in (A, B, C, D)], fc="#1A2230",
+                                      ec="none", alpha=0.08, zorder=z - 0.3))
+        c0, c1 = grad or (mix(c["fill"], "#FFFFFF", 0.3), mix(c["soft"], c["mark"], 0.14))
+        top = Polygon([A, B, C, D], fc="none", ec=c["stroke"], lw=lw, zorder=z + 0.2, joinstyle="round")
+        im = self.ax.imshow(np.linspace(1, 0, 256)[:, None], extent=(min(x, x + skew), max(x + w, x + w + skew), y, y + d), aspect="auto",
+                            cmap=mcolors.LinearSegmentedColormap.from_list("g", [c0, c1]), zorder=z,
+                            interpolation="bicubic")
+        self.ax.add_patch(top)
+        im.set_clip_path(top)
+        side = mix(c["mark"], "#000000", 0.25)
+        self.ax.add_patch(Polygon([A, B, (B[0], B[1] - t), (A[0], A[1] - t)], fc=c["mark"], ec=c["mark"], lw=0.3,
+                                  zorder=z + 0.1, joinstyle="round"))
+        self.ax.add_patch(Polygon([B, C, (C[0], C[1] - t), (B[0], B[1] - t)], fc=side, ec=side, lw=0.3,
+                                  zorder=z + 0.1, joinstyle="round"))
+        if label:
+            self.text(x + w / 2, y - t / 2, label, size=size or self.size, color=label_color, weight="bold", z=z + 1)
+        self.ax.set_xlim(0, self.w)
+        self.ax.set_ylim(0, self.h)
+        return SimpleNamespace(at=lambda u, v: (x + u * w + v * skew, y + v * d), top=(A, B, C, D),
+                               front=(x, y - t, w, t))
+
+    def tile(self, cx, cy, s, *, image=None, glyph=None, label=None, inside=False, r="neutral", size=None,
+             color=None, radius=None, lw=0.45, z=9, shadow=True, weight="bold", pad=0.17, fill="white"):
+        """Upright rounded tile carrying a product mark or a glyph: the unit of a logo row or of the tools standing
+        on a plate. image = path of a logo (drawn once, unmodified, in its own colours); glyph = name of an icon_*
+        method or a callable(cx, cy, size). label goes under the tile, or inside its lower third with inside=True
+        (tool tiles). r colours the border, the glyph and an inside label. Always pair a logo with its name unless
+        the mark contains it. Returns the tile patch; the tile is opaque to the wire audit."""
+        c = role(r)
+        rad = s * 0.2 if radius is None else radius
+        size = size or self.size - 1.0
+        if shadow:
+            self.ax.add_patch(FancyBboxPatch((cx - s / 2 + 0.3, cy - s / 2 - 0.4), s, s, lw=0, fc="#1A2230",
+                                             boxstyle=f"round,pad=0,rounding_size={rad}", alpha=0.10, zorder=z - 0.2))
+        p = FancyBboxPatch((cx - s / 2, cy - s / 2), s, s, boxstyle=f"round,pad=0,rounding_size={rad}", fc=fill,
+                           ec=c["stroke"], lw=lw, zorder=z)
+        self.ax.add_patch(p)
+        self.solids.append((cx - s / 2, cy - s / 2, s, s, f"tile '{label or ''}'", p))
+        iy, isz = cy, s * (1 - 2 * pad)
+        if label and inside:
+            iy, isz = cy + s * 0.14, s * 0.46
+            self.text(cx, cy - s * 0.29, label, size=size, color=color or c["ink"], weight=weight, z=z + 2)
+        elif label:
+            self.text(cx, cy - s / 2 - 0.45 - size * 0.3528 * 0.55, label, size=size, color=color or INK,
+                      weight=weight, z=z + 2)
+        if image:
+            self.image(image, cx, iy, isz, fit="box", z=z + 1)
+        elif callable(glyph):
+            glyph(cx, iy, isz)
+        elif glyph:
+            fn = getattr(self, f"icon_{glyph}")
+            fn(cx, iy, isz, **({"color": c["mark"]} if "color" in fn.__code__.co_varnames else {"r": r}))
+        return p
+
+    def radar(self, cx, cy, R, axes, series, *, hero=0, scale="axis", vmax=None, rings=4, size=None, fmt="{:.1f}",
+              gap=1.3, start=90.0, lead=True, fill=0.13, z=6):
+        """Radar (profile) chart for an envelope claim: one model against at most three others on 5 to 8 axes,
+        where the reader should see one polygon enclose the rest. axes = names; series = [(name, values, role)];
+        series[hero] is drawn last with a heavier line, vertex dots and its value printed at every vertex. With
+        lead=True an axis the hero does not win also prints the winning value in that series' ink, so the envelope
+        cannot hide a loss. scale="axis" runs every axis from 0 to its own best score (state this in the caption or
+        a note: radial lengths are then comparable along an axis, not across axes); scale="shared" runs all axes
+        from 0 to vmax (default: the largest value). Use a dot-row chart instead when exact gaps matter more than
+        the shape, or with more than four polygons. Returns {series name: [(x, y), ...]} vertex positions."""
+        size = size or self.size
+        n = len(axes)
+        ang = [math.radians(start - 360.0 * i / n) for i in range(n)]
+        top = [max(s[1][i] for s in series) for i in range(n)]
+        if scale == "shared":
+            top = [vmax or max(top)] * n
+        assert all(t > 0 for t in top), "radar: an axis with no positive value"
+
+        def ring(f):
+            return [(cx + R * f * math.cos(a), cy + R * f * math.sin(a)) for a in ang]
+
+        self.ax.add_patch(Polygon(ring(1.0), fc="#FBFCFD", ec="none", zorder=z - 0.5))
+        for k in range(1, rings + 1):
+            self.ax.add_patch(Polygon(ring(k / rings), fc="none", ec="#C3C9D2", lw=0.35 if k < rings else 0.5,
+                                      ls=(0, (2.2, 1.6)), zorder=z - 0.4))
+        for px, py in ring(1.0):
+            self.ax.plot([cx, px], [cy, py], color="#C3C9D2", lw=0.35, ls=(0, (2.2, 1.6)), zorder=z - 0.4)
+        out = {}
+        order = [i for i in range(len(series)) if i != hero] + [hero]
+        for i in order:
+            name, vals, r = series[i]
+            c, h = role(r), i == hero
+            pts = [(cx + R * v / t * math.cos(a), cy + R * v / t * math.sin(a)) for v, t, a in zip(vals, top, ang)]
+            out[name] = pts
+            self.ax.add_patch(Polygon(pts, fc=mcolors.to_rgba(c["mark"], fill if h else fill * 0.6), ec=c["mark"],
+                                      lw=1.25 if h else 0.85, zorder=z + (1 if h else 0) + 0.01 * i,
+                                      joinstyle="round"))
+            if h:
+                for px, py in pts:
+                    self.ax.add_patch(Circle((px, py), 0.5, fc=c["mark"], ec="white", lw=0.3, zorder=z + 2))
+        hv, hink = series[hero][1], role(series[hero][2])["ink"]
+        lh = size * 0.3528 * 1.22
+        for i, (a, name) in enumerate(zip(ang, axes)):
+            ca, sa = math.cos(a), math.sin(a)
+            px, py = cx + (R + gap) * ca, cy + (R + gap) * sa
+            ha = "left" if ca > 0.25 else "right" if ca < -0.25 else "center"
+            seg = [(fmt.format(hv[i]), hink, "bold")]
+            best = max(range(len(series)), key=lambda k: series[k][1][i])
+            if lead and series[best][1][i] > hv[i]:
+                seg.append(("  " + fmt.format(series[best][1][i]), role(series[best][2])["ink"], "normal"))
+            # the value sits next to the vertex and the axis name (one or two lines) beyond it
+            vy, vva, ny, nva = ((py, "bottom", py + lh, "bottom") if sa > 0.25 else
+                                (py, "top", py - lh, "top") if sa < -0.25 else
+                                (py + 0.15, "bottom", py - 0.15, "top"))
+            self.rich(px, vy, seg, size=size, ha=ha, va=vva, z=z + 3)
+            self.text(px, ny, name, size=size, weight="bold", ha=ha, va=nva, z=z + 3, linespacing=1.12)
+        return out
+
     def legend(self, x, y, w, items, *, size=None, frame=True, gap=3.2, glyph=4.2, row_h=None, r="neutral",
                dashed=True, pad=1.6, z=10):
         """Glyph key in a dashed strip, laid out like words: items = [(kind, arg, label)], kind in
@@ -1040,7 +1178,7 @@ class Canvas:
         """Polyline arrow with rounded elbows and a filled head (head in mm).
         Route orthogonally; end exactly on the target border. halo=True lays a white casing under the
         line so an unavoidable crossing reads as a bridge over the other wire (draw it with a higher z)."""
-        pts = [tuple(p) for p in pts]
+        pts = _dedupe(pts)
         self.wires.append((pts, None))
         if halo:
             self.ax.add_patch(PathPatch(_rounded_path(pts[:-1] + [pts[-1]], radius), fc="none", ec="white",
@@ -1055,8 +1193,9 @@ class Canvas:
         return a
 
     def line(self, pts, color=LINE, lw=0.6, dashed=False, z=7, radius=1.0, alpha=1):
-        self.wires.append(([tuple(p) for p in pts], None))
-        self.ax.add_patch(PathPatch(_rounded_path([tuple(p) for p in pts], radius), fc="none", ec=color,
+        pts = _dedupe(pts)
+        self.wires.append((pts, None))
+        self.ax.add_patch(PathPatch(_rounded_path(pts, radius), fc="none", ec=color,
                                     lw=lw, zorder=z, ls=(0, (3.2, 1.8)) if dashed else "-", alpha=alpha,
                                     capstyle="round", joinstyle="round"))
 
@@ -1121,6 +1260,19 @@ class Canvas:
 
 
 # ------------------------------------------------------------ path helpers ---
+def _dedupe(pts):
+    """Points as tuples with consecutive repeats removed (computed routes often repeat a corner)."""
+    pts = [tuple(p) for p in pts]
+    return [q for i, q in enumerate(pts) if i == 0 or q != pts[i - 1]]
+
+
+def _open_rgb(png):
+    """Open an image as RGB on white: a transparent background counts as paper, not as black ink."""
+    from PIL import Image
+    im = Image.open(png).convert("RGBA")
+    return Image.alpha_composite(Image.new("RGBA", im.size, "white"), im).convert("RGB")
+
+
 def _rounded_path(pts, r):
     """Polyline with quadratic-rounded corners (radius r mm)."""
     if len(pts) < 3 or r <= 0:
@@ -1210,8 +1362,7 @@ def chart_axes(ax, grid="x", size=7.0):
 
 def density(png):
     """(white, tint, ink) percentages of a rendered figure: grey >=250, 200-249, <120."""
-    from PIL import Image
-    a = np.asarray(Image.open(png).convert("L"), float)
+    a = np.asarray(_open_rgb(png).convert("L"), float)
     return tuple(round(100 * float(v), 1) for v in ((a >= 250).mean(), ((a >= 200) & (a < 250)).mean(), (a < 120).mean()))
 
 
@@ -1235,12 +1386,11 @@ def compare(original, new, out, width=1600):
 def visual_stats(png, width=1600):
     """At a fixed pixel width: empty % (16 px blocks that are flat white), colour % (saturated pixels),
     picture % (blocks with illustration-like texture: many distinct tones)."""
-    from PIL import Image
-    im = Image.open(png).convert("RGB")
-    im = im.resize((width, round(im.height * width / im.width)))
+    im = _open_rgb(png)
+    im = im.resize((width, max(1, round(im.height * width / im.width))))
     g = np.asarray(im.convert("L"), float)
     hsv = np.asarray(im.convert("HSV"), float)
-    b = 16
+    b = min(16, g.shape[0])
     H, W = (g.shape[0] // b) * b, (g.shape[1] // b) * b
     blk = g[:H, :W].reshape(H // b, b, W // b, b).swapaxes(1, 2).reshape(-1, b * b)
     empty = ((blk.min(axis=1) >= 245) & (blk.std(axis=1) < 2)).mean()
@@ -1333,12 +1483,19 @@ def note_issues(text):
 if __name__ == "__main__" and len(__import__("sys").argv) > 1:
     import sys
     cmd, args = sys.argv[1], sys.argv[2:]
+    USAGE = ("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | parity ORIGINAL NEW | "
+             "swatches PNG... OUT | caption FILE_OR_TEXT]")
+    if len(args) < {"density": 1, "compare": 3, "parity": 2, "swatches": 2, "caption": 1}.get(cmd, 0):
+        sys.exit(USAGE)
     if cmd == "density":
         for p in args:
             print(p, "white/tint/ink %", density(p))
     elif cmd == "compare":
         print(compare(*args[:3]))
     elif cmd == "caption":  # paperkit.py caption caption.txt|"text": exit 1 if it narrates production
+        for a in args:  # a missing caption file must not pass as an empty, clean caption
+            if not os.path.isfile(a) and re.fullmatch(r"\S+\.(txt|tex|md)", a):
+                sys.exit(f"caption file not found: {a}")
         text = " ".join(_P(a).read_text() if os.path.isfile(a) else a for a in args)
         hits = note_issues(text)
         for why, phrase in hits:
@@ -1357,7 +1514,7 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
             print(os.path.basename(p), " ".join(c))
         print(out)
     else:
-        sys.exit("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | parity ORIGINAL NEW | swatches PNG... OUT]")
+        sys.exit(USAGE)
 elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to export
     import tempfile
     cv = Canvas(120, 60)
@@ -1408,6 +1565,15 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
                 title="/workspace @ T31")
     assert not ws.text_overlaps(), ws.text_overlaps()
     ws.save(os.path.join(d, "ws"))
+    sc = Canvas(110, 52)  # showcase primitives: plate, tiles, radar
+    pl = sc.plate(4, 14, 44, 16, r="blue", label="Tool layer", size=6.5)
+    for k, (g, name) in enumerate((("doc", "Read"), ("cycle", "Update"), ("lock", "Guard"))):
+        sc.tile(*pl.at(0.2 + 0.3 * k, 0.5), 7.0, glyph=g, label=name, inside=True, r="blue", size=5.8)
+    sc.radar(82, 25, 13, ["Plan", "Code", "Search", "Math", "Chat"],
+             [("ours", [70, 62, 55, 48, 81], "blue"), ("base", [52, 66, 40, 30, 77], "amber"),
+              ("other", [45, 50, 49, 20, 60], "neutral")], size=6.0)
+    assert not sc.text_overlaps(), sc.text_overlaps()
+    sc.save(os.path.join(d, "sc"))
     from PIL import Image, ImageDraw
     src = Image.new("RGB", (512, 512), "white")
     ImageDraw.Draw(src).ellipse((60, 60, 452, 452), fill="#5A8BCB", outline="#333333", width=12)
@@ -1425,5 +1591,15 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
     except RuntimeError:
         pass
     assert note_issues("The icons were generated with Codex CLI and recoloured by the authors.")
+    a = Canvas(40, 20)  # audits must not report clean on these (each was a false pass)
+    a.text(20, 10, "HELLO WORLD", size=8)
+    a.icon_flame(20, 10, 3); a.icon_check(8, 10, 3)
+    assert len(a.text_overlaps()) == 1, a.text_overlaps()
+    a.box(10, 2, 10, 5, "blue", "B"); a.diamond(26, 2, 10, 6, "amber")
+    a.arrow([(2, 5), (15, 5), (15, 1)])            # bends inside the box
+    a.arrow([(22, 5), (38, 5), (38, 5)])           # through the diamond, repeated last point
+    assert len(a.wire_crossings()) == 3, a.wire_crossings()  # two box segments + the diamond
+    Image.new("RGBA", (64, 64), (0, 0, 0, 0)).save(os.path.join(d, "clear.png"))
+    assert density(os.path.join(d, "clear.png"))[0] == 100.0
     assert not note_issues("Points: mean over 8 seeds; bars: 95% intervals. Claude Sonnet 5.5 as reader.")
     print("ok", outs)
