@@ -310,8 +310,47 @@ class Canvas:
                                              boxstyle=f"round,pad=0,rounding_size={h * 0.3}", zorder=z))
         return rows * (h + gap) - gap
 
+    def para(self, x, y, w, segments, size=None, leading=1.2, z=20, **kw):
+        """Example text as a figure object: `segments` (the format of rich: (str, color[, weight[, mark]])) word-
+        wrapped to width w from the top-left (x, y), in the fewest lines and with no orphan last word. Marked
+        spans keep their bands across line breaks, and at leading=1.2 the bands of consecutive lines touch. Pass
+        family="monospace" for what a model wrote. Returns (bottom y, end x of the last line), so a verdict
+        glyph can follow the judged span. Worked example: examples/react/render_fig1.py."""
+        size = size or self.size
+        lh = leading * size / PT_PER_MM
+        segs = [(s[0], s[1] if len(s) > 1 else "black", s[2] if len(s) > 2 else "normal", s[3] if len(s) > 3 else None)
+                for s in segments]
+        # ponytail: widths are measured at regular weight; a long bold run can overshoot w by a few percent
+        lines = wrap_marked(segs, lambda t: self.text_width(t, size, **kw), w)
+        end = x
+        for i, runs in enumerate(lines):
+            end = self.rich(x, y - (i + 0.5) * lh, runs, size=size, z=z, **kw)
+        return y - len(lines) * lh, end
+
+    def head(self, x, y, letter=None, title="", note=None, size=8.0, rule=None, color="black"):
+        """Plain panel head, the default panel treatment: bold '(a)', regular-weight title, optional grey italic
+        note two sizes down, all on one baseline; (x, y) is the top-left. rule=<width in mm> draws a hairline
+        under it. No band, no tab, no frame (visual-craft section 7). Returns the y where content can start."""
+        base = y - 0.72 * size / PT_PER_MM
+        segs = ([(f"({letter}) ", color, "bold")] if letter else []) + [(title, color)]
+        end = self.rich(x, base, segs, size=size, va="baseline")
+        if note:
+            self.text(end + 1.6, base, note, size=size - 1.6, color=MUTED, style="italic", ha="left", va="baseline")
+        bottom = y - 1.05 * size / PT_PER_MM
+        if rule:
+            self.rule(x, x + rule, bottom - 0.5)
+            bottom -= 0.5
+        return bottom - 1.2
+
+    def rule(self, x0, x1, y, lw=0.5, color="#B8BEC7", dashed=False, z=4):
+        """Horizontal hairline that separates zones or closes a table (booktabs style). It is scaffolding, not
+        a wire: wire_crossings() ignores it."""
+        self.ax.plot([x0, x1], [y, y], color=color, lw=lw, zorder=z, solid_capstyle="butt",
+                     ls=(0, (3.2, 1.8)) if dashed else "-")
+
     def label(self, x, y, letter, title=None, size=8.0, color=INK):
-        """Panel label '(a) Title': bold letter + bold title, top-left anchored."""
+        """Panel label '(a) Title': bold letter + bold title, top-left anchored. Prefer head(): a regular-weight
+        title keeps bold for the letter and for ours."""
         self.text(x, y, f"({letter})", size=size, weight="bold", ha="left", va="top", color=color)
         if title:
             dx = self.text_width(f"({letter})", size, "bold") + 1.0
@@ -373,9 +412,11 @@ class Canvas:
                 self.text(tx, y + h - 1.4, title, size=s, weight="bold", color=color or c["ink"],
                           ha="left" if title_pos == "tl" else "center", va="top", z=z + 0.3)
 
-    def chip(self, x, y, s, r="amber", size=None, h=None, pad=0.9, solid=False, z=8, ha="center", region=None):
+    def chip(self, x, y, s, r="amber", size=None, h=None, pad=0.9, solid=False, z=8, ha="center", region=None,
+             lw=0.5):
         """Pill badge; width measured from the rendered text. Returns (x0, w). Every chip is recorded for
-        cv.overlaps(); pass region=(x0, y0, x1, y1) when it must stay inside a card, band or cloud."""
+        cv.overlaps(); pass region=(x0, y0, x1, y1) when it must stay inside a card, band or cloud. Pass the
+        figure's stroke weight as lw; a solid chip's edge takes its fill."""
         c = role(r)
         size = size or self.size - 0.8
         h = h or size * 0.55
@@ -383,7 +424,8 @@ class Canvas:
         x0 = x - w / 2 if ha == "center" else (x if ha == "left" else x - w)
         self.chips.append((x0, y - h / 2, w, h, s, region))
         self.ax.add_patch(FancyBboxPatch((x0, y - h / 2), w, h, boxstyle=f"round,pad=0,rounding_size={h/2}",
-                          lw=0.5, ec=c["stroke"], fc=c["mark"] if solid else c["soft"], zorder=z))
+                          lw=lw, ec=c["mark"] if solid else c["stroke"], fc=c["mark"] if solid else c["soft"],
+                          zorder=z))
         self.text(x0 + w / 2, y, s, size=size, color="white" if solid else c["ink"], z=z + 1)
         return x0, w
 
@@ -497,10 +539,11 @@ class Canvas:
         return sorted(set(bad))
 
     # ---- figure-series and narrative devices ----------------------------------
-    def badge(self, x, y, k, r="neutral", d=3.0, z=12, size=None):
-        """Numbered disc for steps or sub-mechanisms (solid role mark, white numeral)."""
+    def badge(self, x, y, k, r="neutral", d=3.0, z=12, size=None, rim=0.5):
+        """Numbered disc for steps or sub-mechanisms (solid role mark, white numeral). The white rim (pt)
+        separates a disc that sits on a border; rim=0 for a disc on the page."""
         c = role(r)
-        self.ax.add_patch(Circle((x, y), d / 2, fc=c["mark"], ec="white", lw=0.5, zorder=z))
+        self.ax.add_patch(Circle((x, y), d / 2, fc=c["mark"], ec="white" if rim else "none", lw=rim, zorder=z))
         self.text(x, y - 0.05, str(k), size=size or d * 2.0, color="white", weight="bold", z=z + 1)
 
     def tab(self, x, y, w, h, r="neutral", text="", size=None, rotate=False, solid=False, z=6, radius=None):
@@ -1316,19 +1359,35 @@ class Canvas:
 
     # ---- connectors ---------------------------------------------------------
     def arrow(self, pts, color=LINE, lw=0.7, head=1.4, dashed=False, radius=1.2, z=8, both=False,
-              start_dot=False, halo=False):
+              start_dot=False, halo=False, dotted=False):
         """Polyline arrow with rounded elbows and a filled head (head in mm).
         Route orthogonally; end exactly on the target border. halo=True lays a white casing under the
-        line so an unavoidable crossing reads as a bridge over the other wire (draw it with a higher z)."""
+        line so an unavoidable crossing reads as a bridge over the other wire (draw it with a higher z).
+        dashed / dotted style the shaft only; the head stays solid."""
         pts = _dedupe(pts)
         self.wires.append((pts, None))
         if halo:
             self.ax.add_patch(PathPatch(_rounded_path(pts[:-1] + [pts[-1]], radius), fc="none", ec="white",
                                         lw=lw + 2.6, zorder=z - 0.05, capstyle="butt"))
         style = f"{'<|-|>' if both else '-|>'},head_length={head * 0.95},head_width={head * 0.42}"
-        a = FancyArrowPatch(path=_rounded_path(pts, radius), arrowstyle=style, mutation_scale=PT_PER_MM,
-                            lw=lw, color=color, zorder=z, linestyle=(0, (3.2, 1.8)) if dashed else "-",
-                            shrinkA=0, shrinkB=0, joinstyle="miter", capstyle="butt")
+        kw = dict(arrowstyle=style, mutation_scale=PT_PER_MM, lw=lw, color=color, zorder=z, shrinkA=0, shrinkB=0,
+                  joinstyle="miter", capstyle="butt")
+        if (dashed or dotted) and len(pts) >= 2:
+            self.ax.add_patch(PathPatch(_rounded_path(pts, radius), fc="none", ec=color, lw=lw, zorder=z,
+                                        ls=(0, (1.2, 1.8)) if dotted else (0, (3.2, 1.8)), capstyle="butt"))
+
+            def stub(tip, back):  # a solid piece just long enough to carry the head
+                L = math.hypot(tip[0] - back[0], tip[1] - back[1])
+                f = min(1.0, head / L) if L else 0.0
+                return (tip[0] + (back[0] - tip[0]) * f, tip[1] + (back[1] - tip[1]) * f)
+
+            if both:
+                self.ax.add_patch(FancyArrowPatch(posA=stub(pts[0], pts[1]), posB=pts[0],
+                                                  **{**kw, "arrowstyle": style.replace("<|-|>", "-|>")}))
+            a = FancyArrowPatch(posA=stub(pts[-1], pts[-2]), posB=pts[-1],
+                                **{**kw, "arrowstyle": style.replace("<|-|>", "-|>")})
+        else:
+            a = FancyArrowPatch(path=_rounded_path(pts, radius), **kw)
         self.ax.add_patch(a)
         if start_dot:
             self.ax.add_patch(Circle(pts[0], 0.45, fc=color, ec="none", zorder=z))
@@ -1402,6 +1461,54 @@ class Canvas:
 
 
 # ------------------------------------------------------------ path helpers ---
+def wrap_marked(segments, measure, maxw):
+    """Word wrap for Canvas.para. segments = [(text, color, weight, mark)]; measure(str) -> width in mm.
+    Fewest lines; the last line is at least a third of the width when that is possible (no orphan) and the
+    lines above it are as full as they can be. A space keeps its mark only inside a span, so a band never
+    starts or ends on a space. Returns lines of runs in the same format."""
+    chars = [(ch, tuple(s[1:])) for s in segments for ch in s[0]]
+    words, cur = [], []
+    for k, (ch, a) in enumerate(chars):
+        if ch == " ":
+            inside = 0 < k < len(chars) - 1 and chars[k - 1][1] == a == chars[k + 1][1]
+            words.append((cur, a if inside else a[:-1] + (None,)))
+            cur = []
+        else:
+            cur.append((ch, a))
+    words.append((cur, None))
+    n = len(words)
+
+    def line(i, j):  # words i..j-1 as characters, no trailing space
+        return [c for word, space in words[i:j] for c in word + [(" ", space)]][:-1]
+
+    width = {(i, j): measure("".join(ch for ch, _ in line(i, j))) for i in range(n) for j in range(i + 1, n + 1)}
+    best = {(n, 0): (0.0, None)}  # (start word, lines left) -> (cost, next start)
+    for left in range(1, n + 1):
+        for i in range(n - 1, -1, -1):
+            for j in range(i + 1, n + 1):
+                if (width[i, j] > maxw and j > i + 1) or (j, left - 1) not in best:
+                    continue  # a single word wider than the column still gets a line of its own
+                slack = max(0.0, maxw - width[i, j])
+                cost = (1e6 if slack > 2 * maxw / 3 else 0.0) if j == n else slack ** 2
+                cost += best[j, left - 1][0]
+                if (i, left) not in best or cost < best[i, left][0]:
+                    best[i, left] = (cost, j)
+        if (0, left) in best:
+            break
+    out, i = [], 0
+    while i < n:
+        j = best[i, left][1]
+        runs = []
+        for ch, a in line(i, j):
+            if runs and runs[-1][1] == a:
+                runs[-1][0] += ch
+            else:
+                runs.append([ch, a])
+        out.append([(t,) + a for t, a in runs])
+        i, left = j, left - 1
+    return out
+
+
 def _dedupe(pts):
     """Points as tuples with consecutive repeats removed (computed routes often repeat a corner)."""
     pts = [tuple(p) for p in pts]
@@ -1634,14 +1741,35 @@ def note_issues(text):
     return [(why, m.group(0)) for why, pat in NOTE_NOISE for m in re.finditer(pat, text, re.I)]
 
 
+def counts(pdf):
+    """Text sizes and stroke widths actually in a figure PDF, each with its number of uses, for the budgets
+    of visual-craft section 14 (2-3 sizes, 1-2 weights). Needs PyMuPDF, like check_figure.py. Math subscripts
+    (0.7 x a base size) and strokes inside icons show up too; read the list with that in mind."""
+    import fitz  # PyMuPDF
+    from collections import Counter
+    pages = list(fitz.open(pdf))  # a figure PDF is one page; count them all if there are more
+    sizes = Counter(round(s["size"], 1) for page in pages for b in page.get_text("dict")["blocks"]
+                    for ln in b.get("lines", []) for s in ln["spans"] if s["text"].strip())
+    strokes = Counter(round(d["width"], 2) for page in pages for d in page.get_drawings()
+                      if d.get("width") and "s" in d.get("type", ""))
+    return dict(sorted(sizes.items(), reverse=True)), dict(sorted(strokes.items(), reverse=True))
+
+
 if __name__ == "__main__" and len(__import__("sys").argv) > 1:
     import sys
     cmd, args = sys.argv[1], sys.argv[2:]
     USAGE = ("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | parity ORIGINAL NEW | "
-             "swatches PNG... OUT | caption FILE_OR_TEXT | grey PNG OUT]")
-    if len(args) < {"density": 1, "compare": 3, "parity": 2, "swatches": 2, "caption": 1, "grey": 2}.get(cmd, 0):
+             "swatches PNG... OUT | caption FILE_OR_TEXT | grey PNG OUT | counts PDF...]")
+    if len(args) < {"density": 1, "compare": 3, "parity": 2, "swatches": 2, "caption": 1, "grey": 2,
+                    "counts": 1}.get(cmd, 0):
         sys.exit(USAGE)
-    if cmd == "density":
+    if cmd == "counts":  # what the budgets count: text sizes and stroke widths in the exported PDF
+        for p in args:
+            sizes, strokes = counts(p)
+            print(p)
+            print("  text sizes (pt: spans)    ", "  ".join(f"{k}: {v}" for k, v in sizes.items()))
+            print("  stroke widths (pt: paths) ", "  ".join(f"{k}: {v}" for k, v in strokes.items()))
+    elif cmd == "density":
         for p in args:
             wh, ti, ink = density(p)
             print(p, "white/tint/ink %", (wh, ti, ink))
@@ -1769,6 +1897,14 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
     hgt = tx.listing(3, 22, ["lock(pt)", "unmap(pt, va)", "unlock(pt)"], hi={8: "coral"}, start=7)
     tx.callout(60, 20, "A", to=(40, 22 - hgt / 2))
     tx.greek(50, 12, 28, rows=3)
+    yb, ex = tx.para(3, 11, 40, [("Finish[", "black"), ("keyboard function keys", "black", "normal", "memory"),
+                                 ("] after three searches of one page", "black")], size=6.0, family="monospace")
+    assert 2.0 < yb <= 11 - 2 * 1.2 * 6.0 / PT_PER_MM + 1e-6 and ex <= 43.5, (yb, ex)  # wrapped, inside the width
+    assert [r[0] for ln in wrap_marked([("aa bb", "k", "normal", "m"), (" cc", "k", "normal", None)],
+                                       len, 5) for r in ln] == ["aa bb", "cc"]  # the break eats the space
+    y0 = tx.head(50, 5, "b", "Plain head", note="no band", size=7.0, rule=30)
+    assert 0 < y0 < 5
+    tx.arrow([(46, 20), (46, 14)], color="black", lw=0.6, head=1.0, dotted=True, both=True)
     assert not tx.text_overlaps(), tx.text_overlaps()
     tx.save(os.path.join(d, "text"))
     assert not g.text_overlaps(), g.text_overlaps()

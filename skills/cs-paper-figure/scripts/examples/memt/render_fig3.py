@@ -1,4 +1,4 @@
-"""MemT-1.0 Figure 3: inference efficiency and storage overhead of MemT-1.0-Nano.
+"""MemT-1.0 Figure 3: inference efficiency and storage overhead of MemT-1.0-Nano (178 x 61 mm).
 
 Source: Li et al., "MemT-1.0: Towards Memory-Native Evolution", arXiv:2610.26825v2, Figure 3
 (values read from the figure; the speed-ups agree with the 1.86x and 3.99x stated in Section 6.5).
@@ -9,19 +9,26 @@ Content kept from the source
   * Per-trajectory storage at 256K: Full Context 5.061 GiB, Temp-LoRA 172.5 MiB, MemT-1.0-Nano
     40.00 MiB; the last two are the same at 1M, Full Context at 1M is reported only as too large.
 
-Design decisions
+Chart idiom: claim chart (references/visual-craft.md §11), bare on the page.
+  * Message: the lead of MemT-1.0-Nano over Full Context opens from 1.86x to 3.99x when the history
+    doubles, and its state is 130x smaller.
+  * Hero by difference: MemT-1.0-Nano is the only hue (blue) among two greys, in both panels. All three
+    lines have one weight; the hero has the larger marker, the name pill and the bold numbers.
   * (a) is one slope chart on a log axis instead of two bar panels. Bars on a log axis start at an
     arbitrary floor, so their length means nothing; dots do not have that problem, and joining the two
-    history lengths shows how each method scales. The gap to Full Context is shaded, so the reader sees
-    it open from 1.86x to 3.99x, and each line carries its own growth factor for the doubling.
+    history lengths shows how each method scales. The gap to Full Context is shaded and carries the two
+    speed-ups; each line carries its own growth factor for the doubling, set along the line.
   * (b) is area-true: one cell is the 40 MiB state of MemT-1.0-Nano, so Full Context is a block of
     130 cells, Temp-LoRA 4.3 cells and Nano one cell. A log bar hid exactly this difference. The dashed
     cells after the block say that the Full Context state keeps growing; no size is drawn for 1M.
-  * One colour per method in both panels: blue is MemT-1.0-Nano, the two greys are the baselines.
-    Methods are labelled on their marks, so there is no legend.
+  * No card, no header band, no legend: a plain head over each panel, methods named on their marks.
+  * Type: Times/STIX at three sizes, 10 pt (heads and the two claim numbers), 7.6 pt (labels), 6.5 pt
+    (ticks and notes). Strokes: 0.6 pt (axis, grid, arrows, outlines) and 1.2 pt (the three series).
   * Every ratio printed is computed below from the transcribed values and asserted.
   * Printed values are rounded for reading (16.19 -> 16.2, 1400.88 -> 1,401, 5.061 GiB -> 5.06 GiB);
     the exact values are in LATENCY and STORAGE and the rounding is asserted to stay within 0.4 %.
+
+    python render_fig3.py --out DIR
 """
 import argparse
 import math
@@ -57,9 +64,12 @@ assert f"{CELLS[FULL]:.0f}" == "130" and f"{CELLS[LORA]:.1f}" == "4.3" and CELLS
 assert abs(float(STORAGE_LABEL[FULL].split()[0]) * 1024 - STORAGE[FULL]) / STORAGE[FULL] < 0.002
 
 BLUE = ROLE["blue"]
-COL = {NANO: BLUE["mark"], FULL: "#5E6875", LORA: "#8E99A8"}   # marks
+GAP = mix(BLUE["soft"], "#FFFFFF", 0.25)                       # the shaded lead over Full Context
+COL = {NANO: BLUE["mark"], FULL: "#5E6875", LORA: "#8E99A8"}   # marks: one hue and the two chart greys
 TXT = {NANO: BLUE["ink"], FULL: "#414A56", LORA: "#667182"}    # labels on those marks
-T, B, A, HERO = 8.0, 7.0, 6.2, 11.0   # title, body, annotation, hero numeral (pt)
+T, B, A = 10.0, 7.6, 6.5      # heads and claim numbers, labels, ticks and notes (pt)
+THIN, SERIES = 0.6, 1.2       # the two stroke weights (pt)
+GRID, AXIS, TICK = "#E3E6EA", "#9AA0A8", "#4A5059"
 
 
 def secs(v):
@@ -85,155 +95,150 @@ def run(cv, x, y, segs, ha="left"):
 def pill(cv, x, y, s):
     """The hero method's name: white bold on solid blue, left edge x, text baseline y. Returns the end x."""
     w = cv.text_width(s, B, "bold") + 2.6
-    cv.ax.add_patch(FancyBboxPatch((x, y - 1.05), w, 3.5, boxstyle="round,pad=0,rounding_size=1.0",
+    cv.ax.add_patch(FancyBboxPatch((x, y - 1.1), w, 3.8, boxstyle="round,pad=0,rounding_size=1.0",
                                    fc=BLUE["mark"], ec="none", zorder=6))
     cv.text(x + 1.3, y, s, size=B, color="white", weight="bold", ha="left", va="baseline")
     return x + w
 
 
-def card(cv, x, y, w, h, letter, title, sub):
-    cv.group(x, y, w, h, "neutral", f"({letter})  {title}", band=True, size=T, fill="white", stroke="#B4BBC5")
-    cv.text(x + 2.0, y + h - T * 0.62 - 2.9, sub, size=A, color=MUTED, style="italic", ha="left")
+def head(cv, x, ytop, letter, title, sub):
+    """Plain panel head on the page: bold letter, regular title, units and conditions in italic under it."""
+    cv.rich(x, ytop - 1.9, [(f"({letter})", INK, "bold"), ("  " + title, INK)], size=T)
+    cv.text(x, ytop - 6.3, sub, size=A, color=MUTED, style="italic", ha="left")
 
 
-def latency_panel(cv, x, y, w, h):
-    card(cv, x, y, w, h, "a", "End-to-end latency",
-         "history preparation + 128-token response; seconds, log scale")
-    ax0, x1, x2 = x + 12.6, x + 30.5, x + 63.0
-    yb, yt, lo, hi = y + 12.4, y + h - 11.8, 10.0, 2000.0
+def latency_panel(cv, x, ytop):
+    head(cv, x, ytop, "a", "End-to-end latency", "history preparation + 128-token response; log scale")
+    ax0, x1, x2 = x + 10.5, x + 23.0, x + 60.0
+    yb, yt, lo, hi = 10.6, ytop - 10.2, 10.0, 2000.0
     k = (yt - yb) / (math.log10(hi) - math.log10(lo))
 
     def Y(v):
         return yb + (math.log10(v) - math.log10(lo)) * k
 
-    # frame: decade grid, labelled; 3x minor lines, unlabelled
-    for v, major in ((10, 1), (30, 0), (100, 1), (300, 0), (1000, 1)):
-        cv.ax.plot([ax0, x2 + 2.0], [Y(v)] * 2, color="#E3E6EA" if major else "#EFF1F4", lw=0.5, zorder=2)
-        if major:
-            cv.text(ax0 - 1.2, Y(v), f"{v:,}", size=A, color="#5A626D", ha="right")
-    cv.ax.plot([ax0, ax0], [yb, yt], color="#9AA0A8", lw=0.6, zorder=3)
-    cv.text(x + 3.2, (yb + yt) / 2, "latency (s)", size=A, color="#5A626D", rotation=90)
+    # decade grid, labelled; the two history lengths are the only x positions
+    for v in (10, 100, 1000):
+        cv.ax.plot([ax0, x2 + 1.2], [Y(v)] * 2, color=GRID, lw=THIN, zorder=2)
+        cv.text(ax0 - 1.2, Y(v), f"{v:,}", size=A, color=TICK, ha="right")
+    cv.ax.plot([ax0, ax0], [yb, yt], color=AXIS, lw=THIN, zorder=3)
+    cv.text(x + 1.4, (yb + yt) / 2, "latency (s)", size=B, rotation=90)
     for xx, lab in ((x1, "128K"), (x2, "256K")):
-        cv.ax.plot([xx, xx], [yb - 1.0, yt], color="#E3E6EA", lw=0.5, zorder=2)
-        cv.text(xx, yb - 3.2, lab, size=B, color=INK, weight="bold")
-    cv.arrow([(x1 + 5.2, yb - 3.2), (x2 - 5.2, yb - 3.2)], color="#9AA0A8", lw=0.6, head=1.2)
-    cv.text((x1 + x2) / 2, yb - 3.2, "×2", size=A, color="#5A626D",
-            bbox=dict(fc="white", ec="none", pad=1.2))
-    cv.text((x1 + x2) / 2, yb - 7.4, "history length (tokens)", size=A, color="#5A626D")
+        cv.ax.plot([xx, xx], [yb - 1.0, yt], color=GRID, lw=THIN, zorder=2)
+        cv.text(xx, yb - 3.4, lab, size=B)
+    cv.arrow([(x1 + 5.6, yb - 3.4), (x2 - 5.6, yb - 3.4)], color=AXIS, lw=THIN, head=1.3)
+    cv.text((x1 + x2) / 2, yb - 3.4, "×2", size=A, color=TICK, bbox=dict(fc="white", ec="none", pad=1.2))
+    cv.text((x1 + x2) / 2, yb - 7.6, "history length (tokens)", size=B)
 
-    # hero: the gap between Full Context and Nano, opening with history
+    # the claim: the gap between Full Context and Nano, opening with history
     yn, yf = [Y(LATENCY[NANO][c]) for c in (128, 256)], [Y(LATENCY[FULL][c]) for c in (128, 256)]
-    cv.ax.add_patch(Polygon([(x1, yn[0]), (x2, yn[1]), (x2, yf[1]), (x1, yf[0])], closed=True,
-                            fc=mix(BLUE["soft"], "#FFFFFF", 0.25), ec="none", zorder=3))
+    cv.ax.add_patch(Polygon([(x1, yn[0]), (x2, yn[1]), (x2, yf[1]), (x1, yf[0])], closed=True, fc=GAP, ec="none",
+                            zorder=3))
 
     def between(xx):  # mid-height of the gap at xx
         t = (xx - x1) / (x2 - x1)
         return (yn[0] + (yn[1] - yn[0]) * t + yf[0] + (yf[1] - yf[0]) * t) / 2
 
-    cv.text(x1 + 2.6, between(x1 + 6.5), f"{SPEEDUP[128]:.2f}×", size=T, weight="bold", color=BLUE["mark"],
-            ha="left")
-    cv.text(x2 - 2.6, between(x2 - 7.5), f"{SPEEDUP[256]:.2f}×", size=HERO, weight="bold",
-            color=BLUE["mark"], ha="right")
+    cv.text(x1 + 2.4, between(x1 + 6.0), f"{SPEEDUP[128]:.2f}×", size=B, weight="bold", color=BLUE["mark"], ha="left")
+    run(cv, x2 - 2.6, between(x2 - 11.0) - 1.2, [(f"{SPEEDUP[256]:.2f}×", BLUE["mark"], T, "bold", "normal"),
+                                                (" faster", BLUE["ink"], B, "normal", "normal")], ha="right")
 
     for m in (LORA, FULL, NANO):
         hero = m == NANO
         ys = [Y(LATENCY[m][c]) for c in (128, 256)]
-        cv.ax.plot([x1, x2], ys, color=COL[m], lw=1.9 if hero else 1.0, zorder=5 + hero,
-                   solid_capstyle="round")
+        cv.ax.plot([x1, x2], ys, color=COL[m], lw=SERIES, zorder=5 + hero, solid_capstyle="round")
         for xx, yy in zip((x1, x2), ys):
-            cv.ax.add_patch(Circle((xx, yy), 1.1 if hero else 0.85, fc=COL[m], ec="white", lw=0.7,
-                                   zorder=7 + hero))
+            cv.ax.add_patch(Circle((xx, yy), 1.15 if hero else 0.85, fc=COL[m], ec="white", lw=THIN, zorder=7 + hero))
         w8 = "bold" if hero else "normal"
         cv.text(x1 - 2.4, ys[0], secs(LATENCY[m][128]), size=B, color=TXT[m], weight=w8, ha="right")
         if hero:
-            pill(cv, x2 + 2.6, ys[1] + 1.0, m)
+            pill(cv, x2 + 2.6, ys[1] + 0.9, m)
         else:
-            cv.text(x2 + 2.6, ys[1] + 1.45, m, size=B, color=TXT[m], weight="bold", ha="left")
-        cv.text(x2 + 2.6, ys[1] - (2.2 if hero else 1.45), secs(LATENCY[m][256]) + " s", size=B, color=TXT[m],
+            cv.text(x2 + 2.6, ys[1] + 1.55, m, size=B, color=TXT[m], ha="left")
+        cv.text(x2 + 2.6, ys[1] - (2.5 if hero else 1.55), secs(LATENCY[m][256]) + " s", size=B, color=TXT[m],
                 weight=w8, ha="left")
-        # growth for the doubling, at mid-line on the side away from the shaded gap
-        side = 1 if m == FULL else -1
-        cv.text((x1 + x2) / 2 - 2.0 * side, (ys[0] + ys[1]) / 2 + (2.7 if m == FULL else -2.4),
-                f"×{GROWTH[m]:.2f}", size=A, color=TXT[m], style="italic", weight=w8)
-
-    # reading key in the empty band between the baselines
-    ky = (Y(100) + Y(300)) / 2
-    assert LATENCY[FULL][256] < 100 and LATENCY[LORA][128] > 300
-    kx = x1 + 3.4
-    cv.ax.add_patch(Rectangle((kx, ky + 0.75), 2.6, 1.7, fc=mix(BLUE["soft"], "#FFFFFF", 0.25), ec="none", zorder=4))
-    cv.text(kx + 3.6, ky + 1.6, "speed-up vs. Full Context", size=A, color=MUTED, style="italic", ha="left")
-    cv.text(kx + 1.3, ky - 1.6, "×k", size=A, color=MUTED, style="italic")
-    cv.text(kx + 3.6, ky - 1.6, "growth from 128K to 256K", size=A, color=MUTED, style="italic", ha="left")
+        # growth for the doubling, set along the line on the side away from the shaded gap
+        ang = math.atan2(ys[1] - ys[0], x2 - x1)
+        side = -1 if hero else 1
+        t = 0.36 if m == FULL else 0.5
+        gx = x1 + (x2 - x1) * t - side * 1.9 * math.sin(ang)
+        gy = ys[0] + (ys[1] - ys[0]) * t + side * 1.9 * math.cos(ang)
+        cv.text(gx, gy, ("latency " if m == LORA else "") + f"×{GROWTH[m]:.2f}", size=A, color=TXT[m], style="italic",
+                weight=w8, rotation=math.degrees(ang), rotation_mode="anchor")
+    return x2 + 2.6 + cv.text_width(NANO, B, "bold") + 2.6  # right edge of the panel
 
 
-def cells(cv, x, ytop, n, cols, rows, pitch, colour, by="col"):
+def cells(cv, x, ytop, n, rows, pitch, colour, by="col"):
     """n unit cells (fractional), filled column by column from the bottom-left (or along one row)."""
-    s, g = pitch - 0.4, 0.4
+    g = 0.4
+    s = pitch - g
     full, frac = int(n), n - int(n)
     for i in range(full + (frac > 1e-9)):
         c, r = (i // rows, i % rows) if by == "col" else (i, 0)
         px, py = x + c * pitch, ytop - rows * pitch + g + r * pitch
         f = 1.0 if i < full else frac
         if f < 1.0:  # the outline is the whole cell, the fill is the fraction
-            cv.ax.add_patch(Rectangle((px, py), s, s, fc="white", ec=colour, lw=0.4, zorder=5))
+            cv.ax.add_patch(Rectangle((px, py), s, s, fc="white", ec=colour, lw=THIN, zorder=5))
             cv.ax.add_patch(Rectangle((px, py), s * (1 if by == "col" else f), s * (f if by == "col" else 1),
                                       fc=colour, ec="none", zorder=5.1))
         else:
-            cv.ax.add_patch(FancyBboxPatch((px, py), s, s, boxstyle="round,pad=0,rounding_size=0.45",
+            cv.ax.add_patch(FancyBboxPatch((px, py), s, s, boxstyle="round,pad=0,rounding_size=0.4",
                                            fc=colour, ec="none", zorder=5))
     return full + (frac > 1e-9)
 
 
-def storage_panel(cv, x, y, w, h):
+def storage_panel(cv, x, ytop):
     unit = STORAGE[NANO]
-    card(cv, x, y, w, h, "b", "Storage overhead",
-         f"state kept per trajectory; one cell = {unit:.0f} MiB, areas to scale")
-    x0, pitch, rows, cols = x + 3.4, 3.4, 8, 17
+    head(cv, x, ytop, "b", "Storage overhead", f"state kept per trajectory; one cell = {unit:.0f} MiB, areas to scale")
+    pitch, rows, cols = 3.2, 7, 19
     assert cols * rows >= CELLS[FULL] > (cols - 1) * rows
 
-    def head(yy, m):
-        xe = pill(cv, x0, yy, m) - 0.6 if m == NANO else run(cv, x0, yy, [(m, TXT[m], B, "bold", "normal")])
-        run(cv, xe, yy, [("   " + STORAGE_LABEL[m], TXT[m], B, "bold", "normal"),
+    def name(yy, m):
+        xe = pill(cv, x, yy, m) - 0.6 if m == NANO else run(cv, x, yy, [(m, TXT[m], B, "normal", "normal")])
+        run(cv, xe, yy, [("   " + STORAGE_LABEL[m], TXT[m], B, "bold" if m == NANO else "normal", "normal"),
                          ("  " + STORAGE_AT[m], MUTED, A, "normal", "italic")])
 
     # Full Context: a block of 129.6 cells, then open-ended growth
-    yy = y + h - 12.6
-    head(yy, FULL)
-    top = yy - 2.0
-    used = cells(cv, x0, top, CELLS[FULL], cols, rows, pitch, COL[FULL])
+    yy = ytop - 11.8
+    name(yy, FULL)
+    top = yy - 1.6
+    used = cells(cv, x, top, CELLS[FULL], rows, pitch, COL[FULL])
     assert used == math.ceil(CELLS[FULL])
     s = pitch - 0.4
     for i in range(used, used + (rows - used % rows) % rows + 2 * rows):  # rest of the column, two more columns
         c, r = i // rows, i % rows
-        a = max(0.25, 1.0 - 0.38 * (c - (cols - 1)))
-        cv.ax.add_patch(Rectangle((x0 + c * pitch, top - rows * pitch + 0.4 + r * pitch), s, s, fc="white",
-                                  ec=mix(COL[FULL], "#FFFFFF", 1 - a), lw=0.45, ls=(0, (1.6, 1.3)), zorder=4))
-    gx = x0 + (cols + 2) * pitch + 0.6
+        a = max(0.3, 1.0 - 0.35 * (c - (cols - 1)))
+        cv.ax.add_patch(Rectangle((x + c * pitch, top - rows * pitch + 0.4 + r * pitch), s, s, fc="white",
+                                  ec=mix(COL[FULL], "#FFFFFF", 1 - a), lw=THIN, ls=(0, (1.4, 1.2)), zorder=4))
+    gx = x + (cols + 2) * pitch + 0.6
     gy = top - rows * pitch / 2 + 0.2
-    cv.arrow([(gx, gy), (gx + 4.2, gy)], color=COL[FULL], lw=0.7, head=1.3)
-    cv.text(gx + 5.2, gy + 1.4, "too large", size=B, color=TXT[FULL], ha="left", style="italic")
-    cv.text(gx + 5.2, gy - 1.4, "at 1M", size=B, color=TXT[FULL], ha="left", style="italic")
+    cv.arrow([(gx, gy), (gx + 4.2, gy)], color=AXIS, lw=THIN, head=1.3)
+    cv.text(gx + 5.2, gy + 1.5, "too large", size=B, color=TXT[FULL], ha="left", style="italic")
+    cv.text(gx + 5.2, gy - 1.5, "at 1M", size=B, color=TXT[FULL], ha="left", style="italic")
 
     # Temp-LoRA: 4.3 cells
-    yy = top - rows * pitch - 6.0
-    head(yy, LORA)
-    cells(cv, x0, yy - 2.0, CELLS[LORA], 5, 1, pitch, COL[LORA], by="row")
+    yy = top - rows * pitch - 5.4
+    name(yy, LORA)
+    cells(cv, x, yy - 1.6, CELLS[LORA], 1, pitch, COL[LORA], by="row")
 
     # MemT-1.0-Nano: one cell, and what that means against the two above
-    yy = yy - 2.0 - pitch - 6.0
-    head(yy, NANO)
-    cells(cv, x0, yy - 2.0, CELLS[NANO], 1, 1, pitch, COL[NANO], by="row")
-    by = yy - 2.0 - pitch / 2 - 0.95
-    ex = run(cv, x0 + pitch + 2.2, by, [(f"{CELLS[FULL]:.0f}×", BLUE["mark"], HERO, "bold", "normal"),
-                                        (" smaller than Full Context", BLUE["ink"], B, "normal", "normal")])
-    run(cv, ex + 3.4, by, [(f"{CELLS[LORA]:.1f}×", BLUE["mark"], T, "bold", "normal"),
+    yy = yy - 1.6 - pitch - 5.6
+    name(yy, NANO)
+    cells(cv, x, yy - 2.5, CELLS[NANO], 1, pitch, COL[NANO], by="row")
+    by = yy - 2.5 - pitch / 2 - 1.15
+    ex = run(cv, x + pitch + 1.8, by, [(f"{CELLS[FULL]:.0f}×", BLUE["mark"], T, "bold", "normal"),
+                                       (" smaller than Full Context,", BLUE["ink"], B, "normal", "normal")])
+    run(cv, ex + 1.6, by, [(f"{CELLS[LORA]:.1f}×", BLUE["mark"], B, "bold", "normal"),
                            (" smaller than Temp-LoRA", BLUE["ink"], B, "normal", "normal")])
+    return by
 
 
 def render(out):
-    cv = Canvas(178, 70, size=B)
-    latency_panel(cv, 0.4, 0.4, 87.6, 69.2)
-    storage_panel(cv, 91.0, 0.4, 86.6, 69.2)
+    W, H = 178.0, 61.0
+    cv = Canvas(W, H, size=B)
+    right = latency_panel(cv, 1.0, H - 0.8)
+    xb = 94.0
+    assert xb - right >= 8.0, "unframed panels need an 8-10 mm gutter"
+    storage_panel(cv, xb, H - 0.8)
     assert not cv.overlaps(), cv.overlaps()
     assert not cv.text_overlaps(), cv.text_overlaps()
     assert not cv.wire_crossings(), cv.wire_crossings()

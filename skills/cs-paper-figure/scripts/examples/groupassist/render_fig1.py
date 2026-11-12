@@ -113,7 +113,7 @@ def draw(out, vector=False):
 
     # ------------------------------------------------ benchmark card (top left)
     LX, LW = 1.0, 51.5
-    S.frame(cv, LX, T(1.5), LW, 32.5)
+    S.tray(cv, LX, T(1.5), LW, 32.5)
     S.header(cv, LX, T(1.5), LW, 6.2, "GroupAssistBench", size=8.4)
     for k, (kind, num, lab) in enumerate((("groups", "50", "group chats"), ("messages", "80,299", "messages"),
                                           ("instances", "2,395", "instances"))):
@@ -140,11 +140,11 @@ def draw(out, vector=False):
 
     # ------------------------------------------------ the thread (top right)
     TX, TW, TTOP, TH = 55.0, 122.0, 1.5, 47.4
-    S.frame(cv, TX, T(TTOP), TW, TH)
+    S.tray(cv, TX, T(TTOP), TW, TH)
     S.header(cv, TX, T(TTOP), TW, 8.0, "Trip-planning group", "9 members · 2,236 turns · April 15–24", size=8.4)
     ax = TX + TW - 4.4
     S.avatar(cv, "assistant", ax, T(TTOP + 4.0), 5.4)
-    cv.text(ax - 5.2, T(TTOP + 4.05), "+4", size=6.4, color="white", weight="bold")
+    cv.text(ax - 5.2, T(TTOP + 4.05), "+4", size=6.4, color=INK, weight="bold")
     for k, who in enumerate(("lin_xi", "jiang_chen", "li_lei", "lu_ye", "zhou_yue")):
         S.avatar(cv, who, ax - 10.2 - k * 5.9, T(TTOP + 4.0), 5.4)
     COLW = 58.5
@@ -185,8 +185,7 @@ def draw(out, vector=False):
     def band(top, h, r, code, name, total, letter, hi, title, source, cut, marks, labels, query, who, key_title,
              key_note, rows):
         c = ROLE[r]
-        cv.ax.add_patch(FancyBboxPatch((1.0, T(top + h)), W - 2.0, h, boxstyle="round,pad=0,rounding_size=2.0",
-                                       fc=c["fill"], ec=c["stroke"], lw=0.7, zorder=1))
+        S.tray(cv, 1.0, T(top), W - 2.0, h, r=r, z=1)
         # row tab
         cv.ax.add_patch(FancyBboxPatch((2.0, T(top + h - 1.0)), 11.6, h - 2.0, boxstyle="round,pad=0,rounding_size=1.4",
                                        fc=c["mark"], ec="none", zorder=2))
@@ -231,7 +230,7 @@ def draw(out, vector=False):
             S.avatar(cv, who, SX + 2.6, T(qy + qh / 2), 5.0)
         S.mono_para(cv, bx + 1.4, T(qy + 0.8), query, chars)
         # answer key
-        S.frame(cv, KX, T(top + 1.2), KW, h - 2.4, r=r, radius=1.4, lw=0.6, z=2)
+        S.frame(cv, KX, T(top + 1.2), KW, h - 2.4, r=r, radius=1.4, lw=0, z=2)
         cv.text(KX + 1.8, T(top + 3.7), key_title, size=6.9, weight="bold", color=c["ink"], ha="left")
         S.lock_tag(cv, KX + KW - 1.6, T(top + 3.7))
         cv.ax.plot([KX + 1.4, KX + KW - 1.4], [T(top + 5.6)] * 2, color=c["soft"], lw=0.6, zorder=3)
@@ -283,7 +282,7 @@ def draw(out, vector=False):
         (cells, 6.8, "seen history, the cut (L1 / L2), not visible; 10 messages per cell"),
         (lambda x, y: cv.ax.add_patch(Rectangle((x - 1.3, y - 1.3), 2.6, 2.6, fc=slate["mark"], ec="none", zorder=11)),
          2.6, "area = instances"),
-    ])
+    ], frame=False)
 
     assert not cv.overlaps(), cv.overlaps()
     assert not cv.text_overlaps(), cv.text_overlaps()

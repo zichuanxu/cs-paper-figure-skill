@@ -11,23 +11,29 @@ its fact, turn and span and the spans of #342 (found) and #431 (not found); the 
 conflict pair #34 -> #342 with its three votes; the two instances built from the thread (L1 x M2 from the
 native request #104, L2 x M3 from an authored request cut at #452) with their reference facts and rubric
 rows; the checks of the gates, the model review and the human validation; the feedback quote #1474 and
-the route feedback -> five failure patterns -> penalty criteria; the instance tuple (c, q, A, K).
+the route feedback -> five failure patterns -> penalty criteria; the instance tuple (c, q, A, K) and what
+its four letters stand for.
 
-Design:
-* One row of five numbered step columns, read left to right; a solid header names the step and the line
-  under it gives what comes out, with the counts of Appendix A, so the row is also the funnel
-  13,782 -> 7,926 requests, 22,843 anchors, 595 -> 338 pairs, 9,542 instances -> 2,395 sampled.
-* The source is the thread itself, drawn as the same strip of ten-message cells as in Fig. 1
-  (render_fig1.py), with the requests named above it and the anchors below. Every step then works on
-  messages of that one thread, so the reader can follow #342 from the strip through the anchor record,
-  the conflict pair and the rubric to the gate that checks it.
+Design (plate register, kept light: no header band, no frame, one panel treatment):
+* Message: five checked steps turn one real group thread into evaluation instances, and every step
+  filters. The hero is the anchor, the one amber thing in a black, white and slate figure: the cell of
+  #342 on the thread, the span it puts into the answer of #397, its record in step 2 (the only outlined,
+  tinted card), the units of step 3, the rubric rows of step 4. #342 is the only message id set in bold.
+* One row of five numbered steps, read left to right. A step is a plain head on the page (numbered disc
+  and name, the count of Appendix A, a bar that shows the share kept) above a pale borderless tray, so
+  the row is also the funnel 13,782 -> 7,926 requests, 22,843 anchors, 595 -> 338 pairs, 9,542 instances
+  -> 2,395 sampled. Things from the thread and things the pipeline makes are white tiles on the tray.
+* The source is the thread itself, the same strip of ten-message cells as in Fig. 1 (render_fig1.py),
+  with the requests named above it and the memories below.
 * Each sub-step carries one glyph for who does it (gear = rules, sparkle = language model, person =
-  humans) and a data object: two answers side by side in monospace, the anchor record, chips for memory
-  units, instance cards with key rows, check lists.
-* Feedback is a side channel, so it is a rail under the row that enters step 4 at the penalty row it
-  produces; the M3 branch stays inside step 3, where the pair is verified.
-* Colour as in Fig. 1 (ga_style.py): amber = anchor, red = superseded / dropped / penalty, green =
-  current / kept, blue = L1, purple = L2, slate = the benchmark's own structure.
+  humans) and works on a message of that thread. What a step drops is the same drawing in grey.
+* Feedback is a side channel, so it is a rail under the row, on the page. Its five failure patterns are
+  drawn as rubric rows in waiting (outlined weights); the one this thread triggers is solid and rises
+  into the penalty row of instance B that it produces.
+* Colour, as in Fig. 1 (ga_style.py): amber = anchor, red = superseded / dropped / penalty, green =
+  current / kept. The level colours of Fig. 1 are not used here; structure is slate grey.
+* Type: 8.4 pt step names, 6.6 pt labels, 5.8 pt notes and the mono words of the conversation.
+  Strokes: 0.6 pt outlines, 1.0 pt arrows and ticks. Arrows: grey = next step, red = feedback.
 * Where the source figure departs from the paper's text, the text wins: the steps are numbered 1-5 as in
   Sec. 3.2 (the source leaves "Assign dependency type" unnumbered); "M3" for "D3 pairs"; "three annotators,
   120 instances, 95.8% valid by majority" (Sec. 3.2, Appendix C) for "two annotators, agreement kappa";
@@ -42,345 +48,395 @@ import argparse
 import os
 import sys
 
-from matplotlib.patches import Circle, FancyBboxPatch
+from matplotlib.patches import Circle, FancyBboxPatch, Rectangle
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "..", ".."))
 import ga_style as S  # noqa: E402
-from ga_style import ANCHOR, CUR, INK, L1, L2, MUTED, OLD, ROLE, STRUCT  # noqa: E402
+from ga_style import ANCHOR, CUR, INK, MUTED, OLD, ROLE, STRUCT  # noqa: E402
 from paperkit import Canvas  # noqa: E402
 
 STEM = "groupassist_fig2_pipeline"
-W, H = 178, 114.1
-P = 5.9 * 0.415                      # mono line pitch (mm)
+W, H = 178, 103.0
+T1, T2, T3 = 8.4, 6.6, 5.8          # step names; labels; notes and the conversation's own words (mono)
+LW, AW = 0.6, 1.0                    # outlines and rules; arrows
+P = T3 * 0.415                       # mono line pitch (mm)
 FUNNEL = dict(points=13782, requests=10191, kept=7926, proposals=22843, rejected=154, pairs=595, accepted=338,
               passed=9542, excluded=440, sampled=2395)                      # Appendix A, Table 2
 assert FUNNEL["kept"] == 6772 + 1154
 PATTERNS = [("member's current state", -3), ("recalled fact", -2), ("agreement or constraint", -2),
             ("superseded value", -2), ("settled plan", -1)]                 # Table 7
 assert 23 + 24 + 21 + 12 + 17 == 97
+HOT = "superseded value"            # the pattern this thread triggers
 
 
 def draw(out, vector=False):
     S.VECTOR = vector
-    cv = Canvas(W, H, family="sans", size=6.3)
+    cv = Canvas(W, H, family="sans", size=T2)
     T = lambda t: H - t                                             # noqa: E731  (top-down millimetres)
-    slate = ROLE[STRUCT]
-    cw = S.mono_w(cv, 5.9)
-
+    slate, amb, red = ROLE[STRUCT], ROLE[ANCHOR], ROLE[OLD]
+    cw = S.mono_w(cv, T3)
     tight = []
 
-    def fits(s, size, w, weight="normal"):
-        if cv.text_width(s, size, weight) > w:
-            tight.append(f"'{s}' is {cv.text_width(s, size, weight):.1f} mm, room {w:.1f}")
+    def fits(s, size, w, weight="normal", **kw):
+        if cv.text_width(s, size, weight, **kw) > w:
+            tight.append(f"'{s}' is {cv.text_width(s, size, weight, **kw):.1f} mm, room {w:.1f}")
+
+    def seg(x, y, segs, size=T2):
+        return S.seg_line(cv, x, y, segs, size=size, mono_size=T3)
+
+    def mid_seg(mid):
+        """A message id in mono; #342, the anchor the figure follows, is the only bold one."""
+        hot = mid == 342
+        return (f"#{mid} ", INK if hot else MUTED, "bold" if hot else "normal", None, True)
+
+    def rule(x0, x1, t, color=None):
+        cv.ax.plot([x0, x1], [T(t)] * 2, color=color or slate["soft"], lw=LW, zorder=3, solid_capstyle="butt")
+
+    def card(x, t, w, h, fill="white", edge="none", name=""):
+        """An object from the thread or made by the pipeline (a message, the anchor record, an instance): a
+        white tile on the step's tray, borderless; only the anchor record, the hero, keeps an outline."""
+        cv.solids.append((x, T(t + h), w, h, f"card {name}", None))
+        cv.ax.add_patch(FancyBboxPatch((x, T(t + h)), w, h, boxstyle="round,pad=0,rounding_size=1.1", fc=fill,
+                                       ec=edge, lw=LW, zorder=4))
 
     # ------------------------------------------------ source: the thread
-    S.frame(cv, 1.0, T(1.5), W - 2.0, 12.4)
-    cv.ax.add_patch(FancyBboxPatch((1.0, T(13.9)), 50.0, 12.4, boxstyle="round,pad=0,rounding_size=1.8", fc=S.SLATE,
-                                   ec="none", zorder=2))
     for k, who in enumerate(("zhou_yue", "lu_ye", "assistant")):   # a cluster; the vector stand-ins need clear discs
-        S.avatar(cv, who, 5.8 + k * (4.9 if vector else 4.0), T(7.7), 4.7 if vector else 6.2, z=12 + k)
-    cv.text(19.6, T(5.6), "Group conversations", size=7.6, weight="bold", color="white", ha="left")
-    cv.text(19.6, T(9.7), "50 groups · 80,299 messages", size=6.0, color="#D5DCE8", ha="left")
-    SX, SW = 89.0, 53.0
-    cv.text(53.4, T(4.9), "Trip-planning group", size=6.6, weight="bold", color=slate["ink"], ha="left")
-    cv.text(53.4, T(7.9), "2,236 turns", size=6.0, color=INK, ha="left")
-    cv.text(53.4, T(10.8), "10 messages per cell", size=5.8, color=MUTED, style="italic", ha="left")
-    sy = T(9.0)
+        S.avatar(cv, who, 4.1 + k * (4.9 if vector else 4.0), T(6.4), 4.7 if vector else 6.2, z=12 + k)
+    cv.text(17.4, T(4.5), "Group conversations", size=T1, weight="bold", ha="left")
+    cv.text(17.4, T(8.5), "50 groups · 80,299 messages", size=T2, ha="left")
+    for k, s_ in enumerate(("de-identified, real-world", "everyday settings", "Chinese + English translation")):
+        cv.text(52.0, T(3.6 + k * 2.8), s_, size=T3, color=MUTED, ha="left")
+    cv.text(86.0, T(3.6), "Trip-planning group", size=T2, ha="left")
+    cv.text(86.0, T(6.5), "2,236 turns", size=T2, ha="left")
+    cv.text(86.0, T(9.3), "10 messages per cell", size=T3, color=MUTED, style="italic", ha="left")
+    SX, SW = 121.0, 56.0
+    sy = T(7.7)
     fx = S.strip(cv, SX, sy, SW, marks={34: ANCHOR, 326: ANCHOR, 342: ANCHOR, 363: ANCHOR, 104: STRUCT, 397: STRUCT,
                                         452: STRUCT})
-    for mid, lab, ha in ((104, "#104", "center"), (343, "#343", "right"), (397, "#397", "center"), (452, "#452", "center")):
-        S.strip_label(cv, fx(mid), sy + 2.4, lab, color=slate["ink"], weight="bold", ha=ha)
-    amber = ROLE[ANCHOR]["ink"]
-    S.strip_label(cv, fx(34), sy, "#34 #35", color=amber, above=False, weight="bold")
+    for mid in (104, 343, 397, 452):                                # #343 is the request that step 1 drops
+        S.strip_label(cv, fx(mid), sy + 2.4, f"#{mid}", color=MUTED if mid == 343 else INK, size=T3)
+    S.strip_label(cv, fx(34), sy, "#34 #35", color=amb["ink"], above=False, size=T3)
     for mid in (326, 363):
-        cv.ax.plot([fx(mid)] * 2, [sy, sy - 1.0], color=amber, lw=0.5, zorder=7)
-    S.strip_label(cv, fx(342), sy, "#326 #342 #363", color=amber, above=False, weight="bold")
-    cv.text(SX - 1.4, sy + 3.55, "requests", size=5.8, color=slate["ink"], style="italic", ha="right")
-    cv.text(SX - 1.4, sy - 2.15, "memories", size=5.8, color=amber, style="italic", ha="right")
-    for k, s_ in enumerate(("de-identified, real-world", "everyday settings", "Chinese + English translation")):
-        cv.ax.add_patch(Circle((145.6, T(4.5 + k * 3.2)), 0.38, fc=slate["stroke"], ec="none", zorder=5))
-        cv.text(146.8, T(4.5 + k * 3.2), s_, size=6.0, color=INK, ha="left")
-    cv.block_arrow(23.0, T(14.3), 23.0, T(17.9), width=3.6, color=slate["stroke"], head=2.2)
+        cv.ax.plot([fx(mid)] * 2, [sy, sy - 1.0], color=amb["ink"], lw=LW, zorder=7)
+    S.strip_label(cv, fx(342), sy, "#326 #342 #363", color=amb["ink"], above=False, size=T3)
+    cv.text(SX - 1.4, sy + 4.55, "requests", size=T3, color=MUTED, style="italic", ha="right")
+    cv.text(SX - 1.4, sy - 2.15, "memories", size=T3, color=amb["ink"], style="italic", ha="right")
 
-    # ------------------------------------------------ the five step columns
-    PT, PH, GUT = 18.2, 67.5, 2.3
-    widths = [44.4, 33.0, 27.0, 34.8, 27.6]
-    xs = [1.0]
+    # ------------------------------------------------ the five steps: number, name, count, share kept
+    COL_T, PAD, GAP, EDGE = 13.2, 1.3, 0.8, 0.9       # trays: inner padding, white gap between two, outer margin
+    GUT = 2 * PAD + GAP
+    widths = [40.4, 33.6, 24.5, 35.3, 26.2]
+    xs = [EDGE + PAD]
     for w in widths[:-1]:
         xs.append(xs[-1] + w + GUT)
-    assert abs(xs[-1] + widths[-1] - (W - 1.0)) < 1e-6
+    assert abs(xs[-1] + widths[-1] - (W - EDGE - PAD)) < 1e-6
     names = ["Locate requests", "Anchor memories", "Assign type", "Build instances", "Quality control"]
     outs = [f"{FUNNEL['points']:,} candidates → {FUNNEL['kept']:,} kept",
             f"{FUNNEL['proposals']:,} anchors, {FUNNEL['rejected']} rejected",
             f"{FUNNEL['pairs']} pairs → {FUNNEL['accepted']} kept",
             "instance (c, q, A, K)",
             f"{FUNNEL['passed']:,} pass, {FUNNEL['excluded']} fail"]
-    for k, (x0, w) in enumerate(zip(xs, widths)):
-        S.frame(cv, x0, T(PT), w, PH)
-        S.header(cv, x0, T(PT), w, 6.0, names[k], size=7.4, tx=x0 + 6.6)
-        cv.ax.add_patch(Circle((x0 + 3.6, T(PT + 3.0)), 1.9, fc="white", ec="none", zorder=5))
-        cv.text(x0 + 3.6, T(PT + 3.05), str(k + 1), size=7.4, weight="bold", color=S.SLATE, z=6)
-        fits(outs[k], 6.0, w - 2.6)
-        cv.text(x0 + w / 2, T(PT + 8.1), outs[k], size=6.0, color=slate["ink"], style="italic")
-        cv.ax.plot([x0 + 1.3, x0 + w - 1.3], [T(PT + 10.0)] * 2, color=slate["soft"], lw=0.6, zorder=3)
+    shares = [(FUNNEL["kept"], FUNNEL["points"] - FUNNEL["kept"]),          # (kept, dropped) at this step
+              (FUNNEL["proposals"] - FUNNEL["rejected"], FUNNEL["rejected"]),
+              (FUNNEL["accepted"], FUNNEL["pairs"] - FUNNEL["accepted"]),
+              None,
+              (FUNNEL["passed"], FUNNEL["excluded"])]
+    cv.arrow([(EDGE + 2.3, T(10.1)), (EDGE + 2.3, T(COL_T))], color=slate["stroke"], lw=AW, head=1.5)
+    for k, (x0, w) in enumerate(zip(xs, widths)):                   # a plain head above each tray, as wide as the tray
+        hx, hw = x0 - PAD, w + 2 * PAD
+        y = T(COL_T + 2.3)
+        cv.ax.add_patch(Circle((hx + 2.3, y), 2.3, fc=slate["ink"], ec="none", zorder=5))
+        cv.text(hx + 2.3, y - 0.05, str(k + 1), size=T1, weight="bold", color="white", z=6)
+        fits(names[k], T1, hw - 5.7 - (4.2 if k < 4 else 0), "bold")
+        cv.text(hx + 5.7, y - 0.05, names[k], size=T1, weight="bold", ha="left")
+        fits(outs[k], T2, hw)
+        cv.text(hx, T(COL_T + 7.0), outs[k], size=T2, ha="left", style="normal" if shares[k] else "italic")
+        by, bh = T(COL_T + 9.9), 0.9
+        if shares[k]:
+            f = shares[k][0] / sum(shares[k])
+            cv.ax.add_patch(Rectangle((hx, by), hw * f, bh, fc=slate["stroke"], ec="none", zorder=3))
+            cv.ax.add_patch(Rectangle((hx + hw * f, by), hw * (1 - f), bh, fc=red["soft"], ec="none", zorder=3))
+        else:
+            rule(hx, hx + hw, COL_T + 9.9 - bh / 2, slate["soft"])
         if k:
-            cv.arrow([(x0 - GUT, T(PT + 3.0)), (x0, T(PT + 3.0))], color=S.SLATE, lw=1.3, head=1.7)
-    BOT = PT + PH
+            cv.arrow([(hx - GAP - 2.6, y), (hx - 0.1, y)], color=slate["stroke"], lw=AW, head=1.5)
+    BT = COL_T + 12.6                                               # top of the step bodies
 
-    def substep(x0, w, t, letter, doer, label):
-        """'a [doer glyph] Label': who does this sub-step. Returns the next top."""
-        fits(label, 6.3, w - 3.0 - 5.9, "bold")
-        cv.text(x0 + 1.8, T(t + 1.6), letter, size=6.3, weight="bold", color=MUTED, ha="left")
-        S.DOER[doer](cv, x0 + 5.0, T(t + 1.6), 2.5, color=slate["ink"])
-        cv.text(x0 + 6.9, T(t + 1.6), label, size=6.3, weight="bold", color=slate["ink"], ha="left")
-        return t + 3.7
+    def substep(x0, t, letter, doer, label, w):
+        """'a [doer glyph] Label': who does this sub-step. label is a string or seg_line segments."""
+        y = T(t + 1.5)
+        cv.text(x0, y, letter, size=T2, weight="bold", color=MUTED, ha="left")
+        S.DOER[doer](cv, x0 + 3.9, y, 2.5, color=slate["ink"])
+        ex = seg(x0 + 5.8, y, [(label, INK, "normal")] if isinstance(label, str) else label)
+        if ex > x0 + w + 0.05:
+            tight.append(f"sub-step {letter} of the column at {x0} ends at {ex:.1f}, edge {x0 + w:.1f}")
+        return t + 3.4
 
-    def card(x, t, w, h, r=STRUCT, fill="white", lw=0.5, name=""):
-        c = ROLE[r]
-        cv.solids.append((x, T(t + h), w, h, f"card {name}", None))
-        cv.ax.add_patch(FancyBboxPatch((x, T(t + h)), w, h, boxstyle="round,pad=0,rounding_size=1.1", fc=fill,
-                                       ec=c["stroke"], lw=lw, zorder=4))
+    ends = []
+    G = [3.8, 2.8, 7.6, 1.4, 2.0]                                   # the group gap of each column
 
     # ---- 1 Locate requests
     x0, w = xs[0], widths[0]
-    t = substep(x0, w, PT + 11.0, "a", "rule", "Enumerate candidate requests")
-    t = substep(x0, w, t, "b", "model", "Answer with and without history")
+    t = substep(x0, BT, "a", "rule", "Enumerate candidate requests", w)
+    t = substep(x0, t, "b", "model", "Answer with and without history", w)
 
-    def request(t, mid, query, yp, ym, hl, ok, note):
-        cx, cwd = x0 + 1.5, w - 3.0
-        ch, ch2 = int((cwd - 2.4) / cw), int((cwd - 2.4 - 5.2) / cw)
-        nq, n1, n2 = S.n_lines(query, ch), S.n_lines(yp, ch2), S.n_lines(ym, ch2)
-        h = 1.0 + nq * P + 1.0 + n1 * P + 0.6 + n2 * P + 0.9 + 3.2 + 0.8
-        card(cx, t, cwd, h, name=f"#{mid}")
-        y = S.mono_para(cv, cx + 1.2, T(t + 1.0), query, ch, weight="bold", color=slate["ink"])
-        cv.ax.plot([cx + 1.0, cx + cwd - 1.0], [y - 0.5] * 2, color=slate["soft"], lw=0.6, zorder=5)
-        for sym, txt, hh in ((r"$\hat{y}^{+}$", yp, hl), (r"$\hat{y}^{-}$", ym, ())):
-            cv.text(cx + 1.2, y - 1.0 - P / 2, sym, size=6.6, color=slate["ink"], ha="left")
-            y = S.mono_para(cv, cx + 1.2 + 5.2, y - 1.0, txt, ch2, hl=hh) + 0.4
-        vy = T(t + h - 2.4)
-        S.verdict(cv, cx + cwd - 1.2, vy, ok, "keep" if ok else "drop", ha="right")
-        cv.text(cx + 1.2, vy, note, size=5.9, color=MUTED, style="italic", ha="left")
-        return t + h + 1.2
+    def request(t, query, yp, ym, hl, ok, note):
+        """One candidate request (a white message bubble) with both answers; the dropped one is the same
+        drawing in grey."""
+        col = INK if ok else MUTED
+        ch, ch2 = int((w - 2.0) / cw), int((w - 1.0 - 7.8) / cw)
+        qh = S.n_lines(query, ch) * P + 1.4
+        card(x0, t, w, qh, name=query[:4])
+        S.mono_para(cv, x0 + 1.0, T(t + 0.7), query, ch, size=T3, color=col, weight="bold")
+        y = T(t + qh + 0.3)
+        for how, txt, hh in (("with", yp, hl), ("without", ym, ())):
+            assert S.n_lines(txt, ch2) == 2, (txt, ch2)
+            cv.text(x0 + 1.0, y - 0.5 - P / 2, how, size=T3, color=MUTED, style="italic", ha="left")
+            y = S.mono_para(cv, x0 + 1.0 + 7.8, y - 0.5, txt, ch2, size=T3, hl=hh, color=col)
+        vy = y - 2.5
+        S.verdict(cv, x0 + w, vy, ok, "keep" if ok else "drop", ha="right", size=T2)
+        cv.text(x0 + 1.0, vy, note, size=T3, color=MUTED, style="italic", ha="left")
+        return H - vy + 1.5
 
-    t = request(t, 397, "#397 @Agent check when we can start booking tickets",
+    t = request(t + 1.2, "#397 @Agent check when we can start booking tickets",
                 "You have an Apr 30 train and start watching…", "Please confirm the booking time…",
                 [("Apr 30 train", ANCHOR)], True, "history changes the answer")
-    t = request(t, 343, "#343 @Agent check the rail fare from Chongqing to Chengdu…",
+    t = request(t + G[0], "#343 @Agent check the rail fare from Chongqing to Chengdu…",
                 "About ¥100–200 for second class; check 12306.", "About ¥100–200 for second class, …",
                 (), False, "same answer without it")
-    assert t - 1.2 <= BOT - 1.0, t
+    ends.append(t)
 
     # ---- 2 Anchor memories
     x0, w = xs[1], widths[1]
-    cx, cwd = x0 + 1.5, w - 3.0
-    t = substep(x0, w, PT + 11.0, "a", "model", "Extract memories")
-    S.seg_line(cv, cx + 0.4, T(t + 1.2), [("for request ", MUTED, "normal"), ("#397", slate["ink"], "bold", None, True)],
-               size=6.0)
-    t += 3.2
-    ac = ROLE[ANCHOR]
-    card(cx, t, cwd, 20.4, r=ANCHOR, fill=ac["fill"], lw=0.8, name="anchor")
-    cv.text(cx + 1.4, T(t + 2.0), "anchor", size=6.4, weight="bold", color=ac["ink"], ha="left")
-    cv.text(cx + cwd - 1.4, T(t + 2.0), "a = (f, t, e)", size=6.2, color=ac["ink"], style="italic", ha="right")
-    cv.ax.plot([cx + 1.0, cx + cwd - 1.0], [T(t + 3.9)] * 2, color=ac["soft"], lw=0.6, zorder=5)
-    kx, vx = cx + 1.4, cx + 8.0
-    cv.text(kx, T(t + 5.7), "fact", size=6.0, weight="bold", color=ac["ink"], ha="left")
-    yb = S.sans_para(cv, vx, T(t + 4.4), "departure moved to Apr 30", cwd - 8.0 - 1.2, size=6.2)
-    t2 = H - yb + 0.5
-    cv.text(kx, T(t2 + 1.6), "turn", size=6.0, weight="bold", color=ac["ink"], ha="left")
-    S.seg_line(cv, vx, T(t2 + 1.6), [("#342 ", MUTED, "normal", None, True), ("Zhou Yue", INK, "normal")], size=6.2)
-    S.avatar(cv, "zhou_yue", cx + cwd - 3.2, T(t2 + 1.6), 4.0)
-    t2 += 3.6
-    cv.text(kx, T(t2 + 1.3), "span", size=6.0, weight="bold", color=ac["ink"], ha="left")
-    cv.text(cx + cwd - 1.4, T(t2 + 1.3), "verbatim in #342", size=5.8, color=MUTED, style="italic", ha="right")
-    S.mono_para(cv, kx, T(t2 + 3.0), "“we leave on Apr 30”", 22, hl=[("“we leave on Apr 30”", ANCHOR)])
-    t += 20.4 + 2.0
-    for mid, s in ((34, "meet 7:30 am, May 1"), (326, "rail both ways")):
-        cv.ax.add_patch(FancyBboxPatch((cx + 0.4, T(t + 2.7)), 2.2, 2.2, boxstyle="round,pad=0,rounding_size=0.5",
-                                       fc=S.HL[ANCHOR], ec=ac["stroke"], lw=0.45, zorder=5))
-        S.seg_line(cv, cx + 3.6, T(t + 1.6), [(f"#{mid} ", MUTED, "normal", None, True), (s, INK, "normal")], size=6.2)
-        t += 3.3
-    t = substep(x0, w, t + 1.3, "b", "rule", "Verify evidence spans")
+    t = substep(x0, BT, "a", "model", "Extract memories", w)
+    seg(x0 + 5.8, T(t + 1.0), [("for request ", MUTED, "normal"), ("#397", INK, "normal", None, True)], size=T3)
+    t += 3.9
+    rec_t = t
+    kx, vx = x0 + 1.4, x0 + 7.4
+    cv.text(kx, T(t + 2.0), "anchor", size=T2, weight="bold", color=amb["ink"], ha="left", z=21)
+    cv.text(x0 + w - 1.4, T(t + 2.0), "a = (f, t, e)", size=T2, color=amb["ink"], style="italic", ha="right", z=21)
+    rule(x0 + 1.0, x0 + w - 1.0, t + 3.9, amb["soft"])
+    cv.text(kx, T(t + 5.9), "fact", size=T3, color=amb["ink"], ha="left")
+    yb = S.sans_para(cv, vx, T(t + 4.6), "departure moved to Apr 30", 22.0, size=T2)
+    t = H - yb + 0.7
+    cv.text(kx, T(t + 1.5), "turn", size=T3, color=amb["ink"], ha="left")
+    seg(vx, T(t + 1.5), [mid_seg(342), ("Zhou Yue", INK, "normal")])
+    S.avatar(cv, "zhou_yue", x0 + w - 3.3, T(t + 1.5), 4.0)
+    t += 3.6
+    span = "“we leave on Apr 30”"
+    assert vx + len(span) * cw <= x0 + w - 1.0, "the span leaves the anchor record"
+    cv.text(kx, T(t + 1.5), "span", size=T3, color=amb["ink"], ha="left")
+    S.mono_para(cv, vx, T(t + 1.5) + P / 2, span, len(span), size=T3, hl=[(span, ANCHOR)])
+    t += 3.9
+    card(x0, rec_t, w, t - rec_t, fill=amb["fill"], edge=amb["stroke"], name="anchor")
+    t += 2.4
+    for mid, s in ((34, "meet 7:30 am, May 1"), (326, "rail both ways")):          # the request's other anchors
+        cv.ax.add_patch(FancyBboxPatch((x0 + 1.4, T(t + 2.6)), 2.2, 2.2, boxstyle="round,pad=0,rounding_size=0.5",
+                                       fc=S.HL[ANCHOR], ec=amb["stroke"], lw=LW, zorder=5))
+        seg(x0 + 4.8, T(t + 1.5), [mid_seg(mid), (s, INK, "normal")])
+        t += 3.2
+    t = substep(x0, t + G[1], "b", "rule", "Verify evidence spans", w)
     for mid, s, ok in ((342, "verbatim", True), (431, "not found", False)):
-        S.seg_line(cv, cx + 0.4, T(t + 1.7), [(f"#{mid} ", MUTED, "normal", None, True), (s, INK, "normal")], size=6.2)
-        S.verdict(cv, cx + cwd - 0.2, T(t + 1.7), ok, "keep" if ok else "drop", ha="right")
-        t += 3.9
-    cv.ax.plot([cx, cx + cwd], [T(t + 0.6)] * 2, color=slate["soft"], lw=0.6, zorder=3)
-    t += 1.6
-    t = H - S.sans_para(cv, cx + 0.4, T(t), "Verified anchors go to a per-group inventory.", cwd - 0.8, size=5.9,
+        seg(x0 + 1.4, T(t + 1.7), [mid_seg(mid), (s, INK if ok else MUTED, "normal")])
+        S.verdict(cv, x0 + w, T(t + 1.7), ok, "keep" if ok else "drop", ha="right", size=T2)
+        t += 4.0
+    t = H - S.sans_para(cv, x0 + 1.4, T(t + 1.1), "Verified anchors go to a per-group inventory.", w - 1.4, size=T3,
                         color=MUTED, style="italic")
-    assert t <= BOT - 1.0, t
+    ends.append(t)
 
     # ---- 3 Assign dependency type
     x0, w = xs[2], widths[2]
-    cx, cwd = x0 + 1.5, w - 3.0
-    t = substep(x0, w, PT + 11.0, "a", "rule", "Count units")
+    t = substep(x0, BT, "a", "rule", "Count units", w)
 
-    def chip(px, py, r, struck=False):
+    def unit(px, py):
         cv.ax.add_patch(FancyBboxPatch((px - 1.4, py - 1.0), 2.8, 2.0, boxstyle="round,pad=0,rounding_size=0.45",
-                                       fc=S.HL[r], ec=ROLE[r]["stroke"], lw=0.45, zorder=6))
-        if struck:
-            cv.ax.plot([px - 1.0, px + 1.0], [py - 0.6, py + 0.6], color=ROLE[r]["ink"], lw=0.6, zorder=7)
+                                       fc=S.HL[ANCHOR], ec=amb["stroke"], lw=LW, zorder=6))
 
     for code, n, lab in (("M1", 1, "one memory unit"), ("M2", 2, "two or more")):
-        cv.text(cx + 0.4, T(t + 1.7), code, size=6.6, weight="bold", color=slate["ink"], ha="left")
+        cv.text(x0 + 1.4, T(t + 1.6), code, size=T2, weight="bold", ha="left")
         for j in range(n):
-            chip(cx + 7.4 + j * 3.2, T(t + 1.7), ANCHOR)
-        cv.text(cx + 0.4, T(t + 4.7), lab, size=6.0, color=INK, ha="left")
-        t += 7.8
-    # the M3 branch: a verified conflict pair
-    mh = BOT - 1.2 - t
-    cv.ax.add_patch(FancyBboxPatch((cx - 0.5, T(t + mh)), cwd + 1.0, mh, boxstyle="round,pad=0,rounding_size=1.3",
-                                   fc=ROLE[OLD]["fill"], ec=ROLE[OLD]["stroke"], lw=0.6, ls=(0, (3, 2)), zorder=2))
-    cv.text(cx + 0.4, T(t + 2.2), "M3", size=6.6, weight="bold", color=ROLE[OLD]["ink"], ha="left")
-    cv.text(cx + 5.4, T(t + 2.2), "M2 + conflict pair", size=6.0, color=INK, ha="left")
-    t += 4.4
-    old = ROLE[OLD]
+            unit(x0 + 8.0 + j * 3.3, T(t + 1.6))
+        fits(lab, T3, w - 1.4)
+        cv.text(x0 + 1.4, T(t + 4.4), lab, size=T3, color=MUTED, ha="left")
+        t += G[2]
+    # the M3 branch: its sub-steps work on a verified conflict pair only, so they share one dashed scope
+    t += 0.9
+    m3_t = t
+    cv.text(x0 + 1.4, T(t + 2.2), "M3", size=T2, weight="bold", ha="left")
+    fits("M2 + conflict pair", T3, w - 6.6 - 1.0)
+    cv.text(x0 + 6.6, T(t + 2.2), "M2 + conflict pair", size=T3, color=MUTED, ha="left")
+    t += 4.8
     for mid, val, r, struck in ((34, "May 1", OLD, True), (342, "Apr 30", CUR, False)):
-        ex = S.seg_line(cv, cx + 0.6, T(t + 1.5), [(f"#{mid} ", MUTED, "normal", None, True),
-                                                   (val, INK, "bold", r)], size=6.3)
+        ex = seg(x0 + 1.4, T(t + 1.5), [mid_seg(mid), (val, INK, "normal", r)])
         if struck:
-            cv.ax.plot([ex - cv.text_width(val, 6.3, "bold") - 0.2, ex + 0.2], [T(t + 1.5)] * 2, color=old["ink"], lw=0.6,
+            cv.ax.plot([ex - cv.text_width(val, T2) - 0.2, ex + 0.2], [T(t + 1.5)] * 2, color=red["ink"], lw=LW,
                        zorder=22)
-        cv.text(cx + cwd - 0.9, T(t + 1.5), "old" if struck else "new", size=5.9, color=ROLE[r]["ink"], style="italic",
-                ha="right", weight="bold")
+        cv.text(x0 + w - 1.2, T(t + 1.5), "old" if struck else "new", size=T3, color=ROLE[r]["ink"], style="italic",
+                ha="right")
         t += 3.9
-    t += 1.2
-    t = substep(x0, w, t, "b", "rule", "Detect updates")
-    t = substep(x0, w, t, "c", "model", "Three votes")
-    cv.text(x0 + 2.0, T(t + 1.0), "same matter?", size=6.0, color=INK, ha="left")
+    t = substep(x0 + 1.4, t + 1.5, "b", "rule", "Detect updates", w - 2.4)
+    t = substep(x0 + 1.4, t + 0.5, "c", "model", "Three votes", w - 2.4)
+    cv.text(x0 + 1.4, T(t + 0.9), "same matter?", size=T3, color=MUTED, ha="left")
     for j in range(3):
-        S.tick(cv, x0 + 2.0 + cv.text_width("same matter?", 6.0) + 2.2 + j * 2.5, T(t + 1.0), True, s=1.7)
-    t += 3.6
-    t = substep(x0, w, t, "d", "rule", "Current at cut")
-    t = H - S.sans_para(cv, x0 + 2.0, T(t - 0.2), "if not, the cut moves before the next change", cwd - 1.2, size=5.9,
-                        color=MUTED, style="italic", pitch=2.4)
-    assert t <= BOT - 1.6, t
+        S.tick(cv, x0 + 1.4 + cv.text_width("same matter?", T3) + 2.2 + j * 2.5, T(t + 0.9), True, s=1.7)
+    t += 3.5
+    t = substep(x0 + 1.4, t + 0.5, "d", "rule", "Current at cut", w - 2.4)
+    t = H - S.sans_para(cv, x0 + 1.4, T(t - 0.3), "if not, the cut moves before the next change", w - 2.6, size=T3,
+                        color=MUTED, style="italic")
+    t += 1.3
+    cv.ax.add_patch(FancyBboxPatch((x0, T(t)), w, t - m3_t, boxstyle="round,pad=0,rounding_size=1.1", fc="none",
+                                   ec=slate["stroke"], lw=LW, ls=(0, (3, 2)), zorder=2))
+    ends.append(t)
 
     # ---- 4 Build instances
     x0, w = xs[3], widths[3]
-    cx, cwd = x0 + 1.5, w - 3.0
-    t = PT + 11.0
+    t = BT
     for letter, doer, lab in (("a", "model", "Write authored queries"), ("b", "model", "Derive facts, grounding"),
                               ("c", "rule", "Trigger penalties"), ("d", "model", "Propose service criteria")):
-        t = substep(x0, w, t, letter, doer, lab)
+        t = substep(x0, t, letter, doer, lab, w)
 
-    def instance(t, letter, r, title, source, query, rows):
-        c = ROLE[r]
-        ch = int((cwd - 2.4) / cw)
-        h = 4.6 + S.n_lines(query, ch) * P + 1.2 + len(rows) * 3.25 + 0.6
-        card(cx, t, cwd, h, r=r, fill=c["fill"], lw=0.8, name=letter)
-        S.letter_badge(cv, cx + 2.6, T(t + 2.4), letter, r, d=3.4)
-        ex = S.seg_line(cv, cx + 5.0, T(t + 2.4), [(title, c["ink"], "bold")], size=6.6)
-        cv.text(ex + 1.0, T(t + 2.45), source, size=5.9, color=MUTED, style="italic", ha="left")
-        cv.icon_lock(cx + cwd - 2.2, T(t + 2.3), 2.0, color=MUTED)
-        y = S.mono_para(cv, cx + 1.2, T(t + 4.6), query, ch)
-        cv.ax.plot([cx + 1.0, cx + cwd - 1.0], [y - 0.5] * 2, color=c["soft"], lw=0.6, zorder=5)
+    def weight_chip(x, y, wt, solid=True, z=9):
+        r = ROLE[CUR if wt > 0 else OLD]
+        cv.ax.add_patch(FancyBboxPatch((x, y - 1.3), 4.3, 2.6, boxstyle="round,pad=0,rounding_size=0.6",
+                                       fc=r["mark"] if solid else "white", ec=r["mark"], lw=LW, zorder=z))
+        cv.text(x + 2.15, y - 0.05, f"{'+' if wt > 0 else '−'}{abs(wt)}", size=T3, weight="bold",
+                color="white" if solid else r["ink"], z=z + 1)
+
+    def key_row(x, y, wd, kind, segs, mid):
+        """One line of an answer key: a ticked reference fact, or a rubric criterion with its signed weight."""
+        if kind == "fact":
+            cv.ax.add_patch(FancyBboxPatch((x, y - 1.2), 2.4, 2.4, boxstyle="round,pad=0,rounding_size=0.5",
+                                           fc=S.HL[ANCHOR], ec=amb["stroke"], lw=LW, zorder=9))
+            cv.icon_check(x + 1.2, y, 1.5, color=amb["ink"], lw=AW, z=10)
+            tx = x + 3.5
+        else:
+            weight_chip(x, y, kind)
+            tx = x + 5.3
+        ex = seg(tx, y, segs)
+        mx = x + wd - len(f"#{mid}") * cw
+        if ex > mx - 0.6:
+            tight.append(f"key row #{mid}: text ends at {ex:.1f}, id starts at {mx:.1f}")
+        seg(mx, y, [(f"#{mid}", INK if mid == 342 else MUTED, "bold" if mid == 342 else "normal", None, True)])
+
+    def instance(t, letter, title, source, query, who, rows):
+        ax_ = 5.2 if who else 0.0
+        ch = int((w - 2.4 - ax_) / cw)
+        nq = S.n_lines(query, ch)
+        h = 4.6 + max(nq * P, 4.4 if who else 0) + 1.2 + len(rows) * 3.3 + 0.5
+        card(x0, t, w, h, name=letter)
+        cv.ax.add_patch(Circle((x0 + 2.7, T(t + 2.5)), 1.8, fc=slate["ink"], ec="none", zorder=12))
+        cv.text(x0 + 2.7, T(t + 2.55), letter, size=T2, color="white", weight="bold", z=13)
+        ex = seg(x0 + 5.3, T(t + 2.5), [(title, INK, "bold")])
+        cv.text(ex + 1.2, T(t + 2.5), source, size=T3, color=MUTED, style="italic", ha="left")
+        cv.icon_lock(x0 + w - 2.3, T(t + 2.4), 2.0, color=MUTED)
+        qh = max(nq * P, 4.4 if who else 0)
+        if who:
+            S.avatar(cv, who, x0 + 3.4, T(t + 4.6 + qh / 2), 4.2)
+        S.mono_para(cv, x0 + 1.2 + ax_, T(t + 4.6 + (qh - nq * P) / 2), query, ch, size=T3)
+        rule(x0 + 1.0, x0 + w - 1.0, t + 4.6 + qh + 0.5)
         for k, (kind, segs, mid) in enumerate(rows):
-            ry = y - 1.2 - 1.4 - k * 3.25
-            S.key_row(cv, cx + 1.2, ry, cwd - 2.4, kind, segs, mid, size=6.0)
-        return t + h + 1.3
+            key_row(x0 + 1.2, T(t + 4.6 + qh + 1.2 + 1.5 + k * 3.3), w - 2.4, kind, segs, mid)
+        return t + h
 
-    t = instance(t + 0.3, "A", L1, "L1 × M2", "native", "#104 @Agent on departure day, remind…",
+    t = instance(t + 0.4, "A", "L1 × M2", "native", "#104 @Agent on departure day, remind…", "li_lei",
                  [("fact", [("meet ", INK, "normal"), ("7:30 am, May 1", INK, "normal", ANCHOR)], 34),
                   ("fact", [("no-show ", INK, "normal"), ("pays ¥500", INK, "normal", ANCHOR)], 35)])
-    t = instance(t, "B", L2, "L2 × M3", "authored", "#452 @Agent Post a reminder…",
+    t = instance(t + G[3], "B", "L2 × M3", "authored", "#452 @Agent Post a reminder…", None,
                  [(3, [("window seat", INK, "normal", ANCHOR)], 363),
                   (2, [("leaves ", INK, "normal"), ("Apr 30", INK, "normal", CUR)], 342),
                   (-2, [("uses old ", INK, "normal"), ("May 1", INK, "normal", OLD)], 34)])
-    assert t - 1.3 <= BOT - 0.9, t
-    b_bottom = t - 1.3
+    b_bottom = t
+    ends.append(b_bottom)
 
     # ---- 5 Quality control
     x0, w = xs[4], widths[4]
-    cx, cwd = x0 + 1.5, w - 3.0
 
     def checks(t, items):
         for s in items:
-            S.tick(cv, cx + 1.3, T(t + 1.25), True, s=1.7)
-            t = H - S.sans_para(cv, cx + 3.2, T(t), s, cwd - 3.2, size=6.0, pitch=2.45) + 0.5
-        return t + 0.4
+            cv.icon_check(x0 + 2.2, T(t + 1.25), 1.6, color=slate["ink"], lw=AW)
+            t = H - S.sans_para(cv, x0 + 4.2, T(t), s, w - 4.2, size=T3) + 0.7
+        return t + G[4]
 
-    t = substep(x0, w, PT + 11.0, "a", "rule", "Rule gates")
+    t = substep(x0, BT, "a", "rule", "Rule gates", w)
     t = checks(t, ["anchors precede the cut", "spans found verbatim", "query gives no cue of a change"])
-    t = substep(x0, w, t, "b", "model", "Model review")
+    t = substep(x0, t, "b", "model", "Model review", w)
     t = checks(t, ["each anchor is necessary", "query not answerable from its own wording",
                    "assistant turns only relay a member's fact", "M3 values concern one matter"])
-    t = substep(x0, w, t, "c", "human", "Human validation")
-    t = H - S.sans_para(cv, cx + 0.6, T(t), "3 annotators, 120 instances: 95.8% valid by majority", cwd - 1.0, size=6.0,
-                        pitch=2.45)
-    assert t <= BOT - 1.0, t
+    t = substep(x0, t, "c", "human", "Human validation", w)
+    t = H - S.sans_para(cv, x0 + 1.4, T(t), "3 annotators, 120 instances: 95.8% valid by majority", w - 1.4, size=T3)
+    ends.append(t)
+    BOT = max(ends)
+    for x0, w in zip(xs, widths):                                   # the step's tray: a pale field, no frame
+        S.tray(cv, x0 - PAD, T(BT - 1.4), w + 2 * PAD, BOT + PAD - (BT - 1.4))
+    assert BOT - min(ends) < 0.5, f"uneven columns: {[round(e - BT, 1) for e in ends]}"
 
-    # ------------------------------------------------ feedback rail -> penalty criteria
-    RT, RH = BOT + 3.4, 16.5
-    rx1 = xs[3] + widths[3]
-    red = ROLE[OLD]
-    cv.ax.add_patch(FancyBboxPatch((1.0, T(RT + RH)), rx1 - 1.0, RH, boxstyle="round,pad=0,rounding_size=1.8",
-                                   fc=red["fill"], ec=red["stroke"], lw=0.7, zorder=1))
-    cv.text(3.0, T(RT + 2.9), "Penalty criteria from real feedback", size=7.0, weight="bold", color=red["ink"], ha="left")
-    # the quote
+    # ------------------------------------------------ feedback rail -> the penalty row it produces
+    LT = BOT + PAD + 2.4
+    LX = EDGE
+    cv.text(LX, T(LT + 1.5), "Penalty criteria from real feedback", size=T2, weight="bold", color=red["ink"], ha="left")
     quote = "#1474 “I asked you to keep the memo. How is it mixed up again?”"
-    qx, qt, qch = 3.0, RT + 6.2, 32
-    qw, qh = qch * cw + 6.2, 2 * P + 1.8
+    qch = 32
     assert S.n_lines(quote, qch) == 2
-    card(qx, qt, qw, qh, r=OLD, name="quote")
-    S.person(cv, qx + 2.5, T(qt + qh / 2), 3.0, color=red["stroke"])
-    S.mono_para(cv, qx + 4.8, T(qt + 0.9), quote, qch)
-    ym = T(qt + qh / 2)
-    cv.arrow([(qx + qw + 0.6, ym), (qx + qw + 3.4, ym)], color=red["mark"], lw=0.9, head=1.3)
-    fx0 = qx + qw + 4.2
-    cv.text(fx0, ym + 1.5, "423 negative reactions", size=6.0, color=INK, ha="left")
-    cv.text(fx0, ym - 1.5, "97 corrections", size=6.0, color=INK, ha="left", weight="bold")
-    fx1 = fx0 + cv.text_width("423 negative reactions", 6.0) + 0.8
-    cv.arrow([(fx1, ym), (fx1 + 2.8, ym)], color=red["mark"], lw=0.9, head=1.3)
-    # five failure patterns, each with its weight (Table 7); the last one is the M3 penalty of instance B
-    px0, px1 = fx1 + 3.6, rx1 - 1.4
-    cv.text(px0, T(RT + 2.9), "five failure patterns, each with its weight", size=6.0, color=MUTED, style="italic",
-            ha="left")
-    rows = [PATTERNS[1:2] + PATTERNS[4:5] + PATTERNS[3:4], PATTERNS[2:3] + PATTERNS[0:1]]
-    hot = None
-    for k, row in enumerate(rows):
-        y = T(RT + 7.6 + k * 4.4)
-        tws = [cv.text_width(n, 6.0, "bold" if n == "superseded value" else "normal") + 2.0 + 4.8 for n, _ in row]
-        x = px0
-        assert px0 + sum(tws) + 1.0 * (len(row) - 1) <= px1, "pattern chips leave the rail"
-        for (name, wt), tw in zip(row, tws):
-            on = name == "superseded value"
-            cv.chips.append((x, y - 1.6, tw, 3.2, name, (px0 - 0.1, T(RT + RH), px1 + 0.1, T(RT + 4.6))))
-            cv.ax.add_patch(FancyBboxPatch((x, y - 1.6), tw, 3.2, boxstyle="round,pad=0,rounding_size=1.6", fc="white",
-                                           ec=red["ink"] if on else red["stroke"], lw=1.0 if on else 0.5, zorder=5))
-            cv.text(x + 1.4, y - 0.05, name, size=6.0, color=INK, ha="left", weight="bold" if on else "normal")
-            cv.ax.add_patch(FancyBboxPatch((x + tw - 4.5, y - 1.2), 3.9, 2.4, boxstyle="round,pad=0,rounding_size=1.2",
-                                           fc=red["mark"], ec="none", zorder=6))
-            cv.text(x + tw - 2.55, y - 0.05, f"−{abs(wt)}", size=6.0, color="white", weight="bold")
-            if on:
-                hot = (x + tw / 2, y + 1.6)
-            x += tw + 1.0
-    # the rail enters step 4 at the penalty row it produces
-    cv.arrow([hot, (hot[0], T(b_bottom))], color=red["mark"], lw=1.1, head=1.5)
+    S.person(cv, LX + 1.4, T(LT + 6.5), 2.8, color=red["stroke"])
+    cv.ax.add_patch(FancyBboxPatch((LX + 3.4, T(LT + 9.2)), qch * cw + 2.0, 5.4, fc=slate["fill"], ec="none",
+                                   boxstyle="round,pad=0,rounding_size=1.1", zorder=2))
+    S.mono_para(cv, LX + 4.4, T(LT + 4.1), quote, qch, size=T3)
+    seg(LX, T(LT + 11.6), [("423 negative reactions, ", INK, "normal"), ("97 corrections", INK, "bold")])
+    px0, px1 = 53.0, xs[3] + widths[3]
+    hx = xs[3] + 1.2                                                # under the weight column of instance B
+    cv.arrow([(LX + 3.4 + qch * cw + 2.0 + 1.0, T(LT + 6.5)), (px0 - 1.2, T(LT + 6.5))], color=red["mark"], lw=AW, head=1.5)
+
+    def pattern(x, y, name, wt, on=False):
+        """A failure pattern drawn as a rubric row in waiting: outlined weight; solid for the one triggered here."""
+        size = T2 if on else T3
+        tw = 5.3 + cv.text_width(name, size, "bold" if on else "normal")
+        cv.chips.append((x, y - 1.6, tw, 3.2, name, (px0 - 0.1, T(LT + 12.4), px1 + 0.1, T(LT + 2.6))))
+        weight_chip(x, y, wt, solid=on)
+        cv.text(x + 5.3, y, name, size=size, ha="left", weight="bold" if on else "normal")
+        return x + tw
+
+    y1, y2 = T(LT + 4.6), T(LT + 9.2)
+    cv.text(px0, y1, "five failure patterns, each with its weight", size=T3, color=MUTED, style="italic", ha="left")
+    hot = next(p for p in PATTERNS if p[0] == HOT)
+    pattern(hx, y1, *hot, on=True)
+    x = px0
+    for name, wt in (PATTERNS[1], PATTERNS[4], PATTERNS[2], PATTERNS[0]):
+        x = pattern(x, y2, name, wt) + 2.6
+    assert x - 2.6 <= px1, f"pattern rows leave the rail by {x - 2.6 - px1:.1f} mm"
+    cv.arrow([(hx + 2.15, y1 + 1.3), (hx + 2.15, T(b_bottom))], color=red["mark"], lw=AW, head=1.5)
 
     # ------------------------------------------------ output
-    x0, w = xs[4], widths[4]
-    S.frame(cv, x0, T(RT), w, RH)
-    S.header(cv, x0, T(RT), w, 5.4, "Evaluation set", size=7.4)
-    cv.text(x0 + w / 2, T(RT + 8.4), f"{FUNNEL['sampled']:,}", size=9.5, weight="bold", color=slate["ink"])
-    cv.text(x0 + w / 2, T(RT + 11.6), "instances (c, q, A, K)", size=6.0, color=INK)
-    cv.text(x0 + w / 2, T(RT + 14.2), f"sampled from the {FUNNEL['passed']:,}", size=5.8, color=MUTED, style="italic")
-    cv.block_arrow(x0 + w / 2, T(BOT + 0.2), x0 + w / 2, T(RT - 0.1), width=3.6, color=slate["stroke"], head=2.2)
+    x0, w = xs[4] - PAD, widths[4] + 2 * PAD
+    cv.arrow([(x0 + 2.3, T(ends[4] + 1.2)), (x0 + 2.3, T(LT + 0.1))], color=slate["stroke"], lw=AW, head=1.5)
+    cv.text(x0 + 5.7, T(LT + 2.3), "Evaluation set", size=T1, weight="bold", ha="left")
+    for k in (2, 1, 0):                                             # a stack of cards: many instances
+        cv.ax.add_patch(FancyBboxPatch((x0 + 0.3 + k * 0.7, T(LT + 3.9) + k * 0.7), 3.2, 2.6,
+                                       boxstyle="round,pad=0,rounding_size=0.5", fc="white", ec=slate["ink"], lw=LW,
+                                       zorder=5 - k * 0.1))
+    seg(x0 + 5.7, T(LT + 6.8), [(f"{FUNNEL['sampled']:,}", INK, "bold"), (" instances", INK, "normal")])
+    cv.text(x0 + 5.7, T(LT + 9.8), f"sampled from the {FUNNEL['passed']:,}", size=T3, color=MUTED, style="italic",
+            ha="left")
 
     # ------------------------------------------------ key
-    S.key(cv, 1.0, 1.0, W - 2.0, [
-        (lambda x, y: S.gear(cv, x, y, 2.6, color=slate["ink"]), 2.6, "rules"),
-        (lambda x, y: S.sparkle(cv, x, y, 2.6, color=slate["ink"]), 2.6, "language model"),
-        (lambda x, y: S.person(cv, x, y, 2.6, color=slate["ink"]), 2.6, "humans"),
-        (lambda x, y: cv.text(x, y - 0.1, r"$\hat{y}^{+}$ $\hat{y}^{-}$", size=6.4, color=slate["ink"], z=12), 6.2,
-         "answer with / without history"),
-        (lambda x, y: S.swatch(cv, x, y, ANCHOR), 3.6, "anchor"),
-        (lambda x, y: S.swatch(cv, x, y, OLD), 3.6, "superseded"),
-        (lambda x, y: S.swatch(cv, x, y, CUR), 3.6, "current"),
-        (lambda x, y: cv.icon_lock(x, y, 2.2, color=MUTED), 2.2, "judge only"),
-    ])
+    def share(x, y):
+        cv.ax.add_patch(Rectangle((x - 2.7, y - 0.45), 3.6, 0.9, fc=slate["stroke"], ec="none", zorder=11))
+        cv.ax.add_patch(Rectangle((x + 0.9, y - 0.45), 1.8, 0.9, fc=red["soft"], ec="none", zorder=11))
+
+    KT = LT + 14.2
+    S.key(cv, EDGE, T(KT + 4.6), W - 2 * EDGE, [
+        (lambda x, y: S.gear(cv, x, y, 2.5, color=slate["ink"]), 2.5, "rules"),
+        (lambda x, y: S.sparkle(cv, x, y, 2.5, color=slate["ink"]), 2.5, "language model"),
+        (lambda x, y: S.person(cv, x, y, 2.5, color=slate["ink"]), 2.5, "humans"),
+        (share, 5.4, "kept / dropped"),
+        (lambda x, y: S.swatch(cv, x, y, ANCHOR), 3.6, "anchor = required memory"),
+        (lambda x, y: cv.icon_lock(x, y, 2.0, color=MUTED), 2.0, "judge only"),
+        (lambda x, y: cv.text(x, y, "(c, q, A, K)", size=T3, style="italic", z=12), cv.text_width("(c, q, A, K)", T3,
+                                                                                               style="italic"),
+         "cutoff, query, required memories, answer key"),
+    ], h=4.6, size=T3, frame=False)
+    assert abs(KT + 4.6 + 0.6 - H) < 0.8, f"canvas height should be {KT + 5.2:.1f}"
 
     assert not tight, tight
     assert not cv.overlaps(), cv.overlaps()

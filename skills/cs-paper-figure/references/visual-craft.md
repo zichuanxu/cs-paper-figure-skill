@@ -65,6 +65,9 @@ How to choose:
   protocol, layout or data structure → line art. Behaviour on text → example-led. Behaviour on pixels →
   image-led.
 
+A skeleton (§5) is not a register. A plate may be laid out as an example × stage grid and a line-art figure
+as a storyboard; what may not mix is the treatment: ground, fills, strokes and type.
+
 Each register's specific devices and families are in [registers.md](registers.md).
 
 ## 3. Colour
@@ -119,12 +122,21 @@ black stroke and text, for line art.
   and anything else a reader must read stay at 5.8 pt or above. Math subscripts ≥ 4.5 pt. Award figures
   with text at 3.2–4.9 pt fail at print in exactly those places; do not copy them. If content does not fit,
   cut content or add height.
+- **Subscripts and the check.** Mathtext sets a subscript at 0.7 × its base, and `check_figure.py
+  --min-font-pt 5` counts subscripts like any other text. Set subscripted math at 7.2 pt or above and the
+  check comes back clean; below that, the only spans it reports should be subscripts of 4.5 pt or more.
+  Write an identifier that needs no typesetting as plain text (`C0`, `M1`), not as math.
 - **Size down for density, up for emptiness.** A sparse schematic with 6.5 pt labels looks timid; a dense
   plate with 10 pt labels does not fit. Fill the placement.
 - **Two or three sizes per figure.** Build hierarchy with size and position first. Bold is for panel
   letters, ours in a header or legend, a number that is the claim, the changed word in a sentence, and the
-  column or stage headers of a grid when they are its only heads. Other panel heads are regular weight.
-  All-bold flattens the hierarchy.
+  column or stage headers of a grid when they are its only heads. Other panel heads are regular weight
+  (`cv.head`: bold letter, regular title, italic note). All-bold flattens the hierarchy. The claim number
+  takes the head size in bold, not a fourth size. Put the sizes in constants at the top of the script
+  (`HEAD, LABEL, FINE = 8.5, 7.2, 6.0`) and pass one of them to every call: several primitives derive a
+  smaller size for a sub-line when none is given, and the count drifts to eight.
+- **Monospace runs large.** At equal point size a monospace face looks about a size bigger than Times and
+  takes about 40 % more width. Example text in monospace may sit at the bottom of its range.
 - **Face.** Page-level text (panel heads, column headers, axis labels, chart text) takes the manuscript's
   body face: Times/STIX with STIX math for LaTeX papers (`paperkit.use_fonts("serif")`). Text inside a
   drawn diagram may instead be one sans family, used for every diagram in the paper
@@ -142,6 +154,9 @@ black stroke and text, for line art.
 - **Design for the column.** In a two-column venue the figure is 76–85 mm wide unless it earns the full
   width. A column figure is its own design, not a shrunk plate: one example, one vertical axis of reading,
   two or three tiers, about 9–15 objects. Full-width figures are 140–178 mm wide and usually 30–70 mm tall.
+  Three kinds run taller, to 90–130 mm: a dense plate, a four-panel results figure, and a figure whose
+  object is a long example text. Let readable type set the height; if the figure then passes about 130 mm,
+  split it or elide (`cv.greek`, a visible ellipsis) and say so in the caption.
 - **Fill the width.** Content runs to within 1–2 mm of the column edge. The page supplies the margin;
   never draw an outer frame.
 - **Pick a skeleton with named axes**, then place things on it:
@@ -181,6 +196,9 @@ what they have in common is where the white is.
   the canvas or move the neighbours, never fill it with decoration.
 - **Emptiness can be the finding**: the flat window between two regimes, the gap between two schedule
   rows. Mark it with a double-headed arrow and leave it empty.
+- **Emptiness the subject forces stays empty**: the decade between two curves on a log axis, the space
+  above the shorter of two stacks. Do not add content to fill it. Put a label that belongs nearby into it
+  if there is one (the output label, a real object that was drawn too small), or leave it.
 - **Proximity is the grouping rule.** A label sits closer to its object than to anything else. Things in a
   group are closer to each other than to the next group. Use two gutter widths, not one.
 
@@ -210,7 +228,7 @@ hairline coloured strokes is the pale failure, fixed by black text and a darker 
 | Square-cornered rectangle | Memory, data, a buffer, a table cell |
 | Rounded rectangle | A component, module, process or graph node |
 | Tall rounded bar or slab | A layer |
-| Trapezoid | A projection or encoder (narrow side = output) |
+| Trapezoid | A projection or encoder (narrow side = the low-dimensional side; draw the ratio when it is the claim) |
 | Circle 2.4–3.2 mm | An elementwise operator, a decision node, a numbered callout |
 | Disc | A discrete unit: token, feature, point |
 | Hexagon (`cv.hexagon`) | An interface, drawn on the boundary it crosses |
@@ -234,9 +252,14 @@ hairline coloured strokes is the pale failure, fixed by black text and a darker 
 - **Radii scale with size:** chips and labels 0.5–1.2 mm, nodes 1.4–2.0 mm, containers 2.3–2.8 mm, plates
   3.5–4 mm. One radius per size class.
 - **Title a container with a tab on its border or a plain head above it.** Header bands were found in
-  none of about 90 award figures. `cv.section` and `cv.tab` draw the tab; `cv.group(band=True)` is kept for
-  compatibility and should not be the default. The exception is the showcase register, whose illustrated
-  stage cards carry solid colour headers ([registers.md §8](registers.md#8-showcase)).
+  none of about 90 award figures. `cv.head` draws the plain head (with `rule=` for a hairline under it);
+  `cv.section` and `cv.tab` draw the tab; `cv.group(band=True)` is kept for compatibility and should not be
+  the default. The exception is the showcase register, whose illustrated stage cards carry solid colour
+  headers ([registers.md §8](registers.md#8-showcase)).
+- **One panel treatment** means one way of titling and bounding the panels. A zoom box around a detail and
+  a dashed scope frame around repeated layers are objects, not panel treatments.
+- **Ghost wires like shapes.** A path that is not taken or no longer exists is the same wire in light grey
+  (`#D0D0D0`), at the same weight, without a head.
 - **No shadows**, except under something that floats above the content: a window, a callout disc.
 - **Flat by default.** Depth is for feature tensors and layer runs in vision architectures (`cv.cuboid`)
   and for a layering relation in a showcase figure (`cv.plate`). Systems, ML theory and NLP figures are flat.
@@ -309,6 +332,13 @@ stack read bottom to top need none. Counts in strong example-led figures are 0�
   caption. Typical pairs: solid = data, dotted = control; solid = taken, grey dashed = not taken; colour =
   phase. Number arrows with small discs in the arrow's colour when order matters.
 - **Dashed means "not a concrete flow"**: control, optional, train-only, not taken, a construction line.
+  Dotted is the systems convention for control-plane messages beside solid data-plane ones
+  (`cv.arrow(dotted=True)`; the head stays solid). Keep a source's solid/dotted meaning in a redesign.
+- **Counting styles.** One geometry in two stream hues is one style. A weight and its head size are one
+  style. A third weight is a third style.
+- **Step numbers.** Put the numeral on its arrow when the drawing is spatial. When there are more than
+  about eight steps, give each step its own row and set the numerals in one aligned column, so the eye
+  moves a line at a time ([registers.md §1](registers.md#1-line-art), sequence chart).
 - **Leaders are not arrows.** A callout leader is a 0.6–1.0 pt line ending in a dot. A relation between
   two regions is a line with a dot at each end. A region gets a bracket.
 - **Wedges and zoom rays tie a word or a block to its detail**: a translucent wedge from a highlighted
@@ -337,11 +367,17 @@ caption. Status words ("schematic", "illustrative") go in the caption, except a 
 that could be mistaken for results.
 
 **Text from the world** (examples, prompts, model output, quotes, code, interface text): this is an
-object, and it can be long. Set it in the second voice (§4) at 6.7–7.5 pt so it can be read.
+object, and it can be long. Set it in the second voice (§4) at the label size of the placement: 6.7–7.5 pt
+when the text is the figure's subject, down to 5.8 pt for monospace inside a dense plate.
 
 - **Mark spans with borderless bands at full line height** (1.2 × the font size) in a pale tint, three
-  tints at most, each with one meaning (`cv.rich` with a mark per segment). A verdict glyph goes at the
-  span's right end.
+  tints at most, each with one meaning (`cv.rich` for one line, `cv.para` for wrapped text; a mark per
+  segment). A verdict glyph goes at the span's right end, or straight after the answer when the judged
+  text has no marked span.
+- **Mark a whole line's role with a rail**: a 0.8 mm bar in one hue beside the lines (a thought, a quoted
+  turn), with the role label in the same ink. A rail costs no band and leaves the bands for spans.
+- **Three voices are enough**: the figure's own labels in the body face; what a model or program wrote in
+  monospace; what a tool, document or environment returned in the body face in grey.
 - **Or mark by type**: bold for the step in question, an accent colour for changed or erased words, grey
   italic for elided text.
 - **Grey out what the reader does not need** (`cv.greek`): bars in place of irrelevant paragraphs make the
@@ -371,8 +407,16 @@ composite plate it takes the plate's panel treatment and nothing more.
 | Labels | Direct labels at line ends; the ratio printed in bold | One frameless legend row above the grid (`cv.chart_legend`) or in the emptiest panel |
 | Size | ≈ 85 × 40 mm, or a panel of a plate | Subplots 28–75 mm wide, 9–18 mm tall, 2:1 to 7:1 |
 
+**Between the two: a claim with three or four named conditions** (ours, an ablation, two baselines). Keep
+one hue and one marker per condition in every panel, make ours the only filled mark, draw the ablation open
+and dashed, and hold every line at one weight.
+
 Rules for both:
 
+- **Strokes in a chart.** Axes, grid and whiskers share one hairline weight (0.5–0.6 pt); series share one
+  heavier weight. That is the whole budget.
+- **Greyscale and the claim chart.** The two greys are close in lightness to a mid blue. Where print
+  matters, ours also needs the larger or filled marker and a direct label.
 - **Encode what the claim is about.** A speed-up needs the ratio visible: a bracket or shaded gap with a
   bold `4.0×`. "N× smaller" is area-true as a waffle. Two conditions are a slope chart with growth factors.
   A crossing is the same pair of curves in every panel.
@@ -432,11 +476,15 @@ The caption is part of the figure's design.
    under 5 pt, hues with two meanings, crossings, scattered holes or crowding, a hidden key idea, slogans.
 2. Re-read the method text; the redesign must be at least as faithful to equations, timing and topology.
 3. Decide the five-second message and the hero (§1); pick a skeleton (§5).
-4. Build with `paperkit`; export PDF, SVG and PNG; compare side by side at one width
-   (`paperkit.py compare original.png new.png out.png`) and with `density`.
+4. Build with `paperkit`; export PDF, SVG and PNG; compare at one width, one above the other
+   (`paperkit.py compare original.png new.png out.png`), and with `density`. When the two differ in
+   printed width (a 40 mm source, an 84 mm redesign), also look at both at print scale: equal pixel width
+   flatters the smaller one.
 5. For showcase and illustrated sources run `paperkit.py parity original.png new.png`: it fails a redesign
    that is emptier, greyer or less illustrated. For line-art, schematic and example-led sources, parity's
-   "emptier" warning is not a defect; crowding is.
+   "emptier" warning is not a defect; crowding is. Its "greyer" warning counts saturated pixels, coloured
+   text included, so a redesign that sets a source's blue text in black will trip it; that is not a defect
+   either.
 6. Look at both at one width and ask which a reader would choose for a slide. If the original wins the
    first glance, find out why before shipping.
 
@@ -447,6 +495,10 @@ Count first. Each of these has a budget; exceeding one needs a reason.
 - [ ] Hues with a meaning: ≤ 4, each defined, each the same in every figure of the paper
 - [ ] Stroke weights: 1–2; text sizes: 2–3; arrow styles: ≤ 3, each defined; icon families: ≤ 1
 - [ ] Panel treatments: 1 (not a dashed frame here, a banded card there and a bare panel beside them)
+
+Count what the figure's own shapes, wires and labels use. Strokes inside an icon, cell hairlines of a
+strip or matrix, math subscripts, and a grey scope tint are not counted. Count from the PDF, not from
+memory: `python scripts/paperkit.py counts fig.pdf` lists every text size and stroke width with its uses.
 
 Then walk the figure.
 

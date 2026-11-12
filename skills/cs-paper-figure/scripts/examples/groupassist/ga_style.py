@@ -115,15 +115,16 @@ def sans_para(cv, x, ytop, text, w, size=6.2, color=INK, pitch=None, z=20, style
     return ytop - pitch * len(lines)
 
 
-def seg_line(cv, x, y, segs, size=6.2, z=20):
+def seg_line(cv, x, y, segs, size=6.2, z=20, mono_size=None):
     """One line of text-face segments [(text, colour, weight, highlight role or None, mono?)]; a highlight
-    paints the value's state behind it. Returns the end x."""
+    paints the value's state behind it. mono_size sets the size of the mono segments (default: size - 0.3).
+    Returns the end x."""
     cx = x
     for seg in segs:
         s, col, wt = seg[0], seg[1], seg[2]
         r = seg[3] if len(seg) > 3 else None
         mono = len(seg) > 4 and seg[4]
-        ms = max(size - 0.3, 5.8)
+        ms = mono_size or max(size - 0.3, 5.8)
         if mono:
             w = mono_w(cv, ms) * len(s)
         else:
@@ -150,7 +151,7 @@ def avatar(cv, name, x, y, s, z=12, disc=True):
     """Member or assistant avatar centred at (x, y), s mm across, on a white disc. With VECTOR (or a missing
     PNG) the stand-in is drawn: initials in a slate ring for a member, a robot head for the assistant."""
     if disc:
-        cv.ax.add_patch(Circle((x, y), s / 2, fc="white", ec=ROLE[STRUCT]["stroke"], lw=0.45, zorder=z - 0.5))
+        cv.ax.add_patch(Circle((x, y), s / 2, fc="white", ec=ROLE[STRUCT]["stroke"], lw=0.6, zorder=z - 0.5))
     png = os.path.join(ICONS, name + ".png")
     if not VECTOR and os.path.exists(png):
         cv.image(png, x, y - s * 0.02, s * 0.86, fit="box", z=z)
@@ -197,7 +198,7 @@ DOER = {"rule": gear, "model": sparkle, "human": person}
 
 def swatch(cv, x, y, r, w=3.6, h=2.2, z=11):
     cv.ax.add_patch(FancyBboxPatch((x - w / 2, y - h / 2), w, h, boxstyle="round,pad=0,rounding_size=0.4",
-                                   fc=HL[r], ec=ROLE[r]["stroke"], lw=0.4, zorder=z))
+                                   fc=HL[r], ec=ROLE[r]["stroke"], lw=0.6, zorder=z))
 
 
 def tick(cv, x, y, ok=True, s=2.0, z=12):
@@ -217,29 +218,38 @@ def verdict(cv, x, y, ok, label, ha="left", size=6.0, z=9):
     x0 = x if ha == "left" else x - w
     cv.chips.append((x0, y - h / 2, w, h, label, None))
     cv.ax.add_patch(FancyBboxPatch((x0, y - h / 2), w, h, boxstyle=f"round,pad=0,rounding_size={h / 2}",
-                                   fc=c["soft"], ec=c["stroke"], lw=0.55, zorder=z))
+                                   fc=c["soft"], ec=c["stroke"], lw=0.6, zorder=z))
     tick(cv, x0 + 1.7, y, ok, s=1.7, z=z + 1)
     cv.text(x0 + 3.1, y - 0.05, label, size=size, color=c["ink"], weight="bold", ha="left", z=z + 1)
     return x0, w
 
 
 # --------------------------------------------------------------- objects ---
-def header(cv, x, ytop, w, h, title, sub=None, radius=1.8, size=8.0, fc=SLATE, tx=None, z=3):
-    """Solid header band with a rounded top (window chrome, step header): white bold title, light sub-line."""
-    cv.ax.add_patch(PathPatch(_round_top_rect(x, ytop - h, w, h, radius), fc=fc, ec="none", zorder=z))
+def header(cv, x, ytop, w, h, title, sub=None, radius=1.8, size=8.0, fc=None, tx=None, z=3):
+    """Plain head of a tray or window: bold title, muted sub-line, no band (visual-craft section 7). fc = a
+    colour draws the old solid band with white text instead."""
+    if fc:
+        cv.ax.add_patch(PathPatch(_round_top_rect(x, ytop - h, w, h, radius), fc=fc, ec="none", zorder=z))
+    c1, c2 = ("white", "#D5DCE8") if fc else (INK, MUTED)
     tx = x + 2.2 if tx is None else tx
     if sub:
-        cv.text(tx, ytop - h * 0.34, title, size=size, color="white", weight="bold", ha="left", z=z + 1)
-        cv.text(tx, ytop - h * 0.73, sub, size=6.0, color="#D5DCE8", ha="left", z=z + 1)
+        cv.text(tx, ytop - h * 0.34, title, size=size, color=c1, weight="bold", ha="left", z=z + 1)
+        cv.text(tx, ytop - h * 0.73, sub, size=6.0, color=c2, ha="left", z=z + 1)
     else:
-        cv.text(tx, ytop - h / 2 - 0.05, title, size=size, color="white", weight="bold", ha="left", z=z + 1)
+        cv.text(tx, ytop - h / 2 - 0.05, title, size=size, color=c1, weight="bold", ha="left", z=z + 1)
 
 
 def frame(cv, x, ytop, w, h, r=STRUCT, fill="white", radius=1.8, lw=0.7, z=1.5):
-    """Window / card body (a container: wires may end inside it)."""
+    """Window / card body (a container: wires may end inside it). lw=0 = a borderless tile or tray."""
     c = ROLE[r]
     cv.ax.add_patch(FancyBboxPatch((x, ytop - h), w, h, boxstyle=f"round,pad=0,rounding_size={radius}", fc=fill,
-                                   ec=c["stroke"], lw=lw, zorder=z))
+                                   ec=c["stroke"] if lw else "none", lw=lw, zorder=z))
+
+
+def tray(cv, x, ytop, w, h, r=STRUCT, radius=2.4, z=0.5):
+    """The pale borderless field of one panel (a step, a window, a band): white tiles sit on it, the page
+    shows between two trays. The one panel treatment of both figures."""
+    frame(cv, x, ytop, w, h, r=r, fill=ROLE[r]["fill"], radius=radius, lw=0, z=z)
 
 
 def msg_height(text, chars, size=5.9, name=True):
@@ -287,7 +297,7 @@ def strip(cv, x, y, w, cut=None, marks=None, accent=L1, h=2.4, n=N_CELLS, z=6):
 def strip_label(cv, cx, y, s, color=MUTED, above=True, size=5.8, weight="normal", ha="center", stem=1.0):
     """Message-id label on a strip cell with a short stem."""
     d = 1 if above else -1
-    cv.ax.plot([cx, cx], [y, y + d * stem], color=color, lw=0.5, zorder=7, solid_capstyle="butt")
+    cv.ax.plot([cx, cx], [y, y + d * stem], color=color, lw=0.6, zorder=7, solid_capstyle="butt")
     cv.text(cx, y + d * (stem + 1.15), s, size=size, color=color, weight=weight, ha=ha, z=20, **MONO)
 
 
@@ -337,11 +347,14 @@ def darrow(cv, pts, color=LINE, lw=0.8, head=1.3, radius=1.2, z=8):
     cv.arrow([q, pts[-1]], color=color, lw=lw, head=head, z=z)
 
 
-def key(cv, x, y, w, items, h=6.0, size=6.0):
+def key(cv, x, y, w, items, h=6.0, size=6.0, frame=True):
     """Key strip: items = [(draw, glyph_width, label)], draw(cx, cy) paints the glyph centred there; items are
-    spread evenly over the strip."""
-    cv.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=1.4", fc="white",
-                                   ec=ROLE["neutral"]["stroke"], lw=0.55, ls=(0, (3, 2)), zorder=2))
+    spread evenly over the strip. frame=False leaves the row bare on the page under a hairline."""
+    if not frame:
+        cv.ax.plot([x, x + w], [y + h] * 2, color=ROLE[STRUCT]["soft"], lw=0.6, zorder=2, solid_capstyle="butt")
+    else:
+        cv.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=1.4", fc="white",
+                                       ec=ROLE["neutral"]["stroke"], lw=0.55, ls=(0, (3, 2)), zorder=2))
     widths = [gw + 1.1 + cv.text_width(lab, size) for _, gw, lab in items]
     free = w - sum(widths)
     assert free > 1.6 * (len(items) + 1), f"key strip too narrow by {1.6 * (len(items) + 1) - free:.1f} mm"

@@ -8,9 +8,9 @@ Model figures are cited by paper and figure number; the full list with venues is
 
 | Section | Register | Families |
 | --- | --- | --- |
-| [1](#1-line-art) | Line art | Layer cake, planes, memory map, decision diagram, state machine, schedule timeline, protocol storyboard, code figure |
+| [1](#1-line-art) | Line art | Layer cake, planes, memory map, decision diagram, state machine, schedule timeline, protocol storyboard, sequence chart, code figure |
 | [2](#2-idea-schematic) | Idea schematic | Repeated object, ghosted alternatives, phase diagram, geometric intuition, order chain |
-| [3](#3-example-led-text) | Example-led: text | Annotated example, example × stage grid, single-column Figure 1, taxonomy grid |
+| [3](#3-example-led-text) | Example-led: text | Annotated example, example × stage grid, method comparison on one example, single-column Figure 1, taxonomy grid |
 | [4](#4-example-led-interfaces-and-studies) | Example-led: interfaces and studies | Rebuilt screenshot, callouts, interaction storyboard, study design, procedure timeline, participant plots |
 | [5](#5-image-led) | Image-led | Teaser, comparison grid, inset zoom, labels and arrows on pixels, render storyboard, geometry diagram |
 | [6](#6-plate) | Plate | Architecture overview with detail row, section frames, tensors and maps, key strip |
@@ -52,6 +52,18 @@ Families:
   on a red × (OSCAR 5).
 - **Protocol storyboard.** Two to six panels of the same drawing with one change each, separated by a
   rule, each titled with a numbered sentence. Grey out what is no longer live (CortenMM 7, Semisolates 2).
+  It stops fitting when components × panels outgrow the column: nine boxes in eight phases cannot hold
+  5.8 pt labels in 84 mm. Use a sequence chart then.
+- **Sequence chart.** For a protocol with many actors and many messages in one column (Ray Fig. 7 has nine
+  and seventeen). One lane per component, named at the top and again at the bottom, grouped by node under a
+  short rule; grey lifelines; time runs down, one message per row, from a dot at the sender to the
+  arrowhead. Step numerals and the paper's verb for each step sit in one aligned column at the left. State
+  is drawn in the row that creates it: a table entry, an object in a store. Solid and dotted arrows keep
+  the source's planes (`cv.arrow(dotted=True)`), and one hue marks the plane the claim is about. Worked
+  example: `scripts/examples/ray/render_fig7.py`.
+- **White share with scope tints.** A pale grey column or lane behind a node counts as tint in `density`
+  and can take a line-art figure from about 90 % white to about 60 %. That is fine when the tint shows
+  what belongs to which node.
 - **Code figure.** `cv.listing`: monospace, at most three syntax colours, no background, line numbers the
   text cites. Add one device: highlight bands (red/green for before/after), or the data structure beside the
   code with identifiers in the same colour (CortenMM 6, NDD 2, Tree Borrows).
@@ -66,7 +78,10 @@ column), 85–90 % white.
 
 - **Seven things, not seventy.** Aim for the economy of 2503.14858 Fig. 2: seven bars, three words, two
   multipliers. Label things in place; a key row of up to three samples is fine, a boxed legend means there
-  are too many kinds of thing.
+  are too many kinds of thing. When the drawing is repeated, the count is per panel (about ten), and a
+  figure of large filled shapes sits nearer 75 % white than 85–90 %.
+- **A merged state** of two coloured things is the first thing's fill hatched in the second hue, with a
+  clear band for the label (LoRA: `W₀ + BA`). Worked example: `scripts/examples/lora/render_fig1.py`.
 - **One object, redrawn.** Draw the tree, chain or interval once per condition and change only the state
   the claim is about. Alternatives not taken are the same shapes at 20 % strength (`#D9D9D9`, a 20 % tint
   of the hue). A red ✗ on the pruned branch (2504.13837 Fig. 1, Flexibility Trap 2).
@@ -106,8 +121,18 @@ and mark it. Rules for marking are in visual-craft §10.
 - **Example × stage grid.** Rows are two examples from different domains, columns are stages, column
   headers are 8–9 pt bold grey, row labels are grey pills at the left, a hairline between rows, and no
   arrows at all (HALoGEN 1). Each cell shows the same text with one more layer of marking.
-- **Voices.** Prompt in sans, model output in monospace inside a square box, human turn in a speech
-  bubble with a tail, the figure's own labels in grey.
+- **Voices.** Prompt in the body face, model output in monospace, what a tool or the environment returned
+  in the body face in grey, a human turn in a speech bubble with a tail. Box a model output only when
+  several outputs must be told apart inside one cell; otherwise a plain head with a hairline under it
+  (`cv.head(..., rule=w)`) and the page as ground.
+- **Method comparison on one example** (ReAct 1). Say the question once across the top. Give each method
+  a head and its trace: role labels (Thought, Act, Obs) in a gutter, the text wrapped beside them
+  (`cv.para`), a rail beside every line of reasoning, the verdict glyph straight after the final answer.
+  Give ours the widest column and line up the last lines of the columns, so the final answers sit side by
+  side. Transcribe the paper's text exactly; elide only with a visible ellipsis. Worked example:
+  `scripts/examples/react/render_fig1.py`.
+- **Height.** About 1,700 characters of trace at 6.7 pt monospace need about 88 mm at 140 mm wide. If two
+  examples do not both fit at readable size, draw one and say so, or make two figures.
 - **Three tints at most**: neutral blue = the unit under study, green = supported, red = error; tick and
   cross glyphs at the right end of the span; the caption repeats the tints on its own words.
 - **Largest block = the contribution.** If the paper's point is instance-specific criteria, that card
@@ -117,7 +142,7 @@ and mark it. Rules for marking are in visual-craft §10.
 - **Results** in this lane are usually default plots; build them as claim or field charts
   (visual-craft §11) in the same face as the diagrams.
 
-`paperkit`: `rich(..., family="monospace")` with marks, `bubble`, `chip`, `tab`, `icon_check`,
+`paperkit`: `rich(..., family="monospace")` with marks, `para` for wrapped text, `head`, `rule`, `bubble`, `chip`, `tab`, `icon_check`,
 `icon_cross`, `stack` for "many of these". A minimal use of `rich`, `listing`, `callout` and `greek` is the
 `tx` block of the smoke test at the end of `scripts/paperkit.py`.
 
@@ -201,6 +226,15 @@ families, drawn tensors and maps, section frames. From a study of 23 vision and 
   each detail panel to its block.
 - **The page stays white.** Tint a module's field only when membership would otherwise be unclear, at the
   role `fill`. Group by white space and fill-on-fill first; frame second. Keep white at or above 40 %.
+- **Heads on the page, trays under them.** For a row of steps or stages: a plain head on the white page
+  (number, bold name, the count), then one pale borderless tray per step, with the things the step handles
+  as white borderless tiles on the tray. Heads inside the trays push white under 40 %; no trays at all
+  reads as a page of text (about 83 % white, outside the plate's range). Worked example:
+  `scripts/examples/groupassist/render_fig2.py`.
+- **The thing being followed takes the one accent.** In a pipeline that runs one example through every
+  step, colour that example's object in each step and leave the structure slate and black. A thing that
+  has a hue in a sibling figure may be drawn neutral here when it is not what this figure follows; it may
+  not take a different hue.
 - **Section frames** (`cv.section`): a dashed border in the module's hue with the title on a tab on the
   border. Name it as the paper does, with the acronym. One panel treatment for the whole figure.
 - **Role families.** Inherited parts neutral; the contribution in its hue; parameters coloured in place

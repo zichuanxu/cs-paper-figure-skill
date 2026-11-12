@@ -168,30 +168,38 @@ Primitives by dimension (signatures are in `scripts/paperkit.py`; usage in visua
 - **Shapes and objects:** `box`, `hexagon`, `section`, `group`, `tab`, `chip`, `matrix`, `vec`, `trap`, `cuboid`,
   `fmap`, `num_matrix`, `tokens`, `stack`, `doc`, `cylinder`, `diamond`, `graph`, `mini_plot`,
   `filetree`, `turn_strip`, `plate`, `tile`, `bubble`.
-- **Text from the world:** `rich` (coloured terms, marked spans), `listing` (code with line numbers and
-  highlight bands), `greek` (grey bars for text the reader does not need).
+- **Panels:** `head` (bold letter, regular title, italic note; the default panel treatment), `rule`
+  (hairline), `section` and `tab` (titled frames, where a frame is needed).
+- **Text from the world:** `rich` (coloured terms, marked spans), `para` (the same, word-wrapped to a
+  width), `listing` (code with line numbers and highlight bands), `greek` (grey bars for text the reader
+  does not need).
 - **Icons and callouts:** `icon_*`, `badge`, `callout`, `image` (rasters embedded unchanged at 600 dpi).
-- **Arrows:** `arrow`, `line`, `zoom`, `block_arrow`, `brace`, `op`.
+- **Arrows:** `arrow` (`dashed=`, `dotted=`, `both=`), `line`, `zoom`, `block_arrow`, `brace`, `op`.
 - **Charts:** `axes`, `axes_grid`, `chart_legend`, `series_kw` / `SERIES_STYLE`, `curve_label`, `radar`,
   `spectrum`.
 - **Series and keys:** `series` (one palette for a paper), `legend`, `phase_bar`, `chapter`.
-- **Audits:** `overlaps`, `text_overlaps`, `wire_crossings`; command line `density`, `grey`, `compare`,
-  `parity`, `swatches`, `caption`.
+- **Audits:** `overlaps`, `text_overlaps`, `wire_crossings`; command line `counts`, `density`, `grey`,
+  `compare`, `parity`, `swatches`, `caption`.
 
 End every script with `assert not cv.overlaps() and not cv.text_overlaps() and not cv.wire_crossings()`.
-Lay chips out with `cv.flow_chips`, never hand-picked x positions.
+Lay chips out with `cv.flow_chips`, never hand-picked x positions. Put the type scale and the stroke
+weights in constants at the top of the script and pass them to every call (`size=`, `lw=`): the defaults
+of several primitives differ, and a figure drawn on defaults ends up with eight sizes and eight weights.
 
 Worked examples to adapt (each is `python scripts/examples/<dir>/<script>.py --out figures/<dir>`):
 
 | Register | Example |
 | --- | --- |
-| Idea schematic, one column | `memt/render_idea_column.py` |
+| Line art, one column: sequence chart of a protocol | `ray/render_fig7.py` |
+| Idea schematic, one column | `lora/render_fig1.py` (one drawing, two states), `memt/render_idea_column.py` |
+| Example-led text: four methods on one example | `react/render_fig1.py` |
 | Field chart, one column | `toolspace/render_table1_column.py` |
-| Example-led and line-art primitives (`rich` marks, `listing`, `callout`, `greek`, `axes_grid`) | the `tx` and `g` blocks of the smoke test at the end of `scripts/paperkit.py` |
-| Plate: architecture | `memt/render_fig4.py`, `transformer/render_fig1.py`, `restyled/render_attention.py` |
-| Claim chart | `memt/render_fig3.py`, `paperbanana/render_fig5.py` |
+| Claim chart; four-panel results figure | `memt/render_fig3.py`; `restyled/render_experiment.py` |
+| Other example-led and line-art primitives (`listing`, `callout`, `greek`, `axes_grid`) | the `tx` and `g` blocks of the smoke test at the end of `scripts/paperkit.py` |
+| Plate: architecture | `transformer/render_fig1.py` (three sizes, two weights, bare panels), `memt/render_fig4.py`, `restyled/render_attention.py` |
+| Plate on an example × stage grid | `restyled/render_epoch_context.py` |
 | Plate: agents and harnesses | `harness2/render_fig2.py`, `harness2/render_fig3.py`, `reharness/render_fig1.py` |
-| Benchmark overview and pipeline | `groupassist/render_fig1.py`, `groupassist/render_fig2.py` |
+| Benchmark overview and pipeline (heads on the page, trays) | `groupassist/render_fig1.py`, `groupassist/render_fig2.py` |
 | Showcase and figure series | `toolspace/render_fig1.py`, `proactive/render_*.py` |
 
 The older `scripts/render_*.py` demos and `figure_scene.py` / `diagram_geometry.py` are contract and
@@ -210,7 +218,8 @@ Open the exported PNG at full resolution, in crops, not only as a downscaled who
 - **Science.** Trace every value and edge to evidence. Check units, denominators, intervals, pairing,
   omitted conditions and caption scope.
 - **Count.** Hues, stroke weights, text sizes, arrow styles, icon families, panel treatments, against the
-  budgets in visual-craft §14.
+  budgets in visual-craft §14. `python scripts/paperkit.py counts fig.pdf` reads the text sizes and stroke
+  widths from the export.
 - **Craft.** Walk the checklist. Run `python scripts/paperkit.py density fig.png` and compare the white
   share with the register's range; run `grey` for a field chart; for a redesign run `compare`, and `parity`
   when the source is a showcase or illustrated figure.
