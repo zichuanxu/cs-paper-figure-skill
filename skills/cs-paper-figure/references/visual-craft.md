@@ -1,306 +1,475 @@
-# Visual craft: drawing figures that look like top-lab figures
+# Visual craft: the rulebook
 
-Read this before drawing anything. It is the rulebook distilled from a 2026-10 close study (see
-[craft-study-2026-10.md](craft-study-2026-10.md)) of IdeaScientist Fig. 1 (Meta), SkillOpt Figs. 1–2
-(Microsoft), Gated DeltaNet (NVIDIA), Kimi Linear and MoBA (Moonshot), Titans (Google), NSA and
-DeepSeek-V3 (DeepSeek), Qwen Gated Attention, Nemotron-H and Hymba (NVIDIA), BLT and Memory Layers
-(Meta), plus the MemT-1.0 figures that were redesigned as worked examples. Numbers are at printed size.
-General colour/typography background remains in [visual-design.md](visual-design.md).
+Read this before drawing. It is organised by design dimension: message, register, colour, typography,
+layout, white space, shapes, icons, arrows, text, charts, captions. Numbers are at printed size.
 
-Implementation: [`scripts/paperkit.py`](../scripts/paperkit.py) provides every primitive named below in
-millimetre units. Worked example: [`scripts/examples/memt/`](../scripts/examples/memt/).
+The rules come from three rounds of measured study: AI-lab method figures
+([craft-study-2026-10.md](craft-study-2026-10.md), [architecture-study-2026-11.md](architecture-study-2026-11.md)),
+benchmark and showcase figures ([arebench-study-2026-11.md](arebench-study-2026-11.md),
+[toolspace-study-2026-11.md](toolspace-study-2026-11.md)), and 29 award papers from NeurIPS, ICLR, ICML,
+CVPR, ICCV, SIGGRAPH, ACL, EMNLP, NAACL, CHI, UIST, CSCW, SOSP, OSDI, NSDI, PLDI and VLDB
+([venue-study-2026-11.md](venue-study-2026-11.md)). Ranges are what those studies measured; a budget or a
+starting value is this skill's choice inside the range.
 
-## 0. Why earlier outputs looked plain
+Implementation: [`scripts/paperkit.py`](../scripts/paperkit.py) provides the primitives named here, in
+millimetres. Rules that apply to one kind of figure only are in [registers.md](registers.md).
 
-The previous examples were scientifically careful but read as flowcharts or compliance reports:
+## 1. The message and the hero
 
-| Symptom | Fix |
-| --- | --- |
-| White boxes with thin coloured outlines, every box the same weight | Role colour *families*: pale fill + same-hue stroke + dark same-hue text; one hero element with heavier stroke/shadow |
-| DejaVu Sans, bold everywhere | Times/STIX serif with STIX math to match the paper body (or Helvetica/Arial); bold only for titles and the hero |
-| Sentences as panel titles ("Replay a separate case, then commit or retain the baseline") | Noun-phrase titles ≤ 6 words in a header band; narrative goes in the caption |
-| Words where an object belongs ("Memory M_t current snapshot") | Draw the noun: a matrix glyph, token strip, document, trapezoid, gate circle (§4) |
-| Watermarks and receipts inside the art ("SCHEMATIC", "AUDIT RECEIPT", "Fixture, not benchmark data") | Status labels belong in the caption; keep an in-art label only for invented data that could be mistaken for results |
-| Mono-spaced tables and pass/fail grids as the main visual | Tables only when lookup is the task; otherwise show the change on the object itself |
-| Default-looking charts with legends | Hero/muted colouring, direct labels, ratio callouts, area-true encodings (§9) |
+State the one thing a reader should get in five seconds before choosing anything else. Then decide which
+single element delivers it. That element is the hero.
 
-## 1. The five-second test
+**Make the hero by difference, not by weight.** In the award figures the hero is the only coloured object
+among black ones, the only solid line among dashed ones, the only unhatched bar, the block given most of
+the area (55–80 %), or the last panel of a storyboard. None of them thickens the hero's stroke or adds a
+shadow. If the hero needs a heavier outline to be found, something else in the figure is too loud.
 
-Before polishing, state the one thing a reader should get in five seconds and make it the largest,
-most saturated, highest-contrast element. MemT Fig. 4 → "memory is read every token and written once
-per turn"; the redesign draws the state as the same green grid in every panel, colours the read path
-blue and the write path purple, and gives the turn timeline its own panel. MemT Fig. 3 → "4× faster, 130× smaller"; the redesign prints
-those ratios (`3.99×`, `130×`) in bold hero blue, the first inside the shaded gap to the baseline. If nothing is visibly the hero, the figure is not done.
+Three ways to hold a message, in the order they should be tried:
 
-## 2. Typography
+1. **Repeat one drawing and change one thing.** The same tree, chain, page table, network or camera view,
+   two to six times, with only the state that the claim is about changed. What is not taken, not live or not
+   ours is the same shape at about 20 % strength (`#D9D9D9` or a 20 % tint), never a different shape.
+2. **Run one concrete example through every stage.** One question, one program, one prompt, one scene. A
+   grid of example × stage needs no arrows; reading order carries the flow.
+3. **Put the picture of the idea beside its measurement**, on one grid and in the same colours: schematic
+   row over data row, or schematic panel beside the chart it predicts.
 
-- **Family.** Match the manuscript. For LaTeX/Times papers use Times New Roman or STIXGeneral (bundled
-  with matplotlib, so no fallback) with `mathtext.fontset = "stix"`; never DejaVu Sans. For sans papers
-  use Helvetica/Arial with `stixsans`. `paperkit.use_fonts()` does this and embeds TrueType (Type 42).
-- **Sizes (pt at print).** Panel titles 7.5–8.5 bold; node titles 6.8–7.5 bold; body/math 6.5–7.2;
-  annotations 5.8–6.3 italic, muted. At most 3 sizes plus the annotation size. Math subscripts must
-  stay ≥ 4.5 pt → math base ≥ 6.4 pt. (Measured: Gated DeltaNet 6.2 pt everywhere; Kimi Linear 7.9/7.1;
-  DeepSeek-V3 8.9 titles / 6.5–8.9 math; MemT original 3–3.5 pt subscripts — avoid.)
-- **Weight hierarchy.** Bold = title, hero number, hero method name. Regular = everything else.
-  Italic = connector annotations and caveats. All-bold text (Hymba, Memory Layers) flattens hierarchy.
-- **Math.** Typeset, never hand-assemble: bold upright matrices (`\mathbf{M}`), bold-italic vectors
-  (`\boldsymbol{\beta}`), italic scalars. Drop a constant index into the panel title ("Transformer
-  block l") instead of repeating `(l)` on every symbol. One governing equation per mechanism, under its
-  glyph; colour-code its terms by role with `Canvas.rich()`.
+In a comparison grid ours gets the same size and treatment as the baselines, on purpose. It is marked by
+position (first after the input, or last) and a bold header.
 
-## 3. Colour = role families
+If nothing is visibly the hero, the figure is not done.
 
-Each role gets five tokens (`paperkit.ROLE`): `fill` (L\* 95–97, node/card body), `soft` (L\* 88–90,
-header bands, chips, highlighted node), `stroke` (L\* 55–65, outlines), `ink` (L\* 25–35, text on that
-role), `mark` (saturated, data marks and the hero). Text on a role is always that role's `ink`, never
-pure black and never the stroke colour.
+## 2. Choose the register
 
-- 3–5 hues, each with exactly one meaning, stated somewhere (legend row, caption, or panel title).
-  MemT redesign: grey = frozen backbone (recedes), green = the memory state M only, blue = read path,
-  purple = write path, amber = hyper-memory parameters φ (trained offline).
-  Each panel's frame and title tab take the colour of what the panel explains (grey model, green
-  state across turns, blue read, purple write), so the reader can match panels to wires without a
-  legend.
-- **Novel vs inherited.** Inherited parts neutral/slate; the paper's contribution gets the saturated
-  hue, a 0.8–1.0 pt stroke, and optionally a soft shadow (`shadow=True`). Do not paint inherited
-  and new parts with one hue (MemT original used "inherited" blue for its new K/V/Q projections).
-- **Ownership in place.** Instead of a separate inventory box ("Hyper Memory Block: W_Q, W_K …"),
-  colour every component that owns those parameters (amber trapezoids). This deletes boxes and long wires.
-- **Local colour scope.** A colour may carry a second meaning inside one dashed callout if it is
-  labelled there.
-- Panel bodies white or near-white with a tinted header band; tint the panel body only when the panel
-  *is* the role (the memory pillar). Measured tint share in crafted figures: 10–65 %; white 25–80 %.
-- Charts: one hero colour (method) + two greys for baselines (`#5E6875`, `#8E99A8`); the hero line is
-  1.6–2.0 pt, baselines 0.9–1.1 pt.
+A register is a coherent set of choices for ground, fills, strokes and type. Award figures do not share
+one look; they share discipline inside a look. Pick the register before any style value, and never mix two
+in one figure.
 
-## 4. Draw the noun: object vocabulary
+| Register | Where it belongs | Ground and fills | Strokes | White share |
+| --- | --- | --- | --- | --- |
+| **Line art** | Systems, PL, databases, theory, data structures; any 84 mm column | White; shapes white or unfilled; at most a few flat state fills | One black weight, 0.4–1.0 pt | 55–96 %, usually above 75 % |
+| **Idea schematic** | ML theory and intuition figures; Figure 1 of an analysis paper | White; a few large flat shapes, borderless or black-bordered | One weight, 0.7–1.4 pt | 85–90 % |
+| **Example-led** | NLP task and method figures; HCI interface and study figures | White; pale tints behind spans and cards | Thin or none | 50–80 % |
+| **Image-led** | Vision, graphics, robotics: teasers, pipelines over pixels, comparison grids | The images; neutral greys for the vector layer | Module outlines 0.7–0.95 pt | 22–72 % by family |
+| **Plate** | Full-width method and architecture figures of model papers; agent and benchmark overviews | White page; a pale tint only where scope needs one | Same-hue outlines 0.6–0.8 pt | 40–75 % |
+| **Showcase** | Teasers of system and benchmark papers; illustrated survey figures | Pastel fields, plates, logos, illustration | Varied | 30–55 % |
 
-| Concept | Glyph (`paperkit`) | Notes |
-| --- | --- | --- |
-| Matrix / state / memory | `matrix(depth=3)` grid slabs, 4–6 cells/side, 3-stop ramp of the role hue | Offset slabs = heads/channels; `fade=` for decay, `band=` dashed row/col for erase/write target |
-| Vector (q, k, v, gate values) | `vec()` strip of 3–6 shaded cells | Outer product = column strip × row strip |
-| Linear projection | `trap()` trapezoid, narrow side = output dim | Pair narrow-right + narrow-left = low-rank down/up projection |
-| Elementwise op | `op()` circle 2.4–3.2 mm: `+` ⊕, `.` ⊙, `x` ⊗ | Never a rectangle for an elementwise op |
-| Gate / nonlinearity | small chip on the wire or σ circle | Gates are not layers; do not give them layer-sized boxes |
-| Tokens / sequence | `tokens()` rounded squares, fill by token type | Inputs vs generated in two tones of one neutral |
-| Multiplicity (heads, experts, batches) | `stack(n=3)` offset cards, or 3 copies + `⋯` | SkillOpt: K minibatch lanes with vertical ellipsis |
-| Document / artifact / skill file | `doc()` folded corner + faux text lines | Paperclip/tape title for a corpus (IdeaScientist) |
-| Store / database | `cylinder()` | |
-| Decision / validation gate | `diamond()` with accept/reject coloured exits | SkillOpt: mustard gate, green accept, red dashed reject |
-| Frozen / trainable / fixed / evolving | `icon_snow`, `icon_flame`, `icon_lock`, `icon_cycle` | One icon per role, top-right of the node, 2.4 mm |
-| Agent / model | `icon_robot`, distinct colour per role | IdeaScientist: one coloured robot head per agent + a role glyph |
-| Illustrated agent roles (optional) | `image()` with a *matched* generated set (one character, role accent colours, white background knocked out) | Harness² Figs. 2–3: Codex-generated sets via `scripts/codex_images.py` ([image-generation.md](image-generation.md)); keep `icon_robot` as the fallback; never use generated images for labels or data |
-| Edits / operations on text | `chip()` pills: ADD / DEL / REP | |
-| Stage of a framework, chained across figures | `chapter()` with `prev` / `nxt` tabs; `series()` palette | Proactive AI Figs. 7–12 (but keep the hue fixed per stage) |
-| Decision cascade | gate stack: `badge()` per test, failure chip inside the row, pass lines into one AND bar | Proactive AI Fig. 10 |
-| Degree / spectrum | `spectrum()` axis + chips on the same lightness ramp | Proactive AI Fig. 4 |
-| Dialogue, behaviour | `bubble()` with the tail on the speaker; never text in generated pixels | Proactive AI Fig. 3 |
-| Stage label, state tag | `tab(..., solid=True)` overlapping the container border | PlugMem Figs. 2–4, StudentSim Fig. 6 |
-| Pass / fail, verdict | `icon_check()` / `icon_cross()` (vector, font-independent) | StudentSim Fig. 4 |
-| Method = baseline + one layer | diff panels on one grid, same toy example, new layer in its own row and colour | ReHarness Fig. 1 |
-| Numbered edges | badge on the edge + typed-edge legend beside the panel | ReHarness Figs. 1, 3 |
-| Unavoidable crossing | `arrow(..., halo=True)` bridge | — |
-| Comparison to a human / oracle level | axis centred on the reference, losing side shaded, dumbbells with gap labels | PaperBanana Fig. 5 (redesigned) |
-| Mixed-aspect icon set | `image(..., fit="box")` keeps one footprint | — |
-| Scores, traces, curves | mini plot inside the card | SkillOpt trace cards carry a tiny line plot and a score |
-| Time / turns / epochs | columns t−1 · t · t+1, or a strip with write arrows between | Promote time to a panel when evolution is the claim |
+How to choose:
 
-## 5. Composition patterns
+- **Venue and width decide first.** A two-column systems, NLP or vision venue means most figures are one
+  column (76–85 mm). Design for that width from the start (§5).
+- **Look at the paper's other figures and the venue's recent papers.** A figure should look like it belongs.
+- **In a redesign, stay in the source's register** unless the brief says otherwise, and beat it there
+  (§13). Turning an illustrated showcase figure into line art loses; so does turning line art into a plate.
+- **The claim decides the rest.** An idea → schematic. A mechanism with tensors and modules → plate. A
+  protocol, layout or data structure → line art. Behaviour on text → example-led. Behaviour on pixels →
+  image-led.
 
-1. **Overview → zoom → mechanism** (MemT redesign, DeepSeek-V3, Kimi Linear). Narrow locator stack
-   (≈20 % width), zoom rays (`zoom()` with a faint wedge fill) into the block, then the mechanism.
-   Max 2 zoom levels per canvas; deeper detail becomes another panel reached by an elbow arrow.
-2. **State pillar between reader and writer.** Give persistent state its own column; the read path
-   leaves it at the top, the write path returns to it at the bottom. Replaces long looping wires.
-3. **Mechanism storyboard on the object.** Show one step on the actual glyph:
-   `M_{i-1} →(forget) faded M →(erase) M with dashed row ⊕ (v × k outer product) → M_i`, then the
-   typeset equation underneath, colour-coded by the same chips.
-4. **Infographic quadrants** (IdeaScientist): system overview + performance + a concrete case in one
-   plate, each section in a dashed rounded region with a large title tab breaking the border, a
-   repeated micro-template per agent (Input / Action / Output), and a bold takeaway banner.
-5. **Fan-out / merge pipeline** (SkillOpt): data splits as coloured cards → stacked rollout cards with
-   mini plots → K parallel lanes → one tall merge bar → gate diamond → accepted artifact; feedback
-   loops dashed and colour-coded by meaning (red reject, teal slow update), in a reserved corridor.
-6. **Timeline strip** under a mechanism figure when the claim involves evolution across steps.
+Each register's specific devices and families are in [registers.md](registers.md).
 
-Grid: 2 mm unit; card gutter 2.5–3.5 mm; card radius 2.0 mm; node radius = min(1.6 mm, 0.16·h);
-header band height ≈ 0.62 × title pt in mm. Align corresponding stages on shared baselines.
+## 3. Colour
 
-## 6. Connectors
+**Count the hues. The budget is four, each with one meaning.** Strong figures measured zero to five; zero
+or one is common: a black figure with one red object, a one-hue ramp, a greyscale diagram with one accent.
+Figures with seven or more hues were the weakest in every paper that had one. The one exception is series
+identity in a field chart (§11): one hue per system, up to seven, each with a second channel.
 
-- Default wire: `#4A4F57`, 0.6–0.75 pt, orthogonal, 1.0–1.2 mm rounded elbows, filled head ≈ 1.2–1.5 mm.
-- Hero path: role `mark` colour, 0.9–1.0 pt, head 1.4–1.5 mm. Coloured wires only when colour encodes
-  the path type (read / write / reject / feedback). Residual/skip paths lighter grey, 0.55 pt.
-- Dashed only for control, feedback, zoom rays and "conceptual" links; define each dash meaning locally.
-- Junction dots (0.8–0.9 mm) where a wire splits. Arrowheads touch borders exactly.
-- Fat neutral block arrows (`block_arrow`, `#D5D9DF`) for stage-to-stage flow between big sections.
-- Longest wire ≲ 45 mm; if longer, move the endpoints (state pillar) instead of routing around.
-- Zero unexplained crossings; one zoom-ray pair per figure.
+- **Colour what is new, wrong or being followed.** Everything inherited, standard or contextual is black,
+  grey or white. In a plate, inherited modules are neutral and the contribution takes the hue.
+- **A hue is a name; keep it for the whole paper.** The same thing has the same hue in the overview, the
+  detail, the chart and the caption. Carry it through every form the thing takes: its chip, its wire, its
+  token, its curve, the word that names it (`cv.rich`). Define the paper's palette once
+  (`paperkit.series`) and import it in every figure script. A colour pair that changes meaning between
+  adjacent figures is a recurring defect even in award papers.
+- **An ordered variable is one hue on a lightness ramp** (depth, steps, checkpoints, coarse → specific).
+  Unrelated hues for ordered levels hide the order. Model identity is categorical; settings of one model are
+  a ramp.
+- **Use fill versus outline before spending a hue.** A tinted borderless bubble against a white bordered
+  one, a filled disc against an outlined one: a binary carried without a second colour.
+- **Text is black or near-black** (`#000000`–`#262B33`). Colour a word only when it names a coloured thing
+  or sits on a saturated fill (then white). Grey (`#6B7480`) is for secondary text.
+- **Scaffolding is grey.** Arrows, frames and trays that are not the subject take two or three greys
+  (`#7F7F7F`, `#BFBFBF`, `#EFEFEF`).
+- **Tints mean scope.** A pale field says "these things belong together" or "this condition holds here".
+  Tint a region only when the tint explains something; the page is the default ground. Tints sit at
+  L\* 88–97; accents are saturated.
+- **In image-led figures the content owns the colour.** Keep the vector layer neutral and spend saturated
+  hues only on marks that must be found on the pixels, in colours the images lack.
+- **Gradients draw continuous quantities** (a density, a ramp, a blend of two sources). The showcase
+  register also uses them as surface on plates and bars ([registers.md §8](registers.md#8-showcase));
+  nowhere else.
+- **Check greyscale** when the venue prints or the series count exceeds three:
+  `python scripts/paperkit.py grey fig.png grey.png`. Series must still be told apart (§11).
 
-## 7. Density and contrast targets
+Role families for the plate register: `paperkit.ROLE` gives each hue five tokens, `fill` (L\* 95–97),
+`soft` (88–90), `stroke` (55–65), `ink` (25–35), `mark` (saturated). `ROLE["line"]` is white fill with
+black stroke and text, for line art.
 
-Measure with `python scripts/paperkit.py density fig.png` (fractions of white ≥ 250, tint 200–249,
-ink < 120 in greyscale):
+## 4. Typography
 
-| Figure | white % | tint % | ink % |
+**One scale per placement.** Sizes are points at print.
+
+| Role | 84 mm column, any register | Full-width plate (dense) | Full-width schematic, chart, image grid |
 | --- | --- | --- | --- |
-| Gated DeltaNet / Kimi Linear | 39–43 | 50–53 | 6.0–6.4 |
-| DeepSeek-V3 / NSA | 67–82 | 11–14 | 5.2–8.4 |
-| MemT-1.0 Fig. 4 (original) | 43 | 50 | 2.5–2.8 (pale, generic) |
-| MemT Fig. 4 redesign | 25 | 64 | 4.6 |
+| Panel head, column header | 6.5–8 | 7.5–8.5 | 8–11 |
+| Labels, legends, axis titles, example text | 5.8–7.5 | 6.5–7.2 | 7–10 |
+| Tick labels, fine annotations | 5.2–6 | 5.8–6.3 | 6–8.5 |
 
-Targets: no empty region > 15 % of a panel; ink ≥ 2.5 % with dark text, or ≥ 5 % when the figure is
-mostly line art. Low ink with hairline coloured strokes is the "pale/generic" failure mode.
+- **Floor.** Nothing below 5.0 pt. Only tick labels and fine annotations go below 5.8 pt; labels, legends
+  and anything else a reader must read stay at 5.8 pt or above. Math subscripts ≥ 4.5 pt. Award figures
+  with text at 3.2–4.9 pt fail at print in exactly those places; do not copy them. If content does not fit,
+  cut content or add height.
+- **Size down for density, up for emptiness.** A sparse schematic with 6.5 pt labels looks timid; a dense
+  plate with 10 pt labels does not fit. Fill the placement.
+- **Two or three sizes per figure.** Build hierarchy with size and position first. Bold is for panel
+  letters, ours in a header or legend, a number that is the claim, the changed word in a sentence, and the
+  column or stage headers of a grid when they are its only heads. Other panel heads are regular weight.
+  All-bold flattens the hierarchy.
+- **Face.** Page-level text (panel heads, column headers, axis labels, chart text) takes the manuscript's
+  body face: Times/STIX with STIX math for LaTeX papers (`paperkit.use_fonts("serif")`). Text inside a
+  drawn diagram may instead be one sans family, used for every diagram in the paper
+  (`use_fonts("sans")`). Never two sans families, and never a default face in the charts beside designed
+  diagrams: DejaVu Sans in a Times paper is what makes a chart read as unedited matplotlib output.
+- **A second voice for text from the world.** Machine-written text, code, file names and template slots
+  are monospace. Human prompts and quotes are quoted or set in a distinct face. The figure's own labels stay
+  in the main face. A condensed cut can fit a sentence in a narrow tile.
+- **Math is typeset**, bold upright matrices, bold-italic vectors, italic scalars, with a constant index
+  moved into the panel title. Set an equation on the object it describes, rotated along a curve when it
+  labels one (`paperkit.curve_label`).
 
-## 8. Text inside figures
+## 5. Layout
 
-Labels 1–4 words. No slogans ("Memory becomes part of the model's forward pass") — that is caption
-text. Units and conditions go in a one-line italic subtitle under the panel title. Every number shown
-must come from the inputs; derived ratios are computed in code and asserted.
+- **Design for the column.** In a two-column venue the figure is 76–85 mm wide unless it earns the full
+  width. A column figure is its own design, not a shrunk plate: one example, one vertical axis of reading,
+  two or three tiers, about 9–15 objects. Full-width figures are 140–178 mm wide and usually 30–70 mm tall.
+- **Fill the width.** Content runs to within 1–2 mm of the column edge. The page supplies the margin;
+  never draw an outer frame.
+- **Pick a skeleton with named axes**, then place things on it:
 
-## 9. Charts
+  | Skeleton | Use |
+  | --- | --- |
+  | Grid: example × stage, construct × study, condition × metric, method × scene | Comparison and correspondence; headers carry the meaning, arrows are optional |
+  | Hero plus satellites: one object at 60–80 % of the area, inputs in a strip on one side, outputs small on the other | Teasers |
+  | Storyboard: 3–6 equal panels, one drawing, one change per panel | Protocols, algorithms, interactions |
+  | Overview → zoom → mechanism: narrow locator (≈ 20 %), zoom rays, large detail | Architectures with one new block |
+  | Horizontal bands named at the edge, interfaces drawn on the boundaries | Layered systems, planes, address spaces |
+  | Schematic row over data row, columns = regimes | Theory with evidence |
+  | State pillar between reader and writer | Persistent memory or state |
+  | Fan-out, parallel lanes, merge bar, gate | Pipelines with parallel work |
+  | Timeline: time on x, rows = actors or stages | Schedules, sessions, procedures |
 
-- **Encode what the claim is about.** Speed-up claims need the ratio visible: bracket between hero and
-  baseline with a bold `4.0×` label. Bars on a log axis that start at an arbitrary floor (MemT Fig. 3)
-  make length meaningless — use dots/slope lines on log axes, bars only on linear axes from zero.
-- **Area-true comparisons** for "N× smaller": a waffle where one cell = the hero's footprint
-  (130 cells vs 1 cell) is honest and visceral; partial cells for fractions.
-- **Slope chart** for two conditions (128K → 256K): shows both the level and the scaling; print growth
-  factors (×1.46 vs ×3.14).
-- **Direct labels** at line ends/segments in the series colour; no legend when ≤ 4 series.
-- Axes: no top/right spines, light value-axis grid `#E6E9ED` 0.5 pt, tick labels `#5A626D` 6.2 pt,
-  label only major decades on log axes; values formatted `1,401` / `23.7` (≤ 3 significant digits).
-- Hero method: saturated `mark`, bold value labels, larger marker (2.1 mm vs 1.6 mm) with white edge.
-- **Logos are identity marks.** When the figure names real products, services or models, use the official
-  mark, unmodified and in its own colours, in a white tile beside the name (`cv.tile(image=...)`); one size
-  per row, never larger than a technical object. Keep a text fallback and check the venue's rules (§14).
-- **Radar for an envelope claim.** One model ahead on most of 5–8 axes, at most four polygons: keep the
-  radar (`cv.radar`), state the axis scaling, print the hero's value at each vertex and the winner's value
-  where the hero loses. Use aligned dot rows when the claim is a gap, a ratio or a ranking.
-- Cards: each chart in a rounded white card with a tinted header band, matching method figures.
+- **The largest block is the contribution.** Give the operation that carries the claim the most area and
+  shrink context to a locator.
+- **Use a module.** Choose a unit (2 mm, or the height of one text box) and make every box a multiple of
+  it; make parallel things identical in size. Three stage cards of 18.8 × 13.3 mm read as a set; three
+  cards of slightly different sizes read as an accident.
+- **Align across panels.** Shared left edges, shared baselines for corresponding stages, callouts on one
+  vertical line. Symmetry carries a comparison.
+- **Say shared things once.** One legend, one y label, x labels on the bottom row, column heads on the
+  top row, row conditions as rotated labels at the left (`cv.axes_grid`).
+- **Separate zones with space, a hairline or a dashed rule.** Not with a box around each one.
 
-## 10. Beat-the-original protocol (redesign tasks)
+## 6. White space
 
-0. **Strengths first.** List three to five things the original does well that a reader would miss:
-   a depth metaphor, logos, an illustrated object, a chart whose shape is the claim, a pleasant surface.
-   Each one is kept or replaced by something visibly stronger. A redesign that is more correct but
-   plainer has failed ([toolspace-study-2026-11.md](toolspace-study-2026-11.md)).
-1. Render the original figure region at print width; list concrete defects (zoom levels, crossings,
-   min text size, colour meaning conflicts, hidden key idea, slogans, dead space, ink %).
-2. Re-read the method text and extract the governing equations and timing; the redesign must be at
-   least as faithful (MemT: read every token, write once per turn, M = 0 at a new trajectory).
-3. Decide the five-second message and the hero; choose a composition from §5.
-4. Build with `paperkit`, export PDF/SVG/PNG, then compare side by side at the same width
-   (`python scripts/paperkit.py compare original.png new.png out.png`) and with `density`.
-5. Fix overlaps and clipped labels found in the PNG; iterate until the side-by-side shows a clear win
-   on message, hierarchy, faithfulness and legibility, not only on decoration.
-6. `parity` passing is not the end: look at both at one width and ask which one a reader would pick
-   for a slide. If the original wins the first glance, find out why before shipping.
+White space is the cheapest and most neglected tool. Award figures are mostly white (median about 70 %);
+what they have in common is where the white is.
 
-## 12. The architecture register: object-rich method figures
+- **The page is the ground.** Start with a white canvas and add fills only where a fill explains something.
+  A figure whose every panel has a tinted body and a frame has no ground left and reads as heavy.
+- **Group the emptiness.** White belongs in gutters, in bands between layers, in a label row, in the strip
+  between a legend and its axes, and around the hero. A scattered hole inside a panel is a defect: shrink
+  the canvas or move the neighbours, never fill it with decoration.
+- **Emptiness can be the finding**: the flat window between two regimes, the gap between two schedule
+  rows. Mark it with a double-headed arrow and leave it empty.
+- **Proximity is the grouping rule.** A label sits closer to its object than to anything else. Things in a
+  group are closer to each other than to the next group. Use two gutter widths, not one.
 
-From a 2026-11 study of 23 vision/multimodal method figures (Holmes, ReSet, CoPS, SemDiff, LFBNet,
-HFF-Net, VideoFusion, C2R, …; [architecture-study-2026-11.md](architecture-study-2026-11.md)). The
-earlier gallery outputs shared one template (grey header band on a white card around flat 2-D
-boxes); beside these figures that template reads as tidy but generic. For a method or
-architecture figure, start from this register:
+| Distance | Measured range | Starting value |
+| --- | --- | --- |
+| Label to its object | 0.3–1.5 mm | 1 mm |
+| Padding inside a container | 0.4–1.5 mm (column line art), 1.5–3.5 mm (elsewhere) | 1.5–2 mm |
+| Gutter inside a group (images, cards) | 0–1 mm images, 2.5–3.5 mm cards | 1 mm / 3 mm |
+| Gutter between groups or panels (image grids: [registers.md §5](registers.md#5-image-led)) | 3–5 mm framed, 8–10 mm unframed | 4 mm / 8 mm |
+| Subplots sharing an axis | 3.0–4.7 mm | 4 mm |
+| Subplots with their own tick labels | 6–10 mm | 7–8 mm |
+| Between lanes or layer bands | 2.5 mm | 2.5 mm |
+| Outer margin | 0–4.7 mm, usually under 2 | 1 mm |
+| Figure to caption | 3.7–6.3 mm | 4 mm |
 
-- **Plate.** Overview pipeline across the top (55–65 % of height), a row of 2–4 equal-height detail
-  panels opening the new modules, a glyph key strip along the bottom. Dashed zoom rays or a shared
-  hue link each detail panel to its block in the overview.
-- **Section frames, not header bands.** Each module gets `cv.section(...)`: a tinted field and a
-  dashed border in its own hue, titled on a pill tab on the top border, a bold strip at the bottom,
-  or bold-italic in the corner. Name it as the paper does, with the acronym: "Masked Self-Attention
-  (MSA)". The grey `group(band=True)` card stays for charts and neutral context only.
-- **Pseudo-3D nouns.** Feature tensors = `cuboid` (H×W×C beside it in italic math); layer runs =
-  tall slabs `cuboid(rotate=True)` with vertical text; encoders = `trap`; fused features = a
-  gradient between the two source hues (`grad=`). Never put the whole pipeline in perspective.
-- **A data object in every detail panel.** A feature/attention map (`fmap`, `n=` for channels or
-  frames), a numeric matrix with the winner bold-bordered (`num_matrix`), a mini distribution or
-  score bars (`mini_plot`), a graph (`graph`), real tokens, or a real thumbnail. A panel of only
-  boxes and arrows explains the wiring, not the operation.
-- **Branch identity everywhere.** One hue per branch/modality/factor on its blocks, its wires when
-  branches run in parallel, its tokens, and the words that name it (`rich`).
-- **Key strip.** `cv.legend([...])` defines every circled operator, snowflake/flame, dashed =
-  train-only, and abbreviation once, so the panels can say one or two words.
-- **Phase bar.** `cv.phase_bar(...)` under the columns names the stages once (DySeT).
-- **Saturation.** Section tints at the role `fill`, blocks at `soft`, one or two hero blocks at
-  `mark` with white text. Compare against the original with `paperkit.py parity`: a redesign of a
-  colourful method figure must not come out greyer.
+White share by register is in §2. Measure with `python scripts/paperkit.py density fig.png` (white ≥ 250,
+tint 200–249, ink < 120 in greyscale). It warns below 40 % white, the bottom of the measured range outside
+image grids. Ink is typically 2–8 % in diagrams and higher in charts with filled bars; below 2 % with
+hairline coloured strokes is the pale failure, fixed by black text and a darker stroke, not by more fill.
 
-Keep this skill's discipline on top: text ≥ 5.8 pt (they often fall to 4–5 pt), one meaning per hue
-(VideoFusion spends six hues on six block types), no wire through text, one icon family (no emoji).
+## 7. Shapes and objects
 
-## 13. Contrast, state and construction figures
+**Shape means kind.** Decide the mapping once per paper and keep it.
 
-Benchmark and dataset papers explain *what is different about the tasks*, not how a model computes.
-Learned from ARE-bench Figs. 1–3 ([arebench-study-2026-11.md](arebench-study-2026-11.md)).
+| Shape | Kind |
+| --- | --- |
+| Square-cornered rectangle | Memory, data, a buffer, a table cell |
+| Rounded rectangle | A component, module, process or graph node |
+| Tall rounded bar or slab | A layer |
+| Trapezoid | A projection or encoder (narrow side = output) |
+| Circle 2.4–3.2 mm | An elementwise operator, a decision node, a numbered callout |
+| Disc | A discrete unit: token, feature, point |
+| Hexagon (`cv.hexagon`) | An interface, drawn on the boundary it crosses |
+| Diamond | A gate or validation test |
+| Cylinder | A store or a whole external system |
+| Folded-corner sheet | A document or artifact |
+| Speech bubble with tail | A human utterance (square box = model output) |
+| Pill | A chip, tag, button or slot |
+| Stack of three offset cards (≈ 1 mm) | Many of these |
+| Dashed frame | A plane, sandbox or scope; anything that is not a concrete object |
+| Flat filled region | A regime or condition |
 
-- **Contrast figure.** Baseline column narrow (~⅓), ours wide (~⅔). Shared rows named after the
-  claim's dimensions, set once as rotated labels in an I-bar bracket (`cv.brace` + rotated text),
-  separated by a dashed rule spanning both columns. Same objects on both sides; the difference is in
-  their arrangement. End each column on a verdict pill (`icon_cross` red / `icon_check` green).
-- **Non-linear process.** Keep stages in canonical order; draw jumps as arcs above (back) and below
-  (skip) the row, each with a `badge()` numeral keyed to a request list under the row.
-- **Cut point.** `cv.turn_strip(x, y, w, n, cut)` shows history, the cut turn and the unseen future
-  as cells; label it once ("T1–T30 → Background, T31 the task").
-- **Real artifacts as data objects.** Files, commands and user requests go in monospace inside window
-  chrome (`cv.filetree(...)`); state per row = coloured tick + right-aligned italic tag (current,
-  stale, superseded, paused). Mono = data from the world; the figure's own words stay in the text face.
-- **One accent = the task / ours.** The highlight region (dashed), the task bar and its star badge
-  share one hue that no stage or category uses.
-- **Visible vs hidden.** Mark material withheld from the agent with `icon_lock`, identically in every
-  figure of the paper.
-- **Step cards.** "3 Verify & attribute ··· *Problem & cause*": bold numbered step left, italic
-  output type right in role ink; rules (S1–S4) printed in the card so the text can cite them.
-- **Loops as rails.** Revise / feedback paths run around the outside of a column, labelled on the
-  line; never through the step stack.
-- **Results figure.** One model = one colour in every panel (no sequential ramp on the bars and
-  categorical colours on the radar). Declare a truncated radial or value axis in the caption. A radar
-  with more than four polygons becomes small multiples or a stage × model dot plot; with four or fewer
-  and an envelope claim it stays a radar (§14).
+- **Borders: one weight per diagram.** Line art has every stroke at one weight (64 of 64 strokes at
+  0.50 pt in CortenMM Fig. 3). Use a second weight for one thing only, and know what it means.
+- **Borders or fills, not both by habit.** In line art the border separates objects and fills are for
+  state. In fill-on-fill figures (white tile on a grey tray, pill on a card) borders are dropped and
+  reserved for modules, ours and zoom boxes. A pale fill with a same-hue outline on every object is the
+  plate register's device; elsewhere it is noise.
+- **State goes in the border style as well as the fill** (solid / hatched / dashed / dotted) so it
+  survives greyscale.
+- **Radii scale with size:** chips and labels 0.5–1.2 mm, nodes 1.4–2.0 mm, containers 2.3–2.8 mm, plates
+  3.5–4 mm. One radius per size class.
+- **Title a container with a tab on its border or a plain head above it.** Header bands were found in
+  none of about 90 award figures. `cv.section` and `cv.tab` draw the tab; `cv.group(band=True)` is kept for
+  compatibility and should not be the default. The exception is the showcase register, whose illustrated
+  stage cards carry solid colour headers ([registers.md §8](registers.md#8-showcase)).
+- **No shadows**, except under something that floats above the content: a window, a callout disc.
+- **Flat by default.** Depth is for feature tensors and layer runs in vision architectures (`cv.cuboid`)
+  and for a layering relation in a showcase figure (`cv.plate`). Systems, ML theory and NLP figures are flat.
 
-## 14. The showcase register: plates, logos, radar envelopes
+**Draw the noun.** A thing the method reads, writes or transforms is drawn as an object, not named in a
+box. In example-led figures the sentence is the noun: set it in type and mark it (§10).
 
-Teaser and overview figures of system and benchmark papers sell one idea at a glance. Learned from
-ToolSpace Fig. 1 and from a redesign of it that came out tidier and uglier
-([toolspace-study-2026-11.md](toolspace-study-2026-11.md)).
+| Concept | Glyph (`paperkit`) |
+| --- | --- |
+| Matrix, state, memory | `matrix(depth=3)`; `fade=` for decay, `band=` for the written row |
+| Vector | `vec()` strip of 3–6 cells; grey bar in drawn brackets for a column vector |
+| Feature tensor, layer run | `cuboid`, `cuboid(rotate=True)` |
+| Feature or attention map | `fmap(n=)` |
+| Scored matrix, values in cells | `num_matrix(hi=)` |
+| Tokens, sequence | `tokens()`; discs on a chain for an order |
+| Multiplicity | `stack(n=3)` |
+| Document, store, gate | `doc()`, `cylinder()`, `diamond()` |
+| Graph, tree | `graph()`; hand-placed discs and straight edges for a search tree |
+| Distribution, score, trace | `mini_plot()` inside the card |
+| Real files and commands | `filetree()`, `listing()` in monospace |
+| Example text with marked spans | `rich(..., family="monospace")` with a mark per segment |
+| Turn or step sequence with a cut | `turn_strip()` |
+| Layering with depth | `plate()` + `tile()` |
+| Verdict | `icon_check()` / `icon_cross()` on the corner of the judged thing |
+| Elided items | An ellipsis or a ghosted frame |
 
-- **Layering gets depth.** "A layer between X and Y" is drawn as stacked isometric plates
-  (`cv.plate`), objects standing on them as tiles (`cv.tile`), calls and returns in the gap. The
-  plate names itself on its front edge. Everything that is not a layer stays flat.
-- **Real things get their marks.** Services, tools and models the reader knows by sight appear as
-  logo tiles with names (rules in §9 and the study). Generic operations get one glyph family.
-- **Envelope claims keep the radar**, made honest (`cv.radar`): one hero colour across panels, hero
-  drawn last and heavier, values at the vertices, the rival's value where the hero loses, scaling
-  stated in a note under the chart.
-- **Bars carry identity:** the model's mark above the bar, the value on it, a ghost outline for the
-  reference condition when the claim is a drop.
-- **Surface:** gradients on plates and bars only, pastel fields behind clusters, saturated colour
-  for the hero and the walk; panel titles bold, one per dashed rounded frame.
+## 8. Icons
 
-## 11. Anti-patterns checklist
+Start from no icons (16 of 19 ML figures and 18 of 22 systems figures have none). Add one only when it
+passes this test: **it replaces a word that would otherwise repeat, and the reader already knows what it
+means.**
 
-- [ ] Equal-weight boxes, no hero
-- [ ] Box containing a sentence or an inventory of parameter names
-- [ ] Gate / elementwise op drawn as a layer-sized rectangle
-- [ ] State or memory drawn as a text box
-- [ ] Colour with two meanings without a local label
-- [ ] Wire > 45 mm or crossing another wire
-- [ ] Wire running through or behind a box, slab or label (`cv.wire_crossings()`); icon touching text
-- [ ] Text < 5.8 pt, subscripts < 4.5 pt, or DejaVu Sans in a Times paper
-- [ ] Watermarks / audit receipts / slogans inside the art
-- [ ] Legend where direct labels fit; ratio claims without a visible ratio
-- [ ] Log-axis bars, unexplained hatching, or decorative 3-D (depth that carries a layering relation is not decorative, §14)
-- [ ] Every panel the same grey-banded white card; modules not told apart by a hue of their own (§12)
-- [ ] Tensors and layer runs drawn as flat labelled rectangles instead of cuboids/slabs (§12)
-- [ ] A detail panel with no data object (map, numeric matrix, mini plot, tokens, thumbnail)
-- [ ] Circled operators, snowflakes or abbreviations used without a key strip
-- [ ] A contrast figure whose two sides use different objects, or with no verdict at the foot of each side (§13)
-- [ ] The "task / ours" accent hue reused by a stage or category; one model in two colours across panels
-- [ ] A task cut, file state or hidden input explained only in prose when a strip, tag or lock would show it
-- [ ] A radar with more than four overlapping polygons, or a truncated radial axis not stated in the caption
-- [ ] A redesign plainer than its source: depth, logos, illustrated objects or a shape-is-the-claim chart removed with nothing stronger in their place (§10 step 0, §14)
-- [ ] Well-known products or models named only in text boxes when their marks would be recognised faster; or a logo with no name, recoloured, or larger than the mechanism
-- [ ] A radar whose axis scaling is unstated, or whose envelope hides an axis the hero loses
-- [ ] Spelling errors in figure text (proof-read every label; verdict pills are read most)
+- **What earns an icon:** an actor (person, agent), a source or product (its real mark), a verdict (tick,
+  cross), a state that repeats on many objects (frozen, trainable, locked), the place an action happened (a
+  cursor). Operations, stages and abstract concepts get a word.
+- **One family per figure**, line or filled, not both. Line icons take the figure's stroke weight
+  (0.5–1.2 pt). The exception is one motif used throughout the paper.
+- **Size 1.7–3 × the cap height of the adjacent text** (about 2.5–4 mm beside 6–7 pt text). Above 3 × an
+  icon reads as clip art.
+- **Every icon has a word beside it** at first use, or is defined in the key or caption.
+- **Verdicts sit on the judged thing**: on its corner or the right end of the span, 1.6–3 × cap height.
+- **Filled versus outlined is a free binary** (user versus agent).
+- **Logos are identity marks**: official, unmodified, in a white tile beside the name
+  (`cv.tile(image=...)`), one size per row, never larger than a technical object. Keep a text fallback.
+- **Emoji** render from a bitmap font and differ between machines; use `icon_*` vectors.
+- **Illustrated icon sets** (generated or drawn) belong to the showcase register only, 3–7 matched icons
+  with a label beside each ([image-generation.md](image-generation.md)).
+
+`paperkit`: `icon_snow`, `icon_flame`, `icon_lock`, `icon_cycle`, `icon_robot`, `icon_clock`, `icon_doc`,
+`icon_check`, `icon_cross`; `badge` for numbered discs; `callout` for lettered discs with a leader.
+
+## 9. Arrows and connectors
+
+**First ask whether the figure needs arrows.** A grid with headers, a storyboard read left to right and a
+stack read bottom to top need none. Counts in strong example-led figures are 0–3.
+
+- **Weight.** In line art, and in any diagram with many arrows, arrows take the box stroke (0.4–1.1 pt).
+  In a schematic or example-led figure with fewer than ten arrows, make them heavier than the outlines
+  (1.0–2.5 pt) so the flow is the first thing read. One weight per arrow style.
+- **Head.** Filled triangle, length 3–6 × the stroke (median 4.5 ×); up to 7 × on strokes under 0.6 pt;
+  below 2.5 × the head disappears. One head shape per figure. `cv.arrow` defaults (0.7 pt, 1.4 mm) are
+  5.7 ×.
+- **Geometry follows the structure.**
+  - Orthogonal, square or 1 mm rounded elbows: layered systems, pipelines, memory maps.
+  - Straight diagonals: graphs and trees.
+  - Arcs: time, self-loops, jumps, a bypass. A curve should mean something; one curved arrow among
+    straight ones says "this one is different".
+  - Free curves: anything drawn over an image, so it is not read as part of the scene.
+- **At most three arrow styles, each defined** beside a sample of the real arrow in a key row or the
+  caption. Typical pairs: solid = data, dotted = control; solid = taken, grey dashed = not taken; colour =
+  phase. Number arrows with small discs in the arrow's colour when order matters.
+- **Dashed means "not a concrete flow"**: control, optional, train-only, not taken, a construction line.
+- **Leaders are not arrows.** A callout leader is a 0.6–1.0 pt line ending in a dot. A relation between
+  two regions is a line with a dot at each end. A region gets a bracket.
+- **Wedges and zoom rays tie a word or a block to its detail**: a translucent wedge from a highlighted
+  word to the thing it names, a ray pair from a block to its expansion (`cv.zoom`). One per target.
+- **Double-headed arrows measure** an interval or a dimension.
+- **Block arrows** (`cv.block_arrow`, grey) mark a stage change or a row's reading direction, nothing else.
+- **Rails.** Feedback and retry paths run around the outside of a column, labelled on the line. Outcome
+  types can ride as pale bands under one wire style, like metro lines.
+- **Reverse or bend an arrow to say something went wrong**: a cost arrow pointing right to left, the only
+  curved line as the bypass.
+- **Over images:** ghost the image under the arrow, use a hue the image lacks, or switch the stroke from
+  black to white where it crosses the dark part. Check contrast on the lightest and darkest pixels it
+  crosses.
+- **No wire through a label or behind a box**; no unexplained crossing (`cv.wire_crossings()`,
+  `arrow(..., halo=True)` for a bridge). If a wire is longer than about 45 mm, move its endpoints together.
+
+## 10. Text inside figures
+
+Two kinds of text, with different rules.
+
+**The figure's own voice** (labels, heads, annotations): one to four words, regular weight, sentence case.
+Narrative belongs in the caption. Two exceptions earn their place: a storyboard step title may be a short
+sentence ("③ T1 unmaps z, marking it stale"), and a consequence label on a transition arrow may state the
+claim ("more efficient sampling"). Units and conditions go in an italic line under the head or in the
+caption. Status words ("schematic", "illustrative") go in the caption, except a label on invented data
+that could be mistaken for results.
+
+**Text from the world** (examples, prompts, model output, quotes, code, interface text): this is an
+object, and it can be long. Set it in the second voice (§4) at 6.7–7.5 pt so it can be read.
+
+- **Mark spans with borderless bands at full line height** (1.2 × the font size) in a pale tint, three
+  tints at most, each with one meaning (`cv.rich` with a mark per segment). A verdict glyph goes at the
+  span's right end.
+- **Or mark by type**: bold for the step in question, an accent colour for changed or erased words, grey
+  italic for elided text.
+- **Grey out what the reader does not need** (`cv.greek`): bars in place of irrelevant paragraphs make the
+  eye go to the lines set in real type.
+- **Code:** monospace 7–9 pt in a full-width figure, 6–7 pt in a column, at most three syntax colours, no
+  background box, line numbers when the text cites lines (`cv.listing`), and one device that shows the
+  claim: a highlight band, a before/after pair, or the data structure drawn beside the code with
+  identifiers in matching colours.
+- **Every number shown comes from the inputs.** Derived ratios are computed in the script and asserted.
+
+Proof-read every word, stage titles and verdict pills first.
+
+## 11. Charts
+
+**A chart sits bare on the page**: no card, no header band, no frame beyond its own axes. Inside a
+composite plate it takes the plate's panel treatment and nothing more.
+
+**Two idioms. Choose by the number of series and the kind of claim.**
+
+| | Claim chart | Field chart |
+| --- | --- | --- |
+| Use when | One comparison is the message: 2–4 series, one ratio, one crossing | Many systems × many conditions; the reader will look things up |
+| Colour | Ours in one accent, the rest in two greys (`#5E6875`, `#8E99A8`) | `paperkit.SERIES_STYLE`: one hue per system, kept across figures |
+| Second channel | Not needed | Marker + dash for lines, hatch for bars (`series_kw(k)`) |
+| Ours | The accent, the larger marker, bold value | Index 0: the only solid line and the only unhatched bar, first in the legend |
+| Line weight | One weight (1.0–1.6 pt); ours differs by colour and marker, not thickness | One weight for all series (0.8–1.2 pt) |
+| Labels | Direct labels at line ends; the ratio printed in bold | One frameless legend row above the grid (`cv.chart_legend`) or in the emptiest panel |
+| Size | ≈ 85 × 40 mm, or a panel of a plate | Subplots 28–75 mm wide, 9–18 mm tall, 2:1 to 7:1 |
+
+Rules for both:
+
+- **Encode what the claim is about.** A speed-up needs the ratio visible: a bracket or shaded gap with a
+  bold `4.0×`. "N× smaller" is area-true as a waffle. Two conditions are a slope chart with growth factors.
+  A crossing is the same pair of curves in every panel.
+- **Say shared things once** (§5). `cv.axes_grid` builds the grid with one y label, bottom-row x labels,
+  column heads and rotated row labels.
+- **A legend never sits on data.** Frameless, one row, ours first. Region names, boundaries, reference
+  lines and power laws are labelled on the mark itself, rotated to it (`curve_label`); colour an axis title
+  to match its curve when two quantities share a panel.
+- **Annotate inside the plot.** Totals on stacks, the share inside a bar segment, a shaded regime band, a
+  dotted ring with a two-line note on the look-here spot, quantile drop-lines on a CDF, a trend arrow, a
+  named tick ("1 (AR)"), an off-scale point as a dotted arrow with its value.
+- **Bars start at zero on a linear axis.** For gaps of a few points on a high baseline use a dot plot or
+  plot the difference; for values over decades use dots on a log axis. Two ranges are two panels, not a
+  broken axis.
+- **Spines.** Open (left and bottom) or a full box; use the full box for tight grids
+  (`cv.axes_grid(..., box=True)`, or `chart_axes(ax, box=True)` on an axes from `cv.axes`).
+  Light grid on the value axis (`#E6E9ED`, 0.5 pt) or none.
+- **Two factors take two channels and two small legends**: colour for one, dash for the other, the dash
+  legend drawn in black.
+- **Uncertainty and statistics are drawn and defined**: band or whiskers named in the caption (95 % CI,
+  s.e.m., min–max), significance brackets with stars, the mean printed at the bar.
+- **Small n: show every unit.** One strip or stacked bar per participant, same order in every condition;
+  desaturate the baseline's version of each hue.
+- **Qualitative axes.** A schematic plot drops ticks and numbers, names the axes and the regions, and uses
+  symbols as tick labels where a quantity is defined in the text.
+- **Rescaling claims** are a raw-axis panel beside a rescaled-axis panel sharing the y axis.
+- **Heatmaps**: values in the cells and no colour bar when the grid is small; otherwise a colour bar with
+  a scale. Diverging map only around a meaningful zero.
+- **Radar** only for an envelope claim on 5–8 axes with at most four polygons: state the axis scaling,
+  print the hero's value at each vertex and the rival's where the hero loses (`cv.radar`). Otherwise use
+  aligned dot rows.
+- **Check greyscale** for a field chart (`paperkit.py grey`).
+- Tick labels in the chart's own scale (§4), values with at most three significant digits, `1,401` / `23.7`.
+
+## 12. Captions
+
+The caption is part of the figure's design.
+
+- **Open with the claim**, in bold where the venue's style allows: what the figure shows, as a statement.
+- **Then define every encoding the art does not label**: line styles, numerals, colours, bands, error
+  bars, direction ("higher is better"), a truncated axis. A caption word may be set in the colour or tint it
+  defines, which removes the legend.
+- **Length follows the encoding.** Four to eight words for an architecture whose parts are labelled; 25–75
+  where styles or reading order need defining; 70–130 for a lettered walkthrough of a system figure
+  ("(A) …, (B) …").
+- **Say what to look for** in a qualitative figure: the region, the artefact, the row.
+- **Leave out** how the figure was made, drawing mechanics, tools, protocol details the methods section
+  gives, and disclaimers (`python scripts/paperkit.py caption caption.txt` flags these).
+
+## 13. Redesign protocol
+
+0. **Strengths first.** List three to five things the original does well that a reader would miss: a depth
+   metaphor, logos, an illustrated object, a chart whose shape is the claim, calm white space, a clean
+   single-column fit. Each is kept or replaced by something visibly stronger. A redesign that is more
+   correct but plainer has failed; so has one that is more decorated but harder to read.
+1. Render the original region at print width; name its register (§2) and list concrete defects: text
+   under 5 pt, hues with two meanings, crossings, scattered holes or crowding, a hidden key idea, slogans.
+2. Re-read the method text; the redesign must be at least as faithful to equations, timing and topology.
+3. Decide the five-second message and the hero (§1); pick a skeleton (§5).
+4. Build with `paperkit`; export PDF, SVG and PNG; compare side by side at one width
+   (`paperkit.py compare original.png new.png out.png`) and with `density`.
+5. For showcase and illustrated sources run `paperkit.py parity original.png new.png`: it fails a redesign
+   that is emptier, greyer or less illustrated. For line-art, schematic and example-led sources, parity's
+   "emptier" warning is not a defect; crowding is.
+6. Look at both at one width and ask which a reader would choose for a slide. If the original wins the
+   first glance, find out why before shipping.
+
+## 14. Checklist
+
+Count first. Each of these has a budget; exceeding one needs a reason.
+
+- [ ] Hues with a meaning: ≤ 4, each defined, each the same in every figure of the paper
+- [ ] Stroke weights: 1–2; text sizes: 2–3; arrow styles: ≤ 3, each defined; icon families: ≤ 1
+- [ ] Panel treatments: 1 (not a dashed frame here, a banded card there and a bare panel beside them)
+
+Then walk the figure.
+
+- [ ] No visible hero, or a hero made by a thicker stroke or shadow where a difference would do (§1)
+- [ ] Two registers mixed, or a register that does not match the venue and the paper's other figures (§2)
+- [ ] A full-width plate shrunk into a column; text under 5 pt, or labels and legends under 5.8 pt (§4, §5)
+- [ ] A default typeface in a chart beside designed diagrams; two sans families; all-bold labels (§4)
+- [ ] Every panel tinted and framed, white below 40 % outside an image grid; a scattered hole; an outer
+      frame; a gap filled with decoration (§6)
+- [ ] A label nearer to a neighbour than to its own object; one gutter width for everything (§6)
+- [ ] A header band on a card outside the showcase register; a chart in a card; a shadow on something
+      that does not float (§7, §11)
+- [ ] The same kind of thing in two shapes, or two kinds in one shape; a gate or operator drawn as a
+      layer-sized box; state or memory written as a word when it could be drawn (§7)
+- [ ] An icon that replaces nothing, larger than 3 × cap height, from a second family, or with no word (§8)
+- [ ] An undefined arrow style; a wire through a label or behind a box; an unexplained crossing; a low-
+      contrast arrow over an image; arrows where reading order would do (§9)
+- [ ] A sentence in the figure's own voice; example text too small to read; a typo (§10)
+- [ ] A legend on data; shared labels repeated in every panel; a claim about a ratio with no ratio shown;
+      a field chart that fails in greyscale; bars on a log axis or from a non-zero floor; an unlabelled
+      band or error bar; a radar with more than four polygons or unstated scaling (§11)
+- [ ] One model or condition in two colours across panels or figures; an ordered variable in unrelated hues (§3)
+- [ ] A caption that narrates production or leaves an encoding undefined (§12)
+- [ ] A redesign plainer than its source in the source's own register, or more decorated and harder to
+      read (§13)
+- [ ] A rule from [registers.md](registers.md) for this figure's family

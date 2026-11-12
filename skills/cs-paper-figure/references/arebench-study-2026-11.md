@@ -4,7 +4,7 @@ Source: *ARE-bench: Benchmarking Agents' Research Ability in Real-World Research
 Workspaces* (arXiv 2611.14364). Fig. 1 is a results chart (bars + radar), Fig. 2 a "them vs us"
 contrast figure, Fig. 3 a three-role construction pipeline. Together they show how a benchmark paper
 explains *what is different about its tasks* rather than *how a model computes*. Rules distilled
-below go into [visual-craft.md §13](visual-craft.md#13-contrast-state-and-construction-figures).
+below go into [registers.md §7](registers.md#7-contrast-state-and-construction).
 
 ## 1. Fig. 2: the contrast figure (strongest of the three)
 

@@ -1,0 +1,262 @@
+# Registers and figure families
+
+[visual-craft.md](visual-craft.md) holds the rules every figure follows. This file holds the rules for one
+kind of figure at a time. Find the register in visual-craft §2, read its section here, and skip the rest.
+
+Model figures are cited by paper and figure number; the full list with venues is in
+[venue-study-2026-11.md](venue-study-2026-11.md).
+
+| Section | Register | Families |
+| --- | --- | --- |
+| [1](#1-line-art) | Line art | Layer cake, planes, memory map, decision diagram, state machine, schedule timeline, protocol storyboard, code figure |
+| [2](#2-idea-schematic) | Idea schematic | Repeated object, ghosted alternatives, phase diagram, geometric intuition, order chain |
+| [3](#3-example-led-text) | Example-led: text | Annotated example, example × stage grid, single-column Figure 1, taxonomy grid |
+| [4](#4-example-led-interfaces-and-studies) | Example-led: interfaces and studies | Rebuilt screenshot, callouts, interaction storyboard, study design, procedure timeline, participant plots |
+| [5](#5-image-led) | Image-led | Teaser, comparison grid, inset zoom, labels and arrows on pixels, render storyboard, geometry diagram |
+| [6](#6-plate) | Plate | Architecture overview with detail row, section frames, tensors and maps, key strip |
+| [7](#7-contrast-state-and-construction) | Plate, for benchmarks | Existing-versus-ours, non-linear process, task cut, workspace state, construction pipeline |
+| [8](#8-showcase) | Showcase | Isometric plates, logo tiles, radar envelopes, illustrated stages |
+
+## 1. Line art
+
+Systems, networking, PL, databases, theory and data-structure figures. White ground, white or unfilled
+shapes, one black stroke weight, black text, and colour held back for the one thing that is new or wrong.
+Build with `ROLE["line"]` boxes (`cv.box(..., "line", radius=0)`), `cv.line`, `cv.arrow(color="black")`.
+
+- **Width first.** Most are 84 mm wide and 18–57 mm tall. Text 5.8–7 pt; boxes as small as 2.5 mm high
+  with 0.4–1.5 mm padding. Use a module: every box a multiple of one unit.
+- **One stroke weight** between 0.4 and 1.0 pt for boxes and arrows alike (pass `lw=` to both; the
+  defaults differ). Check by counting.
+- **Colour only what is new.** One red object in a black figure is enough. If the paper has a palette
+  (four hues in PipeMorph), the same hues appear in its charts.
+- **State is a border style plus a flat fill**: solid / hatched / dashed / dotted, defined in a small key.
+- **No icons, depth, gradients, shadows or cards.** A word, a shape or a numeral does the job.
+
+Families:
+
+- **Layer cake.** Horizontal bands separated by hairlines and named at one edge (User / Kernel / MMU).
+  The interface is a shape that straddles the boundary (`cv.hexagon` on the line). Lanes may be pale
+  tints 6–11 mm high, 2.5 mm apart (CortenMM 3, AnyBlox 4).
+- **Planes.** Control plane and execution plane are two dashed frames titled in bold italic at the top
+  left. Solid arrows are control, dotted are data; colour marks the phase; arrows are numbered in their own
+  colour and the key shows a sample of each (PipeMorph 13).
+- **Memory or address-space map.** One row per level (physical, system, virtual), segments as square
+  cells with the name inside, projection lines dropping between rows, a permission key, and circled
+  numerals ①–⑥ that reappear under the arguments of the function they explain (AnyBlox 4).
+- **Decision diagram, tree, page table.** Black line art with no fills: node shape gives the kind, line
+  style gives the edge meaning (solid = true, dotted = false). 91–96 % white (NDD 4, Tree Borrows 1).
+- **State machine.** States as bare words or small rounded boxes, transitions labelled on the line.
+- **Schedule timeline.** Time on x; rows are stages or actors; cells are operations coloured by type with
+  the id inside; idle time is the lane showing through. Stack the baseline run and the perturbed run on one
+  axis so the gap is visible (PipeMorph 5). For a protocol, arcs over a time arrow, the failing run ending
+  on a red × (OSCAR 5).
+- **Protocol storyboard.** Two to six panels of the same drawing with one change each, separated by a
+  rule, each titled with a numbered sentence. Grey out what is no longer live (CortenMM 7, Semisolates 2).
+- **Code figure.** `cv.listing`: monospace, at most three syntax colours, no background, line numbers the
+  text cites. Add one device: highlight bands (red/green for before/after), or the data structure beside the
+  code with identifiers in the same colour (CortenMM 6, NDD 2, Tree Borrows).
+- **Evaluation charts** in this register are field charts (visual-craft §11): `cv.axes_grid`,
+  `series_kw`, one legend row, greyscale-safe.
+
+## 2. Idea schematic
+
+The figure that explains an idea before the paper proves it: Figure 1 of an analysis paper, the intuition
+behind a theorem, a failure mode. Very few objects, large type (8–11 pt at full width, 6.2–8 pt in a
+column), 85–90 % white.
+
+- **Seven things, not seventy.** Aim for the economy of 2503.14858 Fig. 2: seven bars, three words, two
+  multipliers. Label things in place; a key row of up to three samples is fine, a boxed legend means there
+  are too many kinds of thing.
+- **One object, redrawn.** Draw the tree, chain or interval once per condition and change only the state
+  the claim is about. Alternatives not taken are the same shapes at 20 % strength (`#D9D9D9`, a 20 % tint
+  of the hue). A red ✗ on the pruned branch (2504.13837 Fig. 1, Flexibility Trap 2).
+- **Borderless flat shapes** on white for nodes and containers, or grey shapes with a black border; no
+  pale-fill-plus-outline boxes. Drawn nouns (a grid, a token row) keep the lines that make them legible.
+- **Transitions carry the claim.** An arrow between two states may hold a short coloured italic phrase
+  ("more efficient sampling", "reduced scope"). Reverse the arrow for the cost.
+- **Discs for discrete units**, tall rounded bars for layers, a grey bar in drawn brackets for a vector, a
+  tinted dashed rectangle for an interval or a product of intervals.
+- **Pair it with the measurement.** Put the chart the schematic predicts beside or under it, in the same
+  colours (schematic 60–65 % of the width, chart 30–35 %).
+
+Families:
+
+- **Phase diagram.** Filled regions in two or three pale hues with the regime name written inside;
+  boundaries as black curves labelled on the curve in a white rounded box (`curve_label`); no ticks in the
+  schematic version, measured points added in the data version, same fills in both (2505.17638 Figs. 1, 3).
+- **Qualitative curve plot.** No ticks, two named axes whose titles take the colour of their curves, an
+  interval marked by a double-headed arrow with drop-lines, regime names in italic at the place they hold.
+- **Geometric intuition.** Lollipop vectors from an origin, dashed basis arrows, a slope triangle with
+  its value, angles as arcs, math set on the object (2505.10465 Figs. 1, 2; IMS 2, 3, 6).
+- **Iteration storyboard on a function plot.** Three panels, a tinted box that shrinks, drop-lines, symbols
+  as tick labels, one panel's output marked as the next panel's input (Polar Express 2).
+- **Order chain.** Discs on a line with black arrows for the default order, one coloured arc for the
+  jump, ghosted branches for the paths not taken.
+- **Displacement scatter.** Before-to-after arrows per item, a halo per cluster, a corner summary with the
+  delta (2505.06120 Fig. 1).
+
+## 3. Example-led: text
+
+NLP task, method and benchmark figures. The example text is the object; the figure's job is to typeset it
+and mark it. Rules for marking are in visual-craft §10.
+
+- **Single-column Figure 1** (76–85 mm wide, 40–75 mm tall): one example, read top to bottom in three
+  tiers (input, what the method does, outcome), about 9–15 boxes, example text 6.7–7.5 pt, content filling
+  the column to within 1 mm (CoT 1, REL-A.I. 1).
+- **Example × stage grid.** Rows are two examples from different domains, columns are stages, column
+  headers are 8–9 pt bold grey, row labels are grey pills at the left, a hairline between rows, and no
+  arrows at all (HALoGEN 1). Each cell shows the same text with one more layer of marking.
+- **Voices.** Prompt in sans, model output in monospace inside a square box, human turn in a speech
+  bubble with a tail, the figure's own labels in grey.
+- **Three tints at most**: neutral blue = the unit under study, green = supported, red = error; tick and
+  cross glyphs at the right end of the span; the caption repeats the tints on its own words.
+- **Largest block = the contribution.** If the paper's point is instance-specific criteria, that card
+  takes half the figure (BiGGen 1).
+- **Taxonomy grid.** Equal cards on a grid, chips of one width inside, one hue on a ramp for an ordered
+  level. Nine unrelated hues is the failure (BiGGen 2).
+- **Results** in this lane are usually default plots; build them as claim or field charts
+  (visual-craft §11) in the same face as the diagrams.
+
+`paperkit`: `rich(..., family="monospace")` with marks, `bubble`, `chip`, `tab`, `icon_check`,
+`icon_cross`, `stack` for "many of these". A minimal use of `rich`, `listing`, `callout` and `greek` is the
+`tx` block of the smoke test at the end of `scripts/paperkit.py`.
+
+## 4. Example-led: interfaces and studies
+
+HCI system papers and user studies.
+
+- **Rebuild the screenshot; never shrink a window.** Redraw the interface at figure scale so its text
+  prints at 6–6.5 pt, keep only the part the paper discusses, and replace everything else with grey bars
+  (`cv.greek`). Float the window on a soft shadow instead of a border. A full window scaled into a column
+  prints at about 3 pt and carries no information (Cocoa 2 against DocWrangler 2).
+- **Callouts** (`cv.callout`): one accent hue the interface does not use; discs of one size (about 5 mm in
+  a full-width figure, 3.5 mm in a column) with a white letter; a leader ending in a dot; discs lined up on
+  one vertical in white space beside the window. A region takes a bracket; a relation takes a line with a
+  dot at each end. The caption is a lettered walkthrough.
+- **Interaction storyboard.** Numbered step panels with a tab on the border; a curved arrow in the accent
+  hue that starts at a drawn cursor and carries the action as a pill ("click"); the result panel largest
+  (Cocoa 3).
+- **Teaser.** Abstract the interface to a skeleton: bars for text, colour kept only for the states that
+  matter (owner, edit, needs help).
+- **Join key.** The same lettered badge on the problem, on the feature that answers it and in the caption.
+- **Study design.** Constructs × studies: rows aligned across two frames, the construct names in the
+  gutter with an arrow in and out, quotes as stacked cards tagged as examples; no hue needed (Reliance 1).
+- **Procedure timeline.** Activities on one row with durations, what each yielded on the row below,
+  same-session stages boxed together. Keep icons under 3 × cap height.
+- **Participant-level plots.** One strip or stacked bar per participant, same order in both conditions,
+  a normalised axis, grey for uncoded time, the legend carrying each category's share (Cocoa 8). Baseline
+  categories are desaturated versions of the same hues.
+- **Ratings.** Show the response counts (diverging stacked bars centred on neutral), not only a mean bar;
+  significance brackets with stars, defined in the caption.
+
+## 5. Image-led
+
+Vision, graphics, robotics and generation papers. The images carry the content and the colour; the vector
+layer stays neutral and small. Place every image with `cv.image` (it embeds pixels unchanged).
+
+- **Teaser.** One hero render at 60–80 % of the area; inputs as a thin strip of thumbnails on one side
+  (about 19 × 14 mm), outputs as small satellites on the other; leaders or a wedge from input to hero. No
+  frames (VGGT 1, TRELLIS.2 1).
+- **Comparison grid.**
+  - A narrow input column (11–34 mm), then equal method cells (17–68 mm).
+  - Column headers once, above the images, in the body face at 8–9.5 pt, regular; only ours bold. Gap to
+    the image 0.3–1.4 mm. Row labels rotated at the left.
+  - Two gutter widths: 0–1 mm inside a group, 1–3.6 mm between groups. No boxes around images.
+  - One camera, pose, crop and backdrop per row, so only the method changes.
+  - Ours first after the input or last, the same size as the rest.
+  - A missing result stays a cell with a grey note ("N/A"), never a gap.
+- **Inset zoom.** Box the source region in a saturated colour the image lacks (1.4 pt), magnify 2–3.5 ×,
+  and park the zooms in a corner or a row of their own with the same colour and stroke. One colour per
+  method (magenta ours, cyan baseline). No leader lines (IMS 27).
+- **Labels on pixels** go on an opaque plate tucked in a corner: a white pill 3.9 mm tall for 8 pt text,
+  inset 0.6–0.9 mm. Bare text only on a white image background.
+- **Numbers and verdicts on the cell**: runtime in the frame's top-right corner; a full-width red or green
+  bar with white text under a render; a small table in the empty corner of the figure.
+- **Arrows over pixels** are free curves, 1–2 pt, with filled heads 4–6 × the stroke (the upper half of
+  the general 3–6 × range); see visual-craft §9 for keeping them visible.
+- **Pipeline over real pixels.** Keep the model as two or three plain boxes and spend the space on the
+  real input and output. Give each query or signal one hue and repeat it as chip, wedge, timeline dot and
+  mark on the render; ghost the frames that are not being discussed (D4RT 2).
+- **Render storyboard.** Equal panels, fixed camera, one arrow style between them, a numbered label per
+  step, a verdict glyph under each where steps are checked (IMS 8, BrickGPT 3).
+- **Geometry diagram.** No frames; the two shapes in two fixed hues for the whole paper; math set on the
+  curve; schematic axes without ticks; tick and cross glyphs on the valid and invalid cases (IMS 2, 3, 6).
+- **Chart with image callouts.** Thumbnails hooked to data points by a thin line.
+- **A sequence** is a strip of frames with an ellipsis or a ghosted frame for the ones left out.
+- **Text from the world** (prompts) in quotes or a distinct face, the changed word in an accent.
+- **Charts** are bare, about 85 × 40 mm, direct labels, ours the only accent.
+
+White share depends on the family: framed image grids 22–31 %, silhouette grids on white 43–62 %,
+pipelines 49–72 %, geometry diagrams 54–70 %. `density`'s crowding hint does not apply to image grids.
+
+## 6. Plate
+
+Full-width method and architecture figures of model papers, and agent or benchmark overviews. Role colour
+families, drawn tensors and maps, section frames. From a study of 23 vision and multimodal method figures
+([architecture-study-2026-11.md](architecture-study-2026-11.md)) and the lab figures in
+[craft-study-2026-10.md](craft-study-2026-10.md), corrected by the venue study: keep the plate light.
+
+- **Layout.** Overview pipeline across the top (55–65 % of the height), a row of two to four equal-height
+  detail panels opening the new modules, a glyph key strip along the bottom. Zoom rays or a shared hue link
+  each detail panel to its block.
+- **The page stays white.** Tint a module's field only when membership would otherwise be unclear, at the
+  role `fill`. Group by white space and fill-on-fill first; frame second. Keep white at or above 40 %.
+- **Section frames** (`cv.section`): a dashed border in the module's hue with the title on a tab on the
+  border. Name it as the paper does, with the acronym. One panel treatment for the whole figure.
+- **Role families.** Inherited parts neutral; the contribution in its hue; parameters coloured in place
+  on the components that own them, not listed in an inventory box. Text black, except words naming a hue.
+- **Drawn nouns.** Feature tensors as `cuboid` with H×W×C in italic math; layer runs as slabs; encoders as
+  `trap`; fused features as a gradient between two source hues.
+- **A data object in every detail panel**: a feature or attention map, a numeric matrix with the winner
+  bordered, a mini distribution, real tokens, a thumbnail. A panel of only boxes and arrows explains wiring,
+  not the operation.
+- **Mechanism storyboard on the object**: `M → faded M → M with a dashed row ⊕ (v × k) → M′`, with the
+  typeset equation underneath, its terms coloured by role (`cv.rich`).
+- **Key strip** (`cv.legend`) defines every circled operator, state icon, dash meaning and abbreviation
+  once. **Phase bar** (`cv.phase_bar`) names the stages once.
+- **Saturation.** Blocks at `soft`, one or two hero blocks at `mark` with white text.
+- **Discipline:** text ≥ 5.8 pt (source figures often fall to 4–5 pt), one meaning per hue, no wire
+  through text, one icon family, at most two zoom levels.
+
+## 7. Contrast, state and construction
+
+Benchmark and dataset papers explain what is different about the tasks. From ARE-bench Figs. 1–3
+([arebench-study-2026-11.md](arebench-study-2026-11.md)).
+
+- **Contrast figure.** Baseline column narrow (about one third), ours wide. Shared rows named after the
+  claim's dimensions, set once as rotated labels in a bracket, separated by a dashed rule spanning both
+  columns. Same objects on both sides; the difference is their arrangement. End each column on a verdict
+  pill (`icon_cross` red, `icon_check` green).
+- **Non-linear process.** Stages in canonical order; jumps as arcs above (back) and below (skip) the row,
+  each with a `badge` numeral keyed to a request list under the row.
+- **Cut point.** `cv.turn_strip(x, y, w, n, cut)` shows history, the cut turn and the unseen future.
+- **Real artifacts.** Files, commands and requests in monospace inside window chrome (`cv.filetree`);
+  state per row as a coloured tick and a right-aligned italic tag.
+- **One accent for the task or ours**, shared by the highlight region, the task bar and its badge, and
+  used by no stage or category.
+- **Hidden inputs** carry `icon_lock`, identically in every figure of the paper.
+- **Step cards.** Bold numbered step at the left, italic output type at the right; rules printed in the
+  card so the text can cite them.
+- **Loops as rails** around the outside of a column, labelled on the line.
+- **Results.** One model = one colour in every panel.
+
+## 8. Showcase
+
+Teaser and overview figures of system and benchmark papers, and illustrated survey figures, which sell one
+idea at a glance. From ToolSpace Fig. 1 ([toolspace-study-2026-11.md](toolspace-study-2026-11.md)) and
+*Proactive AI*
+([figure-series.md](figure-series.md)).
+
+- **Layering gets depth.** "A layer between X and Y" is stacked isometric plates (`cv.plate`) with objects
+  standing on them as tiles (`cv.tile`) and calls and returns in the gap. Everything else stays flat.
+- **Real things get their marks**: logo tiles with names (visual-craft §8).
+- **Envelope claims keep the radar**, made honest (visual-craft §11).
+- **Bars carry identity**: the model's mark above the bar, the value on it, a ghost outline for the
+  reference condition when the claim is a drop.
+- **Illustrated stages.** Each stage shows the agent doing the thing; solid colour headers with white bold
+  text (the one register where a header band belongs); generated or drawn vignettes filling each card edge to edge (`cv.image(..., fit="cover")`); dialogue
+  as vector text (`cv.bubble`), never in pixels.
+- **Surface.** Gradients on plates and bars only; pastel fields behind clusters; saturated colour for the
+  hero and the path being followed.
+- **Redesigns stay in this register** and pass `paperkit.py parity`. A showcase figure rebuilt as line art
+  is more correct and loses.

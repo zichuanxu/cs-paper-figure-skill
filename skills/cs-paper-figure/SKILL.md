@@ -1,264 +1,246 @@
 ---
 name: cs-paper-figure
-description: Design, implement, critique, and refine scientific figures for computer science research papers, with detailed control of color, typography, layout, grouping, shapes, arrows, and visual hierarchy. Use for publication figures, method/model architecture diagrams, agent/harness/memory workflows, multimodal and robotics pipelines, scaling plots, benchmarks, ablations, efficiency tradeoffs, uncertainty, heatmaps, qualitative grids, and multi-panel figure sets. Draw on inspected 2025–2026 AI research from OpenAI, Anthropic, Google, Meta, NVIDIA, DeepSeek, Tencent, Alibaba/Qwen, and Microsoft. Use for improve this paper figure, extract this paper's visual style, or make an ICML/NeurIPS/ICLR/ACL/CVPR-quality diagram. Produce visually specific, scientifically faithful, editable, reproducible figures.
+description: Design, implement, critique and redesign figures for computer science research papers, with deliberate control of colour, layout, typography, white space, shapes, icons and arrows. Use for method and architecture diagrams, idea schematics, system and protocol figures, annotated examples, interface and study figures, teasers, qualitative grids, evaluation charts and multi-figure sets, at single-column or full width. Use when asked to draw or improve a paper figure, make a NeurIPS/ICML/ICLR/CVPR/ACL/CHI/SOSP/OSDI/SIGGRAPH-quality figure, redesign Figure N of a paper, or extract a figure's visual style. Rules are measured from award papers at those venues and from 2025–2026 AI-lab reports. Produces scientifically faithful, editable, reproducible vector figures.
 ---
 
 # CS Paper Figure
 
-Make the scientific argument visible and give it an intentional visual form. Optimize factual fidelity, readable mechanism/comparison, meaningful visual hierarchy, final-size legibility, and coherent polish. Use specific research figures as design evidence; do not invent a corporate house style or assume a prestigious source is flawless.
+Make the scientific argument visible and give it a deliberate visual form. A figure succeeds when a reader
+gets its one message in five seconds, can trace the mechanism or comparison behind it, and can read every
+label at printed size. Scientific fidelity comes first: no invented data, edges or modules.
 
-**Aim for explanatory depth and visual specificity.** A sophisticated figure connects a system view, a precise mechanism, and a concrete instance or evidence view. Use semantic color families, distinct shapes for computation/data/state, nested groups, actual tokens/records/masks, and deliberate panel proportions. A generic set of equal boxes, a large node count, or more colored panels does not establish sophistication.
+Ten principles held in every strong figure studied, across systems, ML, vision, graphics, NLP and HCI
+venues. They are the core of this skill; [visual-craft.md](references/visual-craft.md) turns each into
+rules with measured values.
 
-**Craft first.** Read [visual-craft.md](references/visual-craft.md) before drawing and build with [`scripts/paperkit.py`](scripts/paperkit.py). Earlier outputs of this skill were scientifically careful but looked like flowcharts or audit reports: white boxes with hairline outlines, DejaVu Sans, sentence-long panel titles, words where objects belong, and SCHEMATIC/receipt labels inside the art. Top-lab figures instead use role colour families (pale fill, same-hue stroke, dark same-hue text), a LaTeX-matched serif with typeset math, drawn nouns (state matrices, token strips, trapezoid projections, operator circles, documents, icons), one visible hero, and direct-labelled charts with explicit ratios. The MemT redesigns in [`scripts/examples/memt/`](scripts/examples/memt/) are the reference standard; the older `render_*` demos are component/contract examples only, so do not imitate their look.
+1. **One message, one hero, and the hero is the thing that differs**: the only coloured object, the only
+   solid line, the largest block. Never the thickest outline.
+2. **Choose a register first** (line art, idea schematic, example-led, image-led, plate, showcase) from the
+   venue, the column width and the claim, and stay inside it.
+3. **Count everything**: at most four hues, two stroke weights, three text sizes, three arrow styles, one
+   icon family, one panel treatment.
+4. **Repeat one drawing and change one thing**; ghost what was not taken.
+5. **Run one concrete example through every stage.**
+6. **Colour is a name**: one meaning per hue, kept through every form the thing takes and every figure of
+   the paper. Colour only what is new, wrong or being followed.
+7. **The page is the ground and white space is grouped**: gutters, bands and label rows, never scattered
+   holes, never a frame and a tint on everything.
+8. **Draw the noun** and put labels on the thing; say shared things once.
+9. **Define every encoding** beside a sample of itself, in a key or the caption.
+10. **Type matches the page**, at sizes that fit the placement: labels at 5.8 pt or above, nothing below
+    5 pt.
 
-## Scope and resource map
+## What to read
 
-- **Create:** turn claims, methods or data into figures and reproducible source.
-- **Redesign:** preserve scientific meaning, values, topology and experimental conditions while improving the visual system. First list what the original does well (depth, logos, illustrated objects, a chart whose shape is the claim) and keep or beat each one: a more correct but plainer figure is a failed redesign.
-- **Critique:** inspect the actual figure and caption, identify consequential defects, and propose specific fixes.
-- **Figure set:** assign each figure an evidential role and preserve consistent colors, symbols, terms and typography.
-- For a narrow edit, reuse its source and check the changed region plus final export. Do not rebuild an entire paper unnecessarily.
+**Always, before drawing:** [visual-craft.md](references/visual-craft.md), the rulebook by design
+dimension. Read §1–§2 (message, register) first and pick the register; then read the one section of
+[registers.md](references/registers.md) for that register and family; then the rest of visual-craft
+(colour, typography, layout, white space, shapes, icons, arrows, text, charts, captions, redesign
+protocol, checklist).
+
+Paths in this file are relative to the skill directory; run the commands from there.
+
+**When the task calls for it:**
 
 | Need | Resource |
 | --- | --- |
-| **How to make it look good**: diagnosis, typography, role colours, glyph vocabulary, composition patterns, connectors, density targets, chart craft, beat-the-original protocol | [visual-craft.md](references/visual-craft.md) |
-| **Architecture register** for method figures: overview + detail row + key strip, dashed tinted section frames, cuboid tensors and slab layers, feature maps, numeric matrices, mini plots, branch colours carried into text (study of 23 CV/multimodal figures: Holmes, ReSet, CoPS, SemDiff, LFBNet, HFF-Net, VideoFusion, C2R, …) | [visual-craft.md §12](references/visual-craft.md#12-the-architecture-register-object-rich-method-figures), [architecture-study-2026-11.md](references/architecture-study-2026-11.md) |
-| **Contrast, state and construction figures** for benchmark and dataset papers: "existing vs ours" columns over shared claim rows with verdict pills, numbered jump arcs keyed to a request list, turn strips for a task cut, workspace file trees with status tags, lock-marked hidden inputs, numbered step cards with output-type tags, feedback rails (study of ARE-bench Figs. 1–3) | [visual-craft.md §13](references/visual-craft.md#13-contrast-state-and-construction-figures), [arebench-study-2026-11.md](references/arebench-study-2026-11.md); `cv.turn_strip`, `cv.filetree` |
-| **Showcase register** for teaser and overview figures: isometric plates for layering, logo tiles as identity marks, radar for envelope claims, bars with marks; and the redesign rule "strengths first: never ship a plainer figure than the source" (study of ToolSpace Fig. 1 and a failed redesign of it) | [visual-craft.md §14](references/visual-craft.md#14-the-showcase-register-plates-logos-radar-envelopes), [toolspace-study-2026-11.md](references/toolspace-study-2026-11.md) |
-| Evidence behind those rules: IdeaScientist/SkillOpt readings, measured architecture figures (Gated DeltaNet, Kimi Linear, Titans, NSA, DeepSeek-V3, Hymba, BLT, …), MemT critique | [craft-study-2026-10.md](references/craft-study-2026-10.md) |
-| Drawing primitives in mm: role palette, cards, nodes, matrices, vectors, trapezoids, operators, tokens, docs, icons, zoom rays, routed arrows, rich math, isometric plates, logo tiles, radar, density/compare checks | [scripts/paperkit.py](scripts/paperkit.py) |
-| **Figure series** for surveys, frameworks and system reports: one taxonomy palette for every figure, chapter frames with "To next" tabs, running examples, gate stacks, spectra, timelines, illustrated scenes with vector dialogue, diff panels, typed-edge legends, a palette-drift check (studies of *Proactive AI*, PlugMem, StudentSim, PaperBanana, ReHarness) | [figure-series.md](references/figure-series.md), [scripts/examples/proactive/](scripts/examples/proactive/) |
-| Optional generated icon sets with Codex CLI: when to use them, rules from 11 top-lab figures, prompt anatomy, helper | [image-generation.md](references/image-generation.md), [scripts/codex_images.py](scripts/codex_images.py) |
-| Reference-quality redesigns (architecture + efficiency chart) | [scripts/examples/memt/](scripts/examples/memt/), [advanced-examples.md](references/advanced-examples.md#memt-10-redesigns) |
-| Rich multi-level figures; system, mechanism, instance and evidence | [dense-composition.md](references/dense-composition.md) |
-| Scenes, frame sequences, trajectories, token structures and visual memory | [visual-objects.md](references/visual-objects.md) |
-| Reproducible advanced examples, their contracts and adaptation limits | [advanced-examples.md](references/advanced-examples.md) |
-| Current 120-paper coverage, the 44-paper expansion, and task-to-source lookup | [dense-paper-atlas.md](references/dense-paper-atlas.md) |
-| Complete paper and inspected-figure inventories | [paper-corpus.csv](references/paper-corpus.csv), [figure-corpus.csv](references/figure-corpus.csv) |
-| Select complementary sources and turn observations into design choices | [reference-selection.md](references/reference-selection.md) |
-| Eight concrete composition and encoding recipes | [style-recipes.md](references/style-recipes.md) |
-| Recent detailed studies: OpenAI, Anthropic, Microsoft | [study-openai-anthropic-microsoft.md](references/study-openai-anthropic-microsoft.md) |
-| Recent detailed studies: Google, Meta, NVIDIA | [study-google-meta-nvidia.md](references/study-google-meta-nvidia.md) |
-| Recent detailed studies: DeepSeek, Tencent, Alibaba | [study-deepseek-tencent-alibaba.md](references/study-deepseek-tencent-alibaba.md) |
-| New dense studies with information layers and detail devices | [OpenAI/Anthropic/Microsoft](references/dense-study-openai-anthropic-microsoft.md), [Google/Meta/NVIDIA](references/dense-study-google-meta-nvidia.md), [DeepSeek/Tencent/Alibaba](references/dense-study-deepseek-tencent-alibaba.md) |
-| User-selected IdeaScientist and SkillOpt figure analysis | [dense-user-anchor-study.md](references/dense-user-anchor-study.md) |
-| Initial detailed modern studies, including the four user-selected references | [modern-paper-atlas.md](references/modern-paper-atlas.md) |
-| Machine-readable modern evidence with confidence levels | [modern-source-index.json](references/modern-source-index.json), [recent-expansion-index.json](references/recent-expansion-index.json), [dense-expansion-index.json](references/dense-expansion-index.json) |
-| Color, font hierarchy, composition, shapes, styles and visual critique | [visual-design.md](references/visual-design.md) |
-| Adaptable palette/typography/spacing/stroke tokens | [design-tokens.json](assets/design-tokens.json) |
-| Extract a source figure's actual visual specification | [design-extraction.md](references/design-extraction.md) |
-| Explicit ports, return loops and connector collision review | [diagram-routing.md](references/diagram-routing.md) |
-| Scientific meaning, data units, uncertainty and transformations | [scientific-contract.md](references/scientific-contract.md) |
-| Select a figure family | [figure-patterns.md](references/figure-patterns.md) |
-| Export, caption and review | [production-review.md](references/production-review.md) |
-| Strict chart specification | [spec-format.md](references/spec-format.md) |
-| Foundational examples and exact source records | [paper-atlas.md](references/paper-atlas.md), [source-index.json](references/source-index.json) |
+| What may and may not be claimed: data, units, uncertainty, transformations | [scientific-contract.md](references/scientific-contract.md) |
+| Several figures for one paper, survey or framework: shared palette, chapter frames, running example | [figure-series.md](references/figure-series.md) |
+| Generated icon sets, scenes and vignettes with Codex CLI (showcase register only) | [image-generation.md](references/image-generation.md), [scripts/codex_images.py](scripts/codex_images.py) |
+| Rich multi-level plates (system, mechanism, instance, evidence) | [dense-composition.md](references/dense-composition.md) |
+| Scenes, frame sequences, trajectories, visual memory | [visual-objects.md](references/visual-objects.md) |
+| Explicit ports, return loops, collision review | [diagram-routing.md](references/diagram-routing.md) |
+| Extracting a source figure's colours, fonts and geometry | [design-extraction.md](references/design-extraction.md), `scripts/inspect_pdf_style.py` |
+| Export, fonts in the PDF, final checks | [production-review.md](references/production-review.md) |
+| Strict chart specification for supplied values | [spec-format.md](references/spec-format.md), `scripts/plot_from_spec.py` |
 
-Read the contract, visual-design guidance and relevant figure family for substantial new figures. Consult only relevant atlas entries, not every paper. Use available source/code/template before asking questions. Infer routine style choices and complete every part that can be done faithfully. Ask only when an unresolved scientific fact changes correctness.
+**Evidence, for lookup only.** Read a study when a rule looks wrong for the figure in hand or you need a
+model figure; do not load them for every task.
 
-The corpus contains **120 distinct papers/reports and 261 inspected figure anchors** as of 2026-10-21; **96 papers first appeared in 2025–2026** (67 in 2025, 29 in 2026). The 120-paper expansion added 44 papers and 90 anchors, including the user's IdeaScientist and SkillOpt references. Subsequent close readings deepen existing records without counting those papers again. These are curated design references, not a ranking or a count of accepted conference papers. Use `python <skill-root>/scripts/reference_catalog.py search --query "attention mask streaming" --since 2025 --limit 6`, then `show <paper-id> --figure "Figure 2"` for the precise evidence record. Use `stats` for reproducible coverage counts. Read only the relevant study sections. For manual lookup, use `rg -n '^## |^### |Typography|Geometry' references/dense-study-*.md references/dense-user-anchor-study.md`; do not load every atlas or the whole JSON corpus for each task.
+| Study | Covers |
+| --- | --- |
+| [venue-study-2026-11.md](references/venue-study-2026-11.md) | 29 award papers (NeurIPS, ICLR, ICML, CVPR, ICCV, SIGGRAPH, ACL, EMNLP, NAACL, CHI, UIST, CSCW, SOSP, OSDI, NSDI, PLDI, VLDB): measurements, what held everywhere, model figures per family |
+| [craft-study-2026-10.md](references/craft-study-2026-10.md), [architecture-study-2026-11.md](references/architecture-study-2026-11.md) | AI-lab method figures; 23 vision and multimodal architecture figures |
+| [arebench-study-2026-11.md](references/arebench-study-2026-11.md), [toolspace-study-2026-11.md](references/toolspace-study-2026-11.md) | Benchmark contrast and construction figures; showcase teasers and a failed redesign |
+| Lab corpus: 120 papers, 261 figure anchors | `python scripts/reference_catalog.py search --query "attention mask streaming" --since 2025 --limit 6`, then `show <paper-id> --figure "Figure 2"`; atlases and per-lab studies under `references/` ([dense-paper-atlas.md](references/dense-paper-atlas.md) is the index) |
+
+Older references ([visual-design.md](references/visual-design.md), [style-recipes.md](references/style-recipes.md),
+[figure-patterns.md](references/figure-patterns.md), [reference-selection.md](references/reference-selection.md),
+[advanced-examples.md](references/advanced-examples.md)) remain for their composition recipes and
+contracts. Where they give a size, stroke or font that differs from visual-craft, visual-craft governs.
+
+## Modes
+
+- **Create:** turn claims, methods or data into figures and reproducible source.
+- **Redesign:** keep the scientific meaning, values, topology and conditions; stay in the source's register
+  and beat it there. First list what the original does well and keep or beat each strength
+  (visual-craft §13). A more correct but plainer figure has failed; so has a more decorated, harder one.
+- **Critique:** open the actual figure and caption, count hues, stroke weights, sizes and arrow styles,
+  walk the checklist (visual-craft §14), and give specific fixes by region. If the image cannot be opened,
+  say so; do not invent its defects.
+- **Figure set:** give each figure an evidential role; one palette, one shape grammar and one type scale
+  for the paper.
+- **Narrow edit:** reuse the source and check the changed region and the export. Do not rebuild.
+
+Use available sources, code and templates before asking questions. Decide routine style choices yourself.
+Ask only when an unresolved scientific fact changes correctness.
 
 ## Workflow
 
-### 1. Establish the content and figure brief
+### 1. Brief the content
 
-Use [figure-brief.yaml](assets/figure-brief.yaml), or capture the same fields compactly:
+Capture, compactly or in [figure-brief.yaml](assets/figure-brief.yaml):
 
-- One claim or mechanism the reader should understand.
-- The operation carrying that claim: its input artifact, governing rule, changed output, and observable consequence. State what the reader can reconstruct beyond the overview's module names.
-- Evidence source and status: measured, reported, derived, illustrative or schematic.
-- Comparison, units, independent sampling unit, aggregation and interval meaning.
-- For diagrams, verified entities, operations, persistent state, boundaries and directed edges.
-- Final physical size, manuscript template, panel budget and delivery formats.
-- For a rich figure, the information levels and each panel's question, conclusion, inputs, and cross-panel identifiers.
-- Any unknown facts and necessary qualifications.
+- The one claim or mechanism, and the operation that carries it: input, rule, changed output, consequence.
+- Evidence status of everything shown: measured, reported, derived, illustrative or schematic.
+- For data: comparison, units, sampling unit, aggregation, what intervals mean.
+- For diagrams: verified entities, operations, state, boundaries and directed edges.
+- **Venue, template and placement: one column (76–85 mm) or full width (140–178 mm), and the body face.**
+- Unknown facts and necessary qualifications.
 
-Do not add a model update, memory write, causal edge or module absent from the described system. Do not fabricate data or uncertainty to complete a layout. If an empirical figure is incomplete, show an explicitly pending state, not plausible invented results.
+Do not add a module, edge, update or memory write the system does not have. Do not invent data or
+uncertainty to complete a layout; show a pending state instead. Label invented measurements
+**SYNTHETIC DATA** or **ILLUSTRATIVE DATA** inside the export and in the caption. A method diagram is
+schematic by nature: say so in the caption, not as a watermark in the art.
 
-Resolve and open a supplied image or source file before critiquing it. If its path is missing, recover the available attachment or state that the original cannot be inspected; do not invent its defects or claim a faithful redesign. Continue independent work that does not require the missing image.
+### 2. Decide the message, the hero and the register
 
-### 2. Study relevant modern examples at the figure level
+Write the five-second message. Name the hero and how it will differ from everything else. Pick the
+register (visual-craft §2) and read its section in [registers.md](references/registers.md). For a redesign,
+name the source's register and list its strengths before its defects.
 
-Prioritize 2025–2026 entries across the full catalog. Select references by the reader's task, then give each reference a job: **composition**, **semantic encoding**, or **evidence presentation**. Two complementary examples usually suffice; adding unrelated styles creates inconsistency. Use [reference-selection.md](references/reference-selection.md) and adapt a matching [style recipe](references/style-recipes.md).
-
-- Diagram-to-code correspondence: AlphaEvolve Figure 2.
-- Matched alternatives and local changes: mHC Figure 1; Anthropic Circuit Tracing.
-- Novel versus inherited components, overview plus detail: SAM 3 Figures 4/10; Qwen-Image Figure 6; Qwen3.8-Next and DeepSeek-V4.
-- Parallel modality lanes and typed tokens: Phi-4-Mini Figure 1; GR00T N1 Figures 2/3; Qwen3-VL Figure 1; Cosmos 3.
-- Multi-stage mechanism storyboards: HY-World 2.0 Figure 2; Hunyuan3D 2.5 Figure 3.
-- Evidence and evaluation correspondence: HealthBench Figures 1/2; Monitoring Monitorability Figure 2.
-- Condition-controlled plots and task matrices: gpt-oss Figure 3; Monitoring Monitorability Figure 8; Perception Encoder Figure 8.
-- Persistent memory, token schedules and return paths: WorldPlay Figures 2/4/5; Nemotron-Labs-Diffusion Figures 3/5; Harness².
-- Dense overview coupled to an actual case: IdeaScientist Figure 1; trace the repeated artifact and role identities into the worked example.
-- Parallel edits and different update timescales: SkillOpt Figure 2; make state writers and validation access explicit.
-- Overview plus representation plus exact operator: Wan-Animate-2 Figure 1; follow shared object labels across architecture, time/space layout and the indexed operator, while explicitly scoping colors whose meanings change between panels.
-
-For new aesthetic observations, inspect the actual image. Use version/page/figure anchors. Extract colors, visible font roles, layout proportions, strokes, node vocabulary and arrow routes; label each as measured, estimated or recommended. Searchable invisible text is not proof of visible typography; declared SVG fonts do not prove a local preview used those fonts. Keep opacity and background with raw colors. Reject physically implausible transformed stroke widths as measurements. Record unknowns honestly.
-
-Borrow a transferable principle and produce an original composition. Keep source dates, affiliations and reuse permissions accurate. Do not reproduce artwork or company logos merely to imply quality; logos that identify a real product, service or model the figure is about are welcome as identity marks (official mark, unmodified, in a tile beside its name; [toolspace-study-2026-11.md](references/toolspace-study-2026-11.md)).
-
-### 3. Choose the structure and visual grammar
+### 3. Choose the structure
 
 | Reader's task | Starting structure |
 | --- | --- |
-| Understand the new operation | Narrow overview plus larger mechanism detail; one concrete token/record example |
-| Follow data, state or control | Typed nodes, explicit ports, scoped groups and reserved return corridors |
-| Compare architectural alternatives | Matched positions and shapes; emphasize actual changes |
-| Understand stages or recursion | Aligned lanes or a storyboard; distinguish time from system scope |
-| Compare measured conditions | Dot/interval comparison, controlled bars or small multiples |
-| Inspect scaling or resource cost | Observations and trajectories; quality-cost tradeoff with explicit conditions |
-| Diagnose a component or failure | Paired deltas, ablation panels, distributions or shared-scale heatmaps |
-| Inspect outputs | Matched qualitative grid with source and selection rule |
+| Grasp an idea or a failure mode | Idea schematic: one object redrawn per condition, alternatives ghosted, the measurement beside it |
+| Understand the new operation | Narrow overview, larger mechanism detail, one concrete example on the real object |
+| Understand a method that works on text (NLP), in one column | Example-led: one example read top to bottom in three tiers (registers §3) |
+| Follow data, state or control | Typed shapes, layer bands or planes, two or three defined arrow styles |
+| Follow a protocol or algorithm | Storyboard of equal panels, one change each; or a timeline with time on x |
+| See behaviour on text | Example × stage grid with marked spans; no arrows |
+| See behaviour on pixels | Hero-plus-satellites teaser; comparison grid with fixed camera; inset zooms |
+| Understand an interface | Rebuilt screenshot with lettered callouts; numbered interaction storyboard |
+| Compare alternatives | Matched positions and shapes; only the real differences change |
+| Compare measured conditions | Claim chart (one comparison) or field chart (many systems × conditions) |
+| Inspect scaling or cost | Small-multiples grid with shared labels; quality-cost trade-off with conditions stated |
+| Diagnose a component | Paired deltas, ablation panels, distributions, shared-scale heatmaps |
 
-Sketch two materially different compositions internally for substantial new figures. Choose the one with the clearer reading order, stronger mechanism specificity, and fewer unavoidable crossings. Do not ask the user to arbitrate routine layout choices. Use a table if exact lookup is the main task.
+For a substantial new figure, sketch two materially different compositions and keep the one with the
+clearer reading order and fewer arrows. Give the most area to the operation that carries the claim. Use a
+table if exact lookup is the reader's task. If everything will not fit at readable size, split the figure.
 
-For sophisticated figures, read [dense-composition.md](references/dense-composition.md). Build a panel contract and preserve identifiers across overview, mechanism and worked example. Show actual intermediate objects: a mask with labeled dimensions, a scoped record update, an aligned token sequence, a real failure trace, a tensor transformation, or a conditional objective. Reserve a companion figure for empirical analysis if combining everything would force microtype. Do not treat synthetic measurements as scientific evidence.
+### 4. Specify the visual system
 
-Allocate the most space to the transformation that carries the claim. An overview can be a narrow locator when the reader needs to inspect a replay table, context diff, attention operator or matched scene. An instance of an easy neighboring step does not explain a highlighted operation that remains a generic box. If that operation is only conceptual, mark its boundary or narrow the title.
+Record actual values before rendering, one line each:
 
-For multimodal or spatial figures, read [visual-objects.md](references/visual-objects.md). Link actual scene/frame/state objects to their representation and operator. Preserve object identity, view, scale and time across comparisons; distinguish observations, predictions and executed transitions. Keep the model block compact when its internal architecture is not the claim.
+1. **Palette:** the hues (0–4), what each names, where each recurs; greys for scaffolding.
+2. **Type:** face (body face, or one sans for all diagrams), the two or three sizes from the scale for this
+   placement (visual-craft §4), what is bold.
+3. **Space:** canvas in mm, the module, the two gutter widths, container padding, where the white goes.
+4. **Shapes:** which shape means which kind; the one stroke weight; radii; how containers are titled.
+5. **Icons:** none, or the one family and what each replaces.
+6. **Arrows:** whether any are needed; the styles (≤ 3) and their meanings; geometry; where the key goes.
 
-### 4. Specify the visual system before rendering
+### 5. Build reproducible source
 
-State the five-second message and the hero element first ([visual-craft.md §1](references/visual-craft.md#1-the-five-second-test)). Then record actual values in the brief:
+Draw with `paperkit.Canvas` (millimetre coordinates = printed size); keep the project's own toolchain
+where it has one. Use plotting code for data and vectors for diagrams. Never use image generation for
+quantitative marks, exact labels or topology. Keep raw observations separate from summaries; compute
+derived numbers in the script and assert them.
 
-1. **Palette:** 3–5 roles from `paperkit.ROLE` (fill / soft / stroke / ink / mark), each with one stated meaning; novel parts saturated, inherited parts neutral; parameters owned in place rather than listed in an inventory box. Use a consistent role mapping across panels.
-2. **Typography:** match the manuscript (Times/STIX + STIX math for LaTeX papers via `paperkit.use_fonts("serif")`; never DejaVu Sans in a Times paper), real weights, and three readable size levels at final output; noun-phrase panel titles ≤ 6 words.
-3. **Geometry:** aspect ratio, panel proportions, grid unit, gutters, container padding, card spacing, corner radii and stroke hierarchy.
-4. **Object vocabulary:** computation versus data/state/artifact, repeated modules, operator junctions and any semantic icons or badges.
-5. **Routing:** source/target ports, forward lanes, external feedback corridors, label clearances and edge types.
-
-Use the actual manuscript dimensions; otherwise 85 mm or 178 mm are adjustable starting widths. Start near 8 pt main text, 7–7.5 pt small text and 9–10 pt panel headings. Enlarge or simplify dense content before shrinking labels. Source figures with 3–6 pt text are cautionary examples.
-
-Use real font weights and verify the exported font program, not just its family name. With Matplotlib Type 42 PDF output, select a compatible TrueType program; a CFF-flavored OTF mislabeled as TrueType can appear embedded yet produce renderer warnings. Keep the intended family, actual fallback, weight and export format in provenance. Use darker related ink for small labels than for pale data marks or panel fills.
-
-Use white child cards inside tinted groups only when the nesting expresses real scope. Permit icons, token strips, record stacks, insets and light backgrounds when they explain the method. Avoid adding decorative detail that has no scientific role. Use raster images for real image/video/spatial data; use vector objects for exact topology and labels.
-
-**Figure series.** When several figures explain one framework, define its palette once with `paperkit.series(names)` in a module every figure imports, chain stage figures with `cv.chapter(..., prev=, nxt=)`, carry one running example through the stages, and keep dialogue and labels as vector text (`cv.bubble`, `cv.tab`). See [figure-series.md](references/figure-series.md).
-
-**Match the register before "cleaning up".** Method and results figures reward restraint; illustrated survey, position-paper and overview figures do not. There the pictures carry the argument (each stage shows the agent *doing* it), headers are solid colour with white bold text, and titles are large. Redesigning such a figure means keeping all of that and fixing its real faults (colour drift, text inside pixels, crossings, uneven type), never stripping it to outlined boxes: that reads as emptier and loses. Before drawing, list what the original does well and carry each strength over; fill every card edge to edge (`codex_images.py` style `"vignette"`, placed with `cv.image(..., fit="cover", h=, radius=)`); and run `paperkit.py parity original.png new.png`, which fails a redesign that is emptier, greyer or less illustrated at the same width. Lay chips out with `cv.flow_chips` (never hand-picked x positions) and end each script with `assert not cv.overlaps() and not cv.text_overlaps() and not cv.wire_crossings()`.
-
-**Generated images (optional).** When the figure has actors, roles, tools or stages the reader must tell apart, and `scripts/codex_images.py check` succeeds, a matched set of 3–7 illustrated icons may replace the vector glyphs: one style spec, one Codex run, each icon tinted with its role colour, a text label beside every icon, no text inside the pixels, and a vector fallback kept in the render script. Use real photos or screenshots, not generated pictures, for data, inputs or environments. Full-bleed vignettes and scenes for illustrated figures come from the same helper. Place every generated image with `cv.image` and export with `cv.save`: they embed the pixels unchanged at 600 dpi and fail the export if an image would be resampled (matplotlib's own defaults shrink it to 100 dpi in the PDF, which is why generated images looked blurry). Heed `cv.image`'s warning below 300 source px per inch. Follow [image-generation.md](references/image-generation.md); without Codex, use paperkit's vector icons and continue.
-
-### 5. Implement precise, reproducible source
-
-Preserve the project's existing toolchain where appropriate. Use scientific plotting libraries for data, and SVG/TikZ/Graphviz/programmatic vectors for diagrams. Do not use image generation for quantitative marks, exact labels, or computational topology.
-
-Utilities:
-
-```bash
-# Reference-quality redesigns built on paperkit (start here and adapt)
-python <skill-root>/scripts/examples/memt/render_fig4.py --out figures/memt   # architecture
-python <skill-root>/scripts/examples/memt/render_fig3.py --out figures/memt   # efficiency chart
-python <skill-root>/scripts/examples/transformer/render_fig1.py --out figures/transformer
-python <skill-root>/scripts/examples/harness2/render_fig2.py --out figures/harness2   # [--vector-icons]
-python <skill-root>/scripts/examples/harness2/render_fig3.py --out figures/harness2   # [--vector-icons]
-python <skill-root>/scripts/examples/proactive/render_arbitration.py --out figures/proactive  # chapter + gate stack
-python <skill-root>/scripts/examples/proactive/render_cycle.py --out figures/proactive        # taxonomy loop
-python <skill-root>/scripts/examples/proactive/render_spectrum.py --out figures/proactive     # scenes + spectrum
-python <skill-root>/scripts/examples/proactive/render_overview.py --out figures/proactive     # Fig. 1 redesign
-python <skill-root>/scripts/examples/proactive/render_capabilities.py --out figures/proactive # Fig. 3 redesign
-python <skill-root>/scripts/examples/proactive/render_history.py --out figures/proactive      # Fig. 5 timeline
-python <skill-root>/scripts/examples/reharness/render_fig1.py --out figures/reharness         # two harnesses, one stream
-python <skill-root>/scripts/examples/groupassist/render_fig1.py --out figures/groupassist     # overview [--vector-icons]
-python <skill-root>/scripts/examples/groupassist/render_fig2.py --out figures/groupassist     # pipeline [--vector-icons]
-python <skill-root>/scripts/examples/toolspace/render_fig1.py --out figures/toolspace         # graph + evidence charts
-python <skill-root>/scripts/examples/paperbanana/render_fig5.py --out figures/paperbanana     # dumbbell chart
-python <skill-root>/scripts/paperkit.py swatches fig1.png fig2.png series_check.png          # palette drift
-
-# Optional generated icons, scenes and vignettes via Codex CLI (only if `check` exits 0; see references/image-generation.md)
-python <skill-root>/scripts/codex_images.py check
-python <skill-root>/scripts/codex_images.py generate icons.json --out figures/icons [--ref existing.png]
-
-# The five classic examples rebuilt in the new style (data bundled under scripts/examples/restyled/data)
-python <skill-root>/scripts/examples/restyled/render_method.py --out figures/method
-python <skill-root>/scripts/examples/restyled/render_attention.py --out figures/attention
-python <skill-root>/scripts/examples/restyled/render_experiment.py --out figures/experiment
-python <skill-root>/scripts/examples/restyled/render_scene_planning.py --out figures/scene
-python <skill-root>/scripts/examples/restyled/render_epoch_context.py --out figures/epoch
-
-# paperkit: smoke test, density (white/tint/ink %), side-by-side review against an original
-python <skill-root>/scripts/paperkit.py
-python <skill-root>/scripts/paperkit.py density figures/memt/memt_fig4_architecture.png
-python <skill-root>/scripts/paperkit.py compare original.png figures/new.png review.png
-python <skill-root>/scripts/paperkit.py parity original.png figures/new.png   # exit 1 if emptier/greyer/less illustrated
-
-# Legacy component/contract demos (plain style; use for contracts and checks, not for looks)
-# Original modern demonstrations, including a routed diagram and empirical panels
-python <skill-root>/scripts/render_modern_examples.py --out figures/examples
-
-# Evidence-bound original schematic with matched states and diagram-to-code colors
-python <skill-root>/scripts/render_reference_recipe.py --out figures/recipe
-
-# Rich overview, parallel proposals, atomic conflict matrix, and replay fixture
-python <skill-root>/scripts/render_dense_method.py --out figures/dense
-
-# Exact attention mask, worked softmax/value calculation, and streaming boundary
-python <skill-root>/scripts/examples/causal_attention/render_figure.py --out figures/attention
-
-# Four-panel synthetic study: paired effects, heterogeneity, cost, and diagnostics
-python <skill-root>/scripts/render_dense_experiment.py --out figures/study
-
-# Matched spatial scenes, candidate paths, swept collision checks and one action
-python <skill-root>/scripts/render_worked_example.py scene-planning --out figures/scene
-
-# Matched replay artifacts, context-field changes and the next proposal
-python <skill-root>/scripts/render_worked_example.py epoch-context --out figures/epoch
-
-# Validate a supplied chart specification
-python <skill-root>/scripts/plot_from_spec.py figure.json --out figures/figure_1
-
-# Inspect an exact source-figure region
-python <skill-root>/scripts/inspect_pdf_style.py paper.pdf --page 3 \
-  --clip 66 85 530 251 --out style.json --preview crop.png
-
-# Check physical export and text/font handling
-python <skill-root>/scripts/check_figure.py figures/figure_1.pdf \
-  --expected-width-mm 178 --min-font-pt 7
+```python
+import sys; sys.path.insert(0, "scripts")            # or the absolute path of the skill's scripts directory
+from paperkit import Canvas, series_kw
+cv = Canvas(84, 46, family="serif", size=6.5)        # one column, body face
+cv.box(4, 30, 18, 6, "line", "Scheduler", radius=0, lw=0.6, weight="normal")  # line art: white, black stroke
+cv.box(30, 30, 18, 6, "line", "Workers", radius=0, lw=0.6, weight="normal")
+cv.arrow([(22, 33), (30, 33)], color="black", lw=0.6, head=1.0)               # same weight as the boxes
+axs = cv.axes_grid(16, 6, 64, 14, 1, 3, sharey=True, gap=(4, 3), col_titles=["read", "write", "scan"])
+for ax in axs[0]:
+    ax.plot([1, 2, 4, 8], [1, 1.9, 3.6, 6.5], **series_kw(0))
+assert not cv.overlaps() and not cv.text_overlaps() and not cv.wire_crossings()
+cv.save("figures/fig2")                              # .pdf (Type 42 fonts) + .svg + .png
 ```
 
-Use `figure_style.py` for export/provenance and `diagram_geometry.py` for declared rectangle/port/polyline validation. Read their APIs before calling. The strict chart renderer draws supplied values; it does not choose an estimator or invent intervals. Use custom source for unsupported layouts.
+Primitives by dimension (signatures are in `scripts/paperkit.py`; usage in visual-craft §7–§9):
 
-Use `figure_scene.py` when physical-unit vector composition, typed documents/processes/gates, explicit branch buses, editable text, owner containment, pairwise text-overlap review, and routed-edge audits help. The dense renderer demonstrates the API with a deterministic fixture. Adapt its information hierarchy and components to the actual method; do not reuse its scientific topology for an unrelated task.
+- **Shapes and objects:** `box`, `hexagon`, `section`, `group`, `tab`, `chip`, `matrix`, `vec`, `trap`, `cuboid`,
+  `fmap`, `num_matrix`, `tokens`, `stack`, `doc`, `cylinder`, `diamond`, `graph`, `mini_plot`,
+  `filetree`, `turn_strip`, `plate`, `tile`, `bubble`.
+- **Text from the world:** `rich` (coloured terms, marked spans), `listing` (code with line numbers and
+  highlight bands), `greek` (grey bars for text the reader does not need).
+- **Icons and callouts:** `icon_*`, `badge`, `callout`, `image` (rasters embedded unchanged at 600 dpi).
+- **Arrows:** `arrow`, `line`, `zoom`, `block_arrow`, `brace`, `op`.
+- **Charts:** `axes`, `axes_grid`, `chart_legend`, `series_kw` / `SERIES_STYLE`, `curve_label`, `radar`,
+  `spectrum`.
+- **Series and keys:** `series` (one palette for a paper), `legend`, `phase_bar`, `chapter`.
+- **Audits:** `overlaps`, `text_overlaps`, `wire_crossings`; command line `density`, `grey`, `compare`,
+  `parity`, `swatches`, `caption`.
 
-The advanced scripts are fixed worked examples, not general scientific models or automatic layout engines. Read [advanced-examples.md](references/advanced-examples.md) before adapting them. Their assertions intentionally bind labels, states, masks and numerical claims to preserved inputs. For real measurements, replace the synthetic generator with actual observations and reconsider the estimand and independent sampling unit.
+End every script with `assert not cv.overlaps() and not cv.text_overlaps() and not cv.wire_crossings()`.
+Lay chips out with `cv.flow_chips`, never hand-picked x positions.
 
-Store raw observations separately from summaries; preserve transformation code, seeds, software versions and source hashes. Keep labels and numeric callouts derived from the same inputs, and assert derived ratios in the render script (as `render_fig3.py` does). Label invented measurements **SYNTHETIC DATA** or **ILLUSTRATIVE DATA** inside the export and in the caption, because they could be mistaken for results. A method diagram is schematic by nature: say so in the caption (and note illustrative glyph textures such as matrix shading there), not as a watermark, receipt or footnote inside the artwork.
+Worked examples to adapt (each is `python scripts/examples/<dir>/<script>.py --out figures/<dir>`):
 
-Build diagrams with `paperkit.Canvas` (mm coordinates = printed size). Draw the noun instead of writing it: `matrix` for states, `vec` for vectors, `trap` for projections and encoders, `cuboid` for feature tensors and (with `rotate=True`) layer slabs, `fmap` for feature/attention maps, `num_matrix` for scored matrices, `mini_plot` for distributions and scores, `graph` for node-link structures, `op` for ⊕/⊙/ⓒ, `tokens`, `doc`, `stack`, `diamond`, `chip`, and the frozen/trainable/fixed/evolving icons. For method figures use `section(...)` frames (one hue per module, dashed, tab title), a `legend(...)` key strip and a `phase_bar(...)` (visual-craft §12); keep `group(..., band=True)` cards for charts and neutral context. Use `zoom` for overview→detail, `rich` for colour-coded equations and branch words, and `axes` or hand-placed marks for charts.
+| Register | Example |
+| --- | --- |
+| Idea schematic, one column | `memt/render_idea_column.py` |
+| Field chart, one column | `toolspace/render_table1_column.py` |
+| Example-led and line-art primitives (`rich` marks, `listing`, `callout`, `greek`, `axes_grid`) | the `tx` and `g` blocks of the smoke test at the end of `scripts/paperkit.py` |
+| Plate: architecture | `memt/render_fig4.py`, `transformer/render_fig1.py`, `restyled/render_attention.py` |
+| Claim chart | `memt/render_fig3.py`, `paperbanana/render_fig5.py` |
+| Plate: agents and harnesses | `harness2/render_fig2.py`, `harness2/render_fig3.py`, `reharness/render_fig1.py` |
+| Benchmark overview and pipeline | `groupassist/render_fig1.py`, `groupassist/render_fig2.py` |
+| Showcase and figure series | `toolspace/render_fig1.py`, `proactive/render_*.py` |
 
-### 6. Review the science, appearance and geometry
+The older `scripts/render_*.py` demos and `figure_scene.py` / `diagram_geometry.py` are contract and
+geometry examples in a plain style; use them for their checks, not their looks
+([advanced-examples.md](references/advanced-examples.md)).
 
-**Scientific review:** trace values and edges to evidence. Check units, denominators, intervals, aggregation, controlled conditions, omissions and caption scope. Respect pairing/clustering, and distinguish measured nondominated points from unmeasured frontier interpolation.
+**Generated images** are for the showcase register only: a matched set of 3–7 icons or vignettes from one
+style spec, no text in the pixels, a label beside each, a vector fallback in the script, placed with
+`cv.image`. Use real photos and screenshots for data, inputs and environments. Run
+`python scripts/codex_images.py check` first and follow [image-generation.md](references/image-generation.md).
 
-**Craft review:** open the PNG and walk the [anti-pattern checklist](references/visual-craft.md#11-anti-patterns-checklist); run `paperkit.py density` against the targets in visual-craft §7; for a redesign run `paperkit.py compare` and `paperkit.py parity`, and follow the beat-the-original protocol (§10); a redesign that loses on parity needs a stated reason, not a cleaner-looking excuse. Fix clipped labels, text over wires, and band/label collisions before anything else; they are the most common defects in a first render. `cv.wire_crossings()` catches a wire that runs through or behind a box, slab, document or token instead of ending on its border (mark lanes and background fields `container=True`), and `cv.text_overlaps()` now also catches icons on text; both only see objects drawn with paperkit, so still inspect the PNG in crops at full resolution, never only a downscaled whole.
+### 6. Review
 
-**Design review:** inspect the actual PDF at final physical size and compare it with the selected visual references. Confirm meaningful shape/color hierarchy, specific mechanism detail, coherent typography, balanced information density, deliberate whitespace and readable legends. Check unchanged landmarks align in comparison panels, modality colors persist through transformations, and repeated conditions share scales when their values are being compared. Give dashed lines a local definition. A generic box arrangement or a technically valid default plot still needs redesign if it misses the visual brief.
+Open the exported PNG at full resolution, in crops, not only as a downscaled whole.
 
-**Depth review:** for a rich figure, trace one object through all explanatory levels and reconstruct the operation carrying the title's claim. Verify that the detail panel instantiates that operation, that the case follows its displayed rule, and that the changed artifact has an observable consequence. For a loop, show what changes between iterations; for matched scenes, preserve the camera, scale, object identity and time indexing. Compare source and candidate at the same physical width. Record concrete strengths and remaining weaknesses; object counts are descriptive, not a quality score. Preserve readable text rather than copying source microtype.
+- **Science.** Trace every value and edge to evidence. Check units, denominators, intervals, pairing,
+  omitted conditions and caption scope.
+- **Count.** Hues, stroke weights, text sizes, arrow styles, icon families, panel treatments, against the
+  budgets in visual-craft §14.
+- **Craft.** Walk the checklist. Run `python scripts/paperkit.py density fig.png` and compare the white
+  share with the register's range; run `grey` for a field chart; for a redesign run `compare`, and `parity`
+  when the source is a showcase or illustrated figure.
+- **Geometry.** The three `cv` audits pass; then look for what they cannot see: clipped labels, a label
+  nearer to a neighbour than to its object, a scattered hole, a wire through text drawn outside paperkit.
+- **Depth.** Trace one object through every panel and reconstruct the operation the title claims.
+- **Artifact.** `python scripts/check_figure.py fig.pdf --expected-width-mm 84 --min-font-pt 5` for size
+  and fonts; SVG text is editable; the figure, its gap and its caption fit the text block together.
 
-**Connector review:** trace each declared edge. Check actual painted node bounds, normal port entry/exit, arrowhead attachment, nonendpoint intersections, label collisions, border riding, unintended crossings and feedback separation. Run the geometry helper where supported, then visually inspect the densest region.
+Fix the most consequential defect and look again. Stop when the content, the brief and the checks pass.
 
-**Artifact review:** check dimensions, fonts, editing source, SVG text, PDF rendering, grayscale and rerendering. Budget the artwork, caption gap and caption together against the actual venue text block. Move long interpretation and statistical methods to an accompanying note, or split the figure; do not scale an entire dense plate down until its text becomes unreadable. Inspect color-vision simulations when available. Automated checks cannot certify all overlaps, accessibility, scientific validity or aesthetic quality.
+### 7. Deliver
 
-Fix the most consequential issue and inspect again. Stop once the content, visual brief and required checks pass; avoid arbitrary aesthetic churn.
+Vector PDF, editable SVG and PNG preview; the script and its inputs; a caption that opens with the claim
+and defines every encoding the art does not label (visual-craft §12; `paperkit.py caption` exits 0); alt
+text; and the design decisions in a few lines: message and hero, register, palette roles, type scale,
+where the white space goes, arrow styles, remaining limits. Confirm every delivered file exists and opens.
 
-### 7. Deliver and explain the visual decisions
-
-For creation/redesign, deliver requested formats, editable source and inputs, a manuscript-ready caption (each sentence changes how a value is read; no tools, no mark-placement mechanics, no protocol details the methods already give, no disclaimers; `paperkit.py caption` exits 0), concise alt text, and specific design decisions: palette roles, font hierarchy, layout choice, important routing, and any remaining limits. Default to vector PDF, editable SVG and PNG preview when compatible with the task. Follow the host's file-saving rules.
-
-For critique, prioritize concrete defects and fixes. Point to the affected region or connector. Distinguish inspected facts from interpretation. Attribute borrowed design principles and identify copied/adapted artwork accurately.
-
-Verify that every delivered file exists, opens, and uses the final filename. A preview path from a temporary or unavailable workspace is not a completed handoff. Save and link final artifacts using the host's supported workflow.
+For a critique, lead with the defects that change what a reader understands, point to the region, and
+separate what was inspected from what is inferred.
 
 ## Completion gates
 
-- Data, topology and caption agree; illustrative content is unmistakable; the caption says what is shown, not how it was made.
-- The figure has a recognizable visual hierarchy and task-specific mechanism detail.
-- A visible hero carries the five-second message; key state, projections and operators are drawn as objects, not text boxes; no anti-pattern from visual-craft §11 remains.
-- Colors, fonts, shapes, spacing and line styles form a consistent system.
-- Labels are legible at final size and routes have unambiguous endpoints.
-- The actual export has been inspected; unavailable checks are disclosed.
-- The figure can be regenerated from its preserved inputs and editable source.
+- Data, topology and caption agree; illustrative content is unmistakable.
+- The five-second message has a visible hero, made by difference.
+- One register, matched to the venue and width; every count within budget or justified.
+- Labels are legible at final size (labels and legends ≥ 5.8 pt, nothing under 5 pt); white space is
+  grouped; no outer frame.
+- Every colour, line style, hatch, icon and numeral is defined in the figure or its caption.
+- The export has been opened and inspected; the audits pass; unavailable checks are disclosed.
+- The figure regenerates from preserved inputs and editable source.
 
-Do not equate aesthetic polish with a validated scientific result or promise publication outcomes. Scientific integrity and visual craft both need evidence.
+Do not present visual polish as a validated result or promise a review outcome.

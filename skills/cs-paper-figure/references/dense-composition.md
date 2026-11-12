@@ -81,7 +81,7 @@ Concrete contents are abbreviated for legibility, not replaced by meaningless gr
 
 ## 4. Typography and color at physical size
 
-For a dense full-width manuscript figure, start at **178 mm** width with a content-driven height. Use 7.2–8 pt details, 8–9 pt module labels, 9–10 pt panel titles, and 10–11 pt section emphasis. These are production recommendations, not measurements of the papers. Keep the minimum size fixed while composing; increase height, tighten wording, group repetitions, or move material to a companion figure before shrinking.
+For a dense full-width manuscript figure, start at **178 mm** width with a content-driven height. Use the dense-plate column of the type scale in [visual-craft.md §4](visual-craft.md#4-typography) (panel heads 7.5–8.5 pt, labels 6.5–7.2 pt, annotations 5.8–6.3 pt, nothing under 5 pt). Keep the minimum size fixed while composing; increase height, tighten wording, group repetitions, or move material to a companion figure before shrinking.
 
 Budget the caption before finalizing height. The artwork, caption, and gap must fit the actual text block together. A 228 mm figure plus a 200-word caption can exceed a full manuscript page even though the figure alone opens correctly. Prefer a roughly 180–210 mm plate where the venue permits, shorten the caption while preserving scientific essentials, or split the figure. Recompose geometry while retaining type sizes; do not fix page fit by scaling the entire export until labels become microtype.
 

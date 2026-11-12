@@ -1,6 +1,6 @@
 # cs-paper-figure
 
-An agent skill for designing, drawing and critiquing figures for computer-science papers: architecture and method diagrams, agent pipelines, efficiency and benchmark charts. It is distilled from a close study of figures in leading AI research papers and ships a small drawing library so the agent produces editable, reproducible vector figures instead of generic flowcharts.
+An agent skill for designing, drawing and critiquing figures for computer-science papers: method and architecture diagrams, idea schematics, system and protocol figures, annotated examples, teasers and comparison grids, and evaluation charts, at single-column or full width. Its rules are measured from award papers at NeurIPS, ICLR, ICML, CVPR, ICCV, SIGGRAPH, ACL, EMNLP, NAACL, CHI, UIST, SOSP, OSDI, NSDI, PLDI and VLDB and from recent AI-lab reports, and it ships a small drawing library so the agent produces editable, reproducible vector figures instead of generic flowcharts.
 
 ![The Transformer (Attention Is All You Need, Figure 1), redesigned with this skill](gallery/transformer/transformer_fig1.png)
 
@@ -10,12 +10,14 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 
 | Part | Purpose |
 | --- | --- |
-| [`SKILL.md`](skills/cs-paper-figure/SKILL.md) | The workflow: brief → references → structure → visual system → reproducible source → review |
-| [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | How it should look: typography, role colours, glyph vocabulary, composition, connectors, density, charts, anti-patterns |
+| [`SKILL.md`](skills/cs-paper-figure/SKILL.md) | Ten design principles and the workflow: brief → message, hero and register → structure → visual system → reproducible source → review |
+| [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | The rulebook by design dimension, with measured values: message and hero, register, colour, typography, layout, white space, shapes, icons, arrows, text, charts, captions, redesign protocol, checklist |
+| [`registers.md`](skills/cs-paper-figure/references/registers.md) | Rules for one kind of figure at a time: line art (systems, PL, theory), idea schematics, example-led text and interface figures, image-led teasers and grids, plates, benchmark contrast figures, showcase teasers |
+| [`venue-study-2026-11.md`](skills/cs-paper-figure/references/venue-study-2026-11.md) | The evidence: about 90 figures from 29 award papers at 17 venues, measured; what held in every venue family, which earlier rules of this skill it overturned, and model figures per family |
 | [`architecture-study-2026-11.md`](skills/cs-paper-figure/references/architecture-study-2026-11.md) | What 23 vision/multimodal method figures (Holmes, ReSet, CoPS, SemDiff, LFBNet, HFF-Net, VideoFusion, …) do well and badly, and the rules taken from them |
 | [`arebench-study-2026-11.md`](skills/cs-paper-figure/references/arebench-study-2026-11.md) | What ARE-bench Figs. 1–3 do well and badly: contrast figures, task cut strips, workspace file trees, construction pipelines, results-chart colour identity |
 | [`toolspace-study-2026-11.md`](skills/cs-paper-figure/references/toolspace-study-2026-11.md) | What ToolSpace Fig. 1 does well (isometric plates, logos as identity marks, radar envelopes) and how a tidier redesign lost it: the "strengths first" rule for redesigns |
-| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) plus `density`, `compare`, `parity` and `caption` checks (a redesign must not come out emptier, greyer or less illustrated than its original) |
+| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) column-width charts (`axes_grid`, `chart_legend`, greyscale-safe `SERIES_STYLE`, `curve_label`), marked spans, code listings and callouts, plus layout audits and `density`, `grey`, `compare`, `parity` and `caption` checks |
 | [`figure-series.md`](skills/cs-paper-figure/references/figure-series.md) | Figure series for surveys and frameworks: one taxonomy palette, chapter frames, running examples, gate stacks, spectra, illustrated scenes with vector dialogue |
 | [`codex_images.py`](skills/cs-paper-figure/scripts/codex_images.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icons, scenes and vignettes generated with Codex CLI, embedded at full resolution |
 | `scripts/examples/`, `references/` | The gallery's render scripts; a 120-paper figure corpus, per-lab studies and review checklists |
@@ -114,6 +116,19 @@ Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-res
 
 [Fig. 4 PDF](gallery/memt/memt_fig4_architecture.pdf) · [Fig. 3 PDF](gallery/memt/memt_fig3_efficiency.pdf) · [source](skills/cs-paper-figure/scripts/examples/memt/)
 
+### One column, two registers
+
+| Idea schematic | Field chart |
+| --- | --- |
+| <img src="gallery/memt/memt_idea_column.png" width="420"> | <img src="gallery/toolspace/toolspace_table1_column.png" width="420"> |
+
+Most figures in a two-column venue are 84 mm wide, and a column figure is its own design, not a shrunk plate. Both were built from the venue study's rules.
+
+- MemT-1.0's idea in seven things: a token row over a state grid, drawn twice, with only the state changed. Three hues from the paper's own palette, each defined by a sample in the key row; 85 % of the figure is white and the gap between the turns is the separator.
+- ToolSpace's Table 1 as the chart a systems venue would print: every series has a hue and a hatch, so it survives greyscale; ToolSpace is the only solid bar and is first in each legend row; there is no card or header band; the gain over the backbone is bracketed on the average.
+
+[PDFs](gallery/memt/) · sources: [schematic](skills/cs-paper-figure/scripts/examples/memt/render_idea_column.py), [chart](skills/cs-paper-figure/scripts/examples/toolspace/render_table1_column.py)
+
 ### Five more examples
 
 Illustrative fixtures or synthetic data, not real benchmark results.
@@ -179,17 +194,20 @@ python scripts/codex_images.py generate icons.json --out out/icons [--ref existi
 
 ## Design rules in brief
 
-1. One five-second message, carried by one hero element.
-2. The manuscript's font at three sizes, nothing below 6 pt.
-3. 3–5 colour roles, one meaning each; new parts saturated, inherited parts neutral.
-4. Draw the noun: grids for matrices, trapezoids for projections, strips for tokens.
-5. Orthogonal arrows, no crossings; narrative goes in the caption.
-6. Charts: direct labels, visible ratios, area-true encodings.
-7. Every number comes from the inputs and is asserted in code.
-8. Icons, if any: one matched set, labelled, never carrying text or data.
-9. Match the register: method figures reward restraint; an illustrated survey figure stays illustrated, with full cards, solid headers and large type.
-10. Method figures: one dashed, tinted section per module, pseudo-3D tensors and layer slabs, a data object in every detail panel, and a key strip (learned from 23 CV/multimodal figures; see [`visual-craft.md` §12](skills/cs-paper-figure/references/visual-craft.md#12-the-architecture-register-object-rich-method-figures)).
-11. Captions say what is shown and how to read it; how the figure was made or drawn, and protocol the methods already give, stay out (`paperkit.py caption` checks).
+The ten principles that held in every strong figure studied; `visual-craft.md` gives the measured rules.
+
+1. One message and one hero, and the hero is the thing that differs: the only coloured object, the only solid line, the largest block. Never the thickest outline.
+2. Choose a register first (line art, idea schematic, example-led, image-led, plate, showcase) from the venue, the column width and the claim, and stay inside it.
+3. Count everything: at most four hues, two stroke weights, three text sizes, three arrow styles, one icon family, one panel treatment.
+4. Repeat one drawing and change one thing; ghost what was not taken.
+5. Run one concrete example through every stage.
+6. Colour is a name: one meaning per hue, kept through every form the thing takes and every figure of the paper.
+7. The page is the ground and white space is grouped: gutters, bands and label rows, never scattered holes, never a frame and a tint on everything.
+8. Draw the noun and put labels on the thing; say shared things once.
+9. Define every encoding beside a sample of itself, in a key or the caption.
+10. Type matches the page, at sizes that fit the placement, never below 5 pt.
+
+Every number comes from the inputs and is asserted in code; captions say what is shown and how to read it (`paperkit.py caption` checks).
 
 ## License
 

@@ -11,14 +11,17 @@ code is the printed size. Text sizes are points, stroke widths are points.
     cv.arrow([(30, 74.5), (40, 74.5)])
     cv.save("out/figure")                       # .pdf (Type 42) + .svg + .png
 
-Design rules baked in (see references/visual-craft.md):
-* role colours come as (fill, soft, stroke, ink, mark) families: pale fill,
-  same-hue mid stroke, dark same-hue text, saturated mark for data/hero;
-* corner radius scales with box height; strokes form a 3-level hierarchy;
-* arrows are dark neutral by default, coloured only when colour encodes a
-  path type (read / write / feedback); heads are filled and proportional;
-* glyphs (matrices, token strips, documents, icons) carry the content so that
-  boxes need fewer words.
+Design rules (references/visual-craft.md; per-register rules in references/registers.md):
+* the page is the ground: section frames have white fields, tints are opt-in and mean scope;
+* role colours come as (fill, soft, stroke, ink, mark) families for the plate register;
+  ROLE["line"] is white with a black stroke for line art; SERIES_STYLE gives chart series a hue
+  plus a marker, dash and hatch so they survive greyscale;
+* corner radius scales with box height; arrows are dark neutral by default, coloured only when
+  colour encodes a path type; heads are filled, 3-6 x the stroke;
+* glyphs (matrices, token strips, documents, listings, marked spans) carry the content so that
+  boxes need fewer words;
+* audits: cv.overlaps(), cv.text_overlaps() (canvas and chart text, icons, edge clipping),
+  cv.wire_crossings(); command line: density, grey, compare, parity, swatches, caption.
 """
 from __future__ import annotations
 
@@ -54,6 +57,9 @@ ROLE = {
     "coral":   dict(fill="#FDEEEA", soft="#F8D6CC", stroke="#D9826B", ink="#86321F", mark="#D9583B"),
     "rose":    dict(fill="#FBEFF4", soft="#F3D5E2", stroke="#C77D9C", ink="#7A2E50", mark="#C2507F"),
 }
+# "line": the line-art register of systems, PL and theory figures (references/venue-study-2026-11.md): white
+# shapes, one black stroke weight, black text. Colour is then free for the one thing that is new or wrong.
+ROLE["line"] = dict(fill="#FFFFFF", soft="#EFEFEF", stroke="#000000", ink="#000000", mark="#000000")
 INK = "#262B33"      # body text
 MUTED = "#6B7480"    # secondary text
 LINE = "#4A4F57"     # default connector ink
@@ -62,6 +68,32 @@ HAIR = "#C9CED6"     # hairlines / grid
 
 # Hue order for taxonomy series: maximally distinct neighbours, colour-blind-safe enough with labels.
 SERIES_ORDER = ("memory", "blue", "purple", "amber", "coral", "teal", "rose", "frozen")
+
+
+# Chart series with two channels each (hue + marker + dash + hatch), so a chart with many systems survives
+# greyscale printing and colour-vision deficiency. Index 0 is "ours": the only solid line and the only
+# unhatched bar, listed first in the legend; every line has the same weight (measured in CortenMM Fig. 14,
+# OSCAR Fig. 10; references/venue-study-2026-11.md). Hues are Okabe-Ito.
+SERIES_STYLE = [
+    dict(color="#D55E00", marker="^", ls="-", hatch=""),
+    dict(color="#0072B2", marker="x", ls=(0, (5, 1.6, 1, 1.6)), hatch="////"),
+    dict(color="#009E73", marker="d", ls=(0, (4, 2)), hatch="\\\\\\\\"),
+    dict(color="#B8860B", marker="v", ls=(0, (1, 1.6)), hatch="...."),
+    dict(color="#56B4E9", marker="+", ls=(0, (6, 1.6, 1, 1.6, 1, 1.6)), hatch="xxxx"),
+    dict(color="#CC79A7", marker="s", ls=(0, (2, 2)), hatch="----"),
+    dict(color="#555555", marker="o", ls=(0, (7, 2)), hatch="++++"),
+]
+
+
+def series_kw(k, kind="line", lw=0.9, ms=3.0):
+    """Keyword arguments for series k of a chart: ax.plot(x, y, **series_kw(k)) or
+    ax.bar(x, h, **series_kw(k, "bar")). Bars are a pale fill of the hue with a same-hue edge and hatch."""
+    st = SERIES_STYLE[k % len(SERIES_STYLE)]
+    if kind == "bar":
+        return dict(fc=st["color"] if k == 0 else mix(st["color"], "#FFFFFF", 0.62), ec=st["color"], lw=0.6,
+                    hatch=st["hatch"])
+    return dict(color=st["color"], marker=st["marker"], ls=st["ls"], lw=lw, ms=ms, mew=0.8,
+                mfc=st["color"] if k == 0 else "white")
 
 
 def series(names, roles=None):
@@ -101,7 +133,7 @@ def use_fonts(family="serif"):
         matplotlib.rcParams.update({"font.family": "sans-serif", "font.sans-serif": fam,
                                     "mathtext.fontset": "stixsans"})
     matplotlib.rcParams.update({"pdf.fonttype": 42, "ps.fonttype": 42, "svg.fonttype": "none",
-                                "axes.unicode_minus": False})
+                                "axes.unicode_minus": False, "hatch.linewidth": 0.45})
     return fam[0]
 
 
@@ -167,29 +199,116 @@ class Canvas:
         return chart_axes(self.fig.add_axes([x / self.w, y / self.h, w / self.w, h / self.h], **kw),
                           size=self.size)
 
+    def axes_grid(self, x, y, w, h, rows, cols, gap=(7.0, 3.5), col_titles=None, row_titles=None,
+                  xlabel=None, ylabel=None, sharex=True, sharey=False, box=True, grid="y", size=None):
+        """Small multiples in mm: rows x cols plot areas inside (x, y, w, h), `gap` = (horizontal, vertical) mm
+        between plot areas (3-4.5 mm with sharey=True, which keeps y tick labels on the first column only and
+        gives every panel one y range; 7-9 mm when each panel has its own tick labels).
+        Everything shared is said once: column titles on the top row, row titles rotated at the left, one y label
+        for the grid, the x label under the bottom row only, inner x tick labels removed when sharex.
+        Reserve room left of x for ticks, row titles and the y label (about 5 + 3.5 + 3.5 mm).
+        Returns a rows x cols list of axes; add one frameless legend with chart_legend()."""
+        size = size or self.size
+        pw, ph = (w - (cols - 1) * gap[0]) / cols, (h - (rows - 1) * gap[1]) / rows
+        axs = [[chart_axes(self.fig.add_axes([(x + c * (pw + gap[0])) / self.w,
+                                              (y + (rows - 1 - r) * (ph + gap[1])) / self.h,
+                                              pw / self.w, ph / self.h]), grid=grid, size=size, box=box)
+                for c in range(cols)] for r in range(rows)]
+        for r in range(rows):
+            for c in range(cols):
+                ax = axs[r][c]
+                if r == 0 and col_titles:
+                    ax.set_title(col_titles[c], fontsize=size, pad=2.0)
+                if r < rows - 1 and sharex:
+                    ax.tick_params(labelbottom=False)
+                if sharey:
+                    ax.sharey(axs[0][0]) if (r, c) != (0, 0) else None
+                    ax.tick_params(labelleft=c == 0)
+                if r == rows - 1 and xlabel:
+                    ax.set_xlabel(xlabel, fontsize=size - 0.3, labelpad=1.5)
+            if row_titles:
+                self.text(x - 8.5, y + (rows - 1 - r) * (ph + gap[1]) + ph / 2, row_titles[r], size=size - 0.3,
+                          rotation=90)
+        if ylabel:
+            self.text(max(1.8, x - (12.0 if row_titles else 8.5)), y + h / 2, ylabel, size=size - 0.3, rotation=90)
+        return axs
+
+    def chart_legend(self, handles, labels, x, y, ncol=None, size=None, loc="lower center", **kw):
+        """One frameless legend row for a whole grid of axes, anchored at (x, y) mm: put it above the grid,
+        the paper's own method first. Use ax.legend(frameon=False) instead when one panel has an empty corner."""
+        return self.fig.legend(handles, labels, loc=loc, bbox_to_anchor=(x / self.w, y / self.h),
+                               ncol=ncol or len(labels), frameon=False, fontsize=size or self.size - 0.3,
+                               **{"handlelength": 2.6, "handletextpad": 0.5, "columnspacing": 1.4,
+                                  "borderpad": 0, "borderaxespad": 0, **kw})
+
     # ---- text -------------------------------------------------------------
     def text(self, x, y, s, size=None, color=INK, weight="normal", ha="center", va="center",
              style="normal", z=20, **kw):
         return self.ax.text(x, y, s, fontsize=size or self.size, color=color, weight=weight,
                             ha=ha, va=va, style=style, zorder=z, **kw)
 
-    def text_width(self, s, size, weight="normal"):
-        t = self.ax.text(0, 0, s, fontsize=size, weight=weight)
+    def text_width(self, s, size, weight="normal", **kw):
+        t = self.ax.text(0, 0, s, fontsize=size, weight=weight, **kw)
         bb = t.get_window_extent(self._renderer())
         t.remove()
         return bb.width / self.fig.dpi * 25.4
 
-    def rich(self, x, y, segments, size=None, ha="left", va="center", z=20):
-        """Inline multi-colour text/math: segments = [(str, color[, weight])].
-        Use to colour-code terms of one equation by role. Returns end x."""
+    def rich(self, x, y, segments, size=None, ha="left", va="center", z=20, **kw):
+        """Inline multi-colour text/math: segments = [(str, color[, weight[, mark]])].
+        Use to colour-code terms of one equation by role, or to mark spans of example text: a 4th item (a role
+        name or a colour) lays a borderless pale band behind that segment at 1.2 x the font size, the
+        annotated-example highlight of HALoGEN Fig. 1. Pass family="monospace" for machine-written text.
+        Returns end x."""
         size = size or self.size
-        widths = [self.text_width(s[0], size, s[2] if len(s) > 2 else "normal") for s in segments]
+        widths = [self.text_width(s[0], size, s[2] if len(s) > 2 else "normal", **kw) for s in segments]
         cx = x - (sum(widths) if ha == "right" else sum(widths) / 2 if ha == "center" else 0)
+        bh = 1.2 * size / PT_PER_MM
         for s, w in zip(segments, widths):
+            if len(s) > 3 and s[3]:
+                self.ax.add_patch(Rectangle((cx - 0.15, y - bh / 2), w + 0.3, bh, ec="none", zorder=z - 1,
+                                            fc=ROLE[s[3]]["soft"] if s[3] in ROLE else s[3]))
             self.text(cx, y, s[0], size=size, color=s[1], weight=s[2] if len(s) > 2 else "normal",
-                      ha="left", va=va, z=z)
+                      ha="left", va=va, z=z, **kw)
             cx += w
         return cx
+
+    def listing(self, x, y, lines, *, hi=None, start=1, size=None, numbers=True, leading=1.25, z=8):
+        """Code, IR or a trace as a figure object: monospace lines from the top-left (x, y), grey right-aligned
+        line numbers the text can cite, and hi={line number: role} full-width highlight bands (red/green for
+        before/after, one accent for the line the claim is about). No background box and at most three
+        colours in the code itself (CortenMM Fig. 6, NDD Fig. 2). Returns the height."""
+        size = size or self.size - 0.3
+        rh = leading * size / PT_PER_MM
+        nx = self.text_width(str(start + len(lines) - 1), size - 0.6, family="monospace") + 1.2 if numbers else 0
+        wmax = max(self.text_width(t, size, family="monospace") for t in lines)
+        for i, t in enumerate(lines):
+            cy = y - (i + 0.5) * rh
+            if hi and (start + i) in hi:
+                self.ax.add_patch(Rectangle((x + nx - 0.4, cy - rh / 2), wmax + 0.8, rh, ec="none",
+                                            fc=role(hi[start + i])["soft"], zorder=z - 1))
+            if numbers:
+                self.text(x + nx - 1.2, cy, str(start + i), size=size - 0.6, color=MUTED, ha="right",
+                          family="monospace", z=z)
+            self.text(x + nx, cy, t, size=size, color="black", ha="left", family="monospace", z=z)
+        return len(lines) * rh
+
+    def callout(self, x, y, k, to=None, r="rose", d=3.6, lw=0.8, z=14):
+        """Lettered callout for a screenshot or a dense object: a solid disc with a white letter in one accent hue
+        the content does not use, and a leader to `to` that ends in a dot, not an arrowhead (Cocoa Fig. 2).
+        Keep one disc size per figure and line the discs up in the white space beside the content."""
+        c = role(r)
+        if to:
+            self.ax.plot([x, to[0]], [y, to[1]], color=c["mark"], lw=lw, zorder=z - 0.5, solid_capstyle="round")
+            self.ax.add_patch(Circle(to, d * 0.2, fc=c["mark"], ec="none", zorder=z))
+        self.badge(x, y, k, r, d=d, z=z)
+
+    def greek(self, x, y, w, rows=2, h=1.2, gap=0.9, color="#D9D9D9", z=6):
+        """Grey bars standing in for text the reader does not need (a rebuilt screenshot, a document body): the
+        eye then goes to the lines that are set in real type. Ragged right edge; (x, y) is the top-left."""
+        for i, f in enumerate([1.0, 0.86, 0.94, 0.62, 0.9, 0.74][k % 6] for k in range(rows)):
+            self.ax.add_patch(FancyBboxPatch((x, y - (i + 1) * h - i * gap), w * f, h, ec="none", fc=color,
+                                             boxstyle=f"round,pad=0,rounding_size={h * 0.3}", zorder=z))
+        return rows * (h + gap) - gap
 
     def label(self, x, y, letter, title=None, size=8.0, color=INK):
         """Panel label '(a) Title': bold letter + bold title, top-left anchored."""
@@ -326,6 +445,18 @@ class Canvas:
                 tr = art.get_data_transform() if hasattr(art, "get_data_transform") else art.get_transform()
                 (a, b), (c, d) = inv.transform(tr.transform([(a, b), (c, d)]))
             boxes.append((a, b, c, d, k))  # an icon on a word is as bad as two words  # an icon on a word is as bad as two words
+        from matplotlib.text import Text
+        own = set(map(id, self.ax.texts))
+        for a in self.fig.axes:  # matplotlib keeps label objects for ticks outside the view; they are not drawn
+            for axis in (a.xaxis, a.yaxis):
+                lo, hi = sorted(axis.get_view_interval())
+                own |= {id(lb) for t in axis.get_major_ticks() + axis.get_minor_ticks()
+                        if not lo <= t.get_loc() <= hi for lb in (t.label1, t.label2)}
+        for tx in self.fig.findobj(Text):  # chart text (ticks, axis titles, legends) lives in other axes
+            if id(tx) in own or not tx.get_text().strip() or not tx.get_visible():
+                continue
+            (x0, y0), (x1, y1) = inv.transform(tx.get_window_extent(r).get_points())
+            tbox.append((x0, y0, x1, y1, tx.get_text().replace("\n", " ")[:28]))
         bad = [f"'{s}' is cut by the canvas edge" for x0, y0, x1, y1, s in tbox
                if x0 < -tol or y0 < -tol or x1 > self.w + tol or y1 > self.h + tol]
         for i, (a0, b0, a1, b1, s) in enumerate(boxes):
@@ -595,6 +726,16 @@ class Canvas:
         if title:
             self.text(x + w / 2, y + (h - e) / 2, title, color=c["ink"], weight="bold", z=z + 1)
 
+    def hexagon(self, x, y, w, h, r="line", title=None, z=6, lw=0.6, size=None):
+        """Interface: a flat hexagon that sits ON the boundary between two layers (CortenMM Fig. 3)."""
+        c = role(r)
+        d = min(h / 2, w / 4)
+        self.solids.append((x + d / 2, y, w - d, h, f"hexagon '{title or ''}'", None))
+        self.ax.add_patch(Polygon([(x, y + h / 2), (x + d, y + h), (x + w - d, y + h), (x + w, y + h / 2),
+                                   (x + w - d, y), (x + d, y)], fc=c["fill"], ec=c["stroke"], lw=lw, zorder=z))
+        if title:
+            self.text(x + w / 2, y + h / 2, title, size=size, color=c["ink"], z=z + 1)
+
     def diamond(self, x, y, w, h, r="amber", title=None, z=6, lw=0.7):
         """Decision / gate."""
         c = role(r)
@@ -788,14 +929,15 @@ class Canvas:
     # ---- architecture register (2026-11 study of 23 method figures; references/architecture-study-2026-11.md)
     def section(self, x, y, w, h, r="neutral", title=None, *, tab="top", letter=None, dashed=True, lw=0.75,
                 radius=2.4, size=None, fill=None, z=1, italic=False):
-        """Module region: tinted field and a dashed border in one hue, the title on a pill tab that sits ON
+        """Module region: a dashed border in one hue around a white field (the page stays the ground; pass
+        fill=ROLE[r]["fill"] to tint the field when membership would otherwise be unclear), the title on a pill tab that sits ON
         the top border (tab="top", ReSet/CoPS), a bold strip along the bottom edge (tab="bottom", HFF-Net/STDD),
         a bold-italic title in the top-left corner in the role mark (tab="corner", SemDiff/C2R/CHAL) or the old
         header band (tab="band"). Each module of the method gets its own hue, so panels, wires and the legend
         share one key. letter='a' prefixes '(a) '. Returns the free inner rect (x, y, w, h)."""
         c = role(r)
         self.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={radius}", lw=lw,
-                                         ec=c["stroke"], fc=fill or c["fill"], ls=(0, (4, 2.2)) if dashed else "-",
+                                         ec=c["stroke"], fc=fill or "white", ls=(0, (4, 2.2)) if dashed else "-",
                                          zorder=z))
         s = size or self.size + 0.6
         t = (f"({letter}) " if letter else "") + (title or "")
@@ -1345,12 +1487,13 @@ def _round_top_rect(x, y, w, h, r):
 
 
 # ------------------------------------------------------------- chart style ---
-def chart_axes(ax, grid="x", size=7.0):
-    """Editorial chart defaults: no top/right spines, light grid on the value axis only,
-    short outward ticks, muted tick labels."""
+def chart_axes(ax, grid="x", size=7.0, box=False):
+    """Chart defaults: light grid on the value axis only, short outward ticks, muted tick labels.
+    Open (left + bottom spines) by default; box=True keeps the full frame, which most ML and systems venues
+    use for line plots and which separates the panels of a tight small-multiples grid."""
     for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
-    for s in ("left", "bottom"):
+        ax.spines[s].set_visible(box)
+    for s in ("left", "bottom") + (("top", "right") if box else ()):
         ax.spines[s].set_color("#9AA0A8")
         ax.spines[s].set_linewidth(0.6)
     ax.tick_params(length=2.2, width=0.6, color="#9AA0A8", labelsize=size - 0.5, labelcolor="#4A5059", pad=1.5)
@@ -1358,6 +1501,17 @@ def chart_axes(ax, grid="x", size=7.0):
         ax.grid(axis=grid, color="#E3E6EA", lw=0.5, zorder=0)
         ax.set_axisbelow(True)
     return ax
+
+
+def curve_label(ax, xs, ys, i, text, size=6.5, color="black", boxed=True, **kw):
+    """Label a curve or boundary on the curve itself, rotated to its local slope at index i, in a small white
+    rounded box (phase boundaries, reference lines, power laws). Replaces a legend entry for a line that is
+    not a data series. Works on log axes: the rotation is taken through the axes transform."""
+    j = min(max(i, 1), len(xs) - 1)
+    ang = math.degrees(math.atan2(ys[j] - ys[j - 1], xs[j] - xs[j - 1]))
+    box = dict(boxstyle="round,pad=0.22,rounding_size=0.5", fc="white", ec=color, lw=0.5) if boxed else None
+    return ax.text(xs[i], ys[i], text, fontsize=size, color=color, rotation=ang, rotation_mode="anchor",
+                   transform_rotates_text=True, ha="center", va="center", bbox=box, zorder=6, **kw)
 
 
 def density(png):
@@ -1484,12 +1638,19 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
     import sys
     cmd, args = sys.argv[1], sys.argv[2:]
     USAGE = ("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | parity ORIGINAL NEW | "
-             "swatches PNG... OUT | caption FILE_OR_TEXT]")
-    if len(args) < {"density": 1, "compare": 3, "parity": 2, "swatches": 2, "caption": 1}.get(cmd, 0):
+             "swatches PNG... OUT | caption FILE_OR_TEXT | grey PNG OUT]")
+    if len(args) < {"density": 1, "compare": 3, "parity": 2, "swatches": 2, "caption": 1, "grey": 2}.get(cmd, 0):
         sys.exit(USAGE)
     if cmd == "density":
         for p in args:
-            print(p, "white/tint/ink %", density(p))
+            wh, ti, ink = density(p)
+            print(p, "white/tint/ink %", (wh, ti, ink))
+            if wh < 40:  # 41 measured award figures: white 41-96 %, median ~71 % (venue-study-2026-11)
+                print(f"  crowded: {wh}% white. Tinted panel bodies and frames around everything are the usual "
+                      "cause; let the page be the ground and tint only what the tint explains")
+    elif cmd == "grey":  # what a greyscale printout shows: every series must still be told apart
+        _open_rgb(args[0]).convert("L").save(args[1])
+        print(args[1])
     elif cmd == "compare":
         print(compare(*args[:3]))
     elif cmd == "caption":  # paperkit.py caption caption.txt|"text": exit 1 if it narrates production
@@ -1591,6 +1752,27 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
     except RuntimeError:
         pass
     assert note_issues("The icons were generated with Codex CLI and recoloured by the authors.")
+    g = Canvas(84, 40, family="serif", size=6.5)  # column-width small multiples with one shared legend
+    axs = g.axes_grid(16, 7, 66, 25, 2, 3, col_titles=["read", "write", "scan"], row_titles=["low", "high"],
+                      xlabel="threads", ylabel="ops / s")
+    xs_ = np.arange(1, 9)
+    for row in axs:
+        for ax in row:
+            hs = [ax.plot(xs_, xs_ ** (1 - 0.2 * k), **series_kw(k))[0] for k in range(4)]
+    g.chart_legend(hs, ["ours", "A", "B", "C"], 49, 34.5)
+    curve_label(axs[0][0], xs_, xs_.astype(float), 5, "linear", size=5.2)
+    g.box(2, 1, 8, 4, "line", "ctl", radius=0)
+    g.hexagon(70, 35, 10, 3.6, title="API", size=5.8)
+    tx = Canvas(84, 30, family="sans", size=6.8)  # annotated example, listing, callout, greeked text
+    tx.rich(3, 26, [("import pandas", "black", "normal", "memory"), (" as pd  ", "black"),
+                    ("import pylinreg", "black", "normal", "coral")], family="monospace")
+    hgt = tx.listing(3, 22, ["lock(pt)", "unmap(pt, va)", "unlock(pt)"], hi={8: "coral"}, start=7)
+    tx.callout(60, 20, "A", to=(40, 22 - hgt / 2))
+    tx.greek(50, 12, 28, rows=3)
+    assert not tx.text_overlaps(), tx.text_overlaps()
+    tx.save(os.path.join(d, "text"))
+    assert not g.text_overlaps(), g.text_overlaps()
+    g.save(os.path.join(d, "grid"))
     a = Canvas(40, 20)  # audits must not report clean on these (each was a false pass)
     a.text(20, 10, "HELLO WORLD", size=8)
     a.icon_flame(20, 10, 3); a.icon_check(8, 10, 3)

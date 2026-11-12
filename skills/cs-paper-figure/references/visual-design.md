@@ -79,9 +79,9 @@ The shape, weight, size, line spacing, and placement of each text role matter to
 | File names, literal schema/code | 7–8 pt | Compatible monospace, only where literal identity matters |
 | Equations and symbols | Optically matched | Compatible math face; do not make symbols conspicuously smaller |
 
-These are skill recommendations, not source measurements or venue rules. The actual manuscript template overrides them. Some inspected source figures have 3–6 pt labels; preserve their hierarchy while enlarging or simplifying the content.
+These sizes suit a sparse full-width figure. For a single column, a dense plate or a chart, use the measured scale in [visual-craft.md §4](visual-craft.md#4-typography), which governs where the two differ. The actual manuscript template overrides both. Some inspected source figures have 3–6 pt labels; preserve their hierarchy while enlarging or simplifying the content.
 
-Use one main family and at most one functional companion (math or monospace). Portable starting choices are Nimbus Sans/Liberation Sans/DejaVu Sans for a technical diagram, or STIXGeneral/Nimbus Roman/Latin Modern Roman for a serif mathematical figure. State any font substitution. Do not claim a proprietary face is embedded when it is unavailable.
+Use one main family and at most one functional companion (math or monospace). Page-level text takes the manuscript's body face (STIXGeneral/Times/Nimbus Roman for LaTeX papers); a diagram may use one sans family (Helvetica/Arial/Liberation Sans) throughout the paper. DejaVu Sans is a last-resort fallback: in a Times paper it reads as unedited matplotlib output ([visual-craft.md §4](visual-craft.md#4-typography)). State any font substitution. Do not claim a proprietary face is embedded when it is unavailable.
 
 - Use real bold/italic weights. Define exactly which roles receive each weight.
 - Use sentence case for descriptive text; preserve actual acronyms, symbols and filenames.
