@@ -13,6 +13,7 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | [`SKILL.md`](skills/cs-paper-figure/SKILL.md) | The workflow: brief → references → structure → visual system → reproducible source → review |
 | [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | How it should look: typography, role colours, glyph vocabulary, composition, connectors, density, charts, anti-patterns |
 | [`architecture-study-2026-11.md`](skills/cs-paper-figure/references/architecture-study-2026-11.md) | What 23 vision/multimodal method figures (Holmes, ReSet, CoPS, SemDiff, LFBNet, HFF-Net, VideoFusion, …) do well and badly, and the rules taken from them |
+| [`arebench-study-2026-11.md`](skills/cs-paper-figure/references/arebench-study-2026-11.md) | What ARE-bench Figs. 1–3 do well and badly: contrast figures, task cut strips, workspace file trees, construction pipelines, results-chart colour identity |
 | [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) plus `density`, `compare`, `parity` and `caption` checks (a redesign must not come out emptier, greyer or less illustrated than its original) |
 | [`figure-series.md`](skills/cs-paper-figure/references/figure-series.md) | Figure series for surveys and frameworks: one taxonomy palette, chapter frames, running examples, gate stacks, spectra, illustrated scenes with vector dialogue |
 | [`codex_images.py`](skills/cs-paper-figure/scripts/codex_images.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icons, scenes and vignettes generated with Codex CLI, embedded at full resolution |
@@ -49,20 +50,11 @@ Each redesign keeps the paper's components, values and notation; only the drawin
 
 ### A figure series: *Proactive AI for Superintelligent Agents*
 
-Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-research2023-media/pubtools/1048480.pdf)) rebuilt as one series. The originals are illustrated figures, and their pictures, solid headers and large type are what make them work, so the redesigns keep all of that and fix the faults: each capacity's colour now stays the same in every figure (the paper paints Agenda pink, purple and blue), text baked into the illustrations becomes editable vector text, and overlapping eras, crossings and uneven type are cleaned up. The 41 illustrations come from the skill's Codex helper as one cast; every redesign passes `paperkit.py parity` (not emptier, greyer or less illustrated than its original).
+Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-research2023-media/pubtools/1048480.pdf)) rebuilt as one series; Fig. 1 is shown here, the other five are in the PDFs and source linked below. The originals are illustrated figures, and their pictures, solid headers and large type are what make them work, so the redesigns keep all of that and fix the faults: each capacity's colour now stays the same in every figure (the paper paints Agenda pink, purple and blue), text baked into the illustrations becomes editable vector text, and overlapping eras, crossings and uneven type are cleaned up. The 41 illustrations come from the skill's Codex helper as one cast; every redesign passes `paperkit.py parity` (not emptier, greyer or less illustrated than its original).
 
 | | Original | Redesign |
 | --- | --- | --- |
 | **Fig. 1**, proactive vs. reactive | <img src="gallery/proactive/original/proactive_original_fig1.png" width="400"> | <img src="gallery/proactive/proactive_overview.png" width="400"> |
-| **Fig. 3**, capabilities to earned autonomy | <img src="gallery/proactive/original/proactive_original_fig3.png" width="400"> | <img src="gallery/proactive/proactive_capabilities.png" width="400"> |
-| **Fig. 4**, the reactivity–proactivity spectrum | <img src="gallery/proactive/original/proactive_original_fig4.png" width="400"> | <img src="gallery/proactive/proactive_spectrum.png" width="400"> |
-| **Fig. 5**, historical foundations | <img src="gallery/proactive/original/proactive_original_fig5.png" width="400"> | <img src="gallery/proactive/proactive_history.png" width="400"> |
-| **Fig. 6**, the six capacities | <img src="gallery/proactive/original/proactive_original_fig6.png" width="400"> | <img src="gallery/proactive/proactive_cycle.png" width="400"> |
-| **Fig. 10**, arbitration | <img src="gallery/proactive/original/proactive_original_fig10.png" width="400"> | <img src="gallery/proactive/proactive_arbitration.png" width="400"> |
-
-- Fig. 4: the dialogue, work plan and progress update were pixels inside the paintings; here they are vector bubbles and cards over text-free scenes.
-- Fig. 5: illustrated era cards stay, but sit around a proportional time axis, so the two 2000s–2010s traditions read as overlapping spans; each card's chip names the capacity it prepared.
-- Fig. 6 and Fig. 10: one hue per capacity instead of a new colour per box; the household example becomes vector chips inside the robot's thought cloud, and each failed test's fallback sits beside it, so no pass line crosses a failure.
 
 [PDFs](gallery/proactive/) · [source](skills/cs-paper-figure/scripts/examples/proactive/) · [what the studies found](skills/cs-paper-figure/references/figure-series.md)
 

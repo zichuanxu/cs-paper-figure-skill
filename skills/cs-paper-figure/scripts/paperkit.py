@@ -938,6 +938,48 @@ class Canvas:
             self.ax.add_patch(Rectangle((x0 + gap / 2, y), x1 - x0 - gap, h, fc=c["soft"], ec="none", zorder=z))
             self.text((x0 + x1) / 2, y + h / 2, lab, size=size or self.size, color=c["ink"], weight="bold", z=z + 1)
 
+    def turn_strip(self, x, y, w, n, cut, h=2.2, r="amber", past="memory", gap=0.18, z=6):
+        """Session progress as n turn cells (ARE-bench Fig. 2): turns before the cut in the `past` soft tint,
+        the cut turn solid in `r`, later turns grey. Shows where a task is cut and how much history precedes it."""
+        cw = (w - gap * (n - 1)) / n
+        for i in range(n):
+            t = i + 1
+            fc = role(past)["soft"] if t < cut else role(r)["mark"] if t == cut else "#E4E4E4"
+            ec = role(past)["stroke"] if t < cut else role(r)["stroke"] if t == cut else "#C8C8C8"
+            self.ax.add_patch(Rectangle((x + i * (cw + gap), y), cw, h, fc=fc, ec=ec, lw=0.25, zorder=z))
+
+    def filetree(self, x, y, w, rows, *, title=None, row_h=3.4, size=None, indent=3.0, r="neutral", z=8):
+        """Workspace listing as a data object (ARE-bench Fig. 2): a window with three dots and a mono title,
+        rows = [(depth, name, status, role)] with status None or a short italic tag ("current", "stale").
+        A name ending in "/" is a folder. Each file gets a role-coloured tick so status reads before the tag.
+        (x, y) is the top-left; returns the height."""
+        size = size or self.size - 0.5
+        bar = row_h + 0.8 if title else 0
+        H = bar + len(rows) * row_h + 1.6
+        c = role(r)
+        self.box(x, y - H, w, H, fill="white", stroke=c["stroke"], radius=1.0, z=z, container=True)
+        if title:
+            self.ax.add_patch(Rectangle((x + 0.3, y - bar), w - 0.6, bar - 0.3, fc=c["soft"], ec="none", zorder=z + 0.5))
+            for k, col in enumerate(("#E0645A", "#E8B23A", "#5DB86A")):
+                self.ax.add_patch(Circle((x + 2.2 + k * 1.9, y - bar / 2), 0.6, fc=col, ec="none", zorder=z + 1))
+            self.text(x + 8.4, y - bar / 2, title, size=size, ha="left", weight="bold", color=c["ink"],
+                      family="monospace", z=z + 1)
+        for i, (depth, name, status, rr) in enumerate(rows):
+            cy = y - bar - 0.8 - (i + 0.5) * row_h
+            tx = x + 1.8 + depth * indent
+            rc = role(rr)
+            folder = name.endswith("/")
+            if folder:
+                self.ax.add_patch(Rectangle((tx, cy - 0.9), 2.4, 1.7, fc="#F2B33D", ec="none", zorder=z + 1))
+            else:
+                self.ax.add_patch(Rectangle((tx + 0.7, cy - 1.0), 0.6, 2.0, fc=rc["mark"], ec="none", zorder=z + 1))
+            self.text(tx + 3.0, cy, name, size=size, ha="left", family="monospace",
+                      weight="bold" if folder or status == "current" else "normal", z=z + 1)
+            if status:
+                self.text(x + w - 1.5, cy, status, size=size, ha="right", style="italic", weight="bold",
+                          color=rc["ink"], z=z + 1)
+        return H
+
     def legend(self, x, y, w, items, *, size=None, frame=True, gap=3.2, glyph=4.2, row_h=None, r="neutral",
                dashed=True, pad=1.6, z=10):
         """Glyph key in a dashed strip, laid out like words: items = [(kind, arg, label)], kind in
@@ -1359,6 +1401,13 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
                           ("flame", None, "Trainable"), ("dash", None, "Train only"), ("cuboid", "blue", "Feature"),
                           ("abbr", "FFT2D", "2-D Fourier transform")])
     sv.save(os.path.join(d, "arch"))
+    ws = Canvas(80, 34)  # workspace-state primitives
+    ws.turn_strip(4, 29, 72, 42, 31)
+    ws.filetree(4, 26, 72, [(0, "artifacts/", None, "neutral"), (1, "plan_v4.md", "superseded", "amber"),
+                            (1, "plan_v5.md", "current", "memory"), (1, "section3_final.md", "stale", "coral")],
+                title="/workspace @ T31")
+    assert not ws.text_overlaps(), ws.text_overlaps()
+    ws.save(os.path.join(d, "ws"))
     from PIL import Image, ImageDraw
     src = Image.new("RGB", (512, 512), "white")
     ImageDraw.Draw(src).ellipse((60, 60, 452, 452), fill="#5A8BCB", outline="#333333", width=12)

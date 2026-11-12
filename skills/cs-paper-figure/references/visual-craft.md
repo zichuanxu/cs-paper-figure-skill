@@ -220,6 +220,34 @@ architecture figure, start from this register:
 Keep this skill's discipline on top: text ≥ 5.8 pt (they often fall to 4–5 pt), one meaning per hue
 (VideoFusion spends six hues on six block types), no wire through text, one icon family (no emoji).
 
+## 13. Contrast, state and construction figures
+
+Benchmark and dataset papers explain *what is different about the tasks*, not how a model computes.
+Learned from ARE-bench Figs. 1–3 ([arebench-study-2026-11.md](arebench-study-2026-11.md)).
+
+- **Contrast figure.** Baseline column narrow (~⅓), ours wide (~⅔). Shared rows named after the
+  claim's dimensions, set once as rotated labels in an I-bar bracket (`cv.brace` + rotated text),
+  separated by a dashed rule spanning both columns. Same objects on both sides; the difference is in
+  their arrangement. End each column on a verdict pill (`icon_cross` red / `icon_check` green).
+- **Non-linear process.** Keep stages in canonical order; draw jumps as arcs above (back) and below
+  (skip) the row, each with a `badge()` numeral keyed to a request list under the row.
+- **Cut point.** `cv.turn_strip(x, y, w, n, cut)` shows history, the cut turn and the unseen future
+  as cells; label it once ("T1–T30 → Background, T31 the task").
+- **Real artifacts as data objects.** Files, commands and user requests go in monospace inside window
+  chrome (`cv.filetree(...)`); state per row = coloured tick + right-aligned italic tag (current,
+  stale, superseded, paused). Mono = data from the world; the figure's own words stay in the text face.
+- **One accent = the task / ours.** The highlight region (dashed), the task bar and its star badge
+  share one hue that no stage or category uses.
+- **Visible vs hidden.** Mark material withheld from the agent with `icon_lock`, identically in every
+  figure of the paper.
+- **Step cards.** "3 Verify & attribute ··· *Problem & cause*": bold numbered step left, italic
+  output type right in role ink; rules (S1–S4) printed in the card so the text can cite them.
+- **Loops as rails.** Revise / feedback paths run around the outside of a column, labelled on the
+  line; never through the step stack.
+- **Results figure.** One model = one colour in every panel (no sequential ramp on the bars and
+  categorical colours on the radar). Declare a truncated radial or value axis in the caption. A radar
+  with more than four polygons becomes small multiples or a stage × model dot plot.
+
 ## 11. Anti-patterns checklist
 
 - [ ] Equal-weight boxes, no hero
@@ -237,3 +265,8 @@ Keep this skill's discipline on top: text ≥ 5.8 pt (they often fall to 4–5 p
 - [ ] Tensors and layer runs drawn as flat labelled rectangles instead of cuboids/slabs (§12)
 - [ ] A detail panel with no data object (map, numeric matrix, mini plot, tokens, thumbnail)
 - [ ] Circled operators, snowflakes or abbreviations used without a key strip
+- [ ] A contrast figure whose two sides use different objects, or with no verdict at the foot of each side (§13)
+- [ ] The "task / ours" accent hue reused by a stage or category; one model in two colours across panels
+- [ ] A task cut, file state or hidden input explained only in prose when a strip, tag or lock would show it
+- [ ] A radar with more than four overlapping polygons, or a truncated radial axis not stated in the caption
+- [ ] Spelling errors in figure text (proof-read every label; verdict pills are read most)
