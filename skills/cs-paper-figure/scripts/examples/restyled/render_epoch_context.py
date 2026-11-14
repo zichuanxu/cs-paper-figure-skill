@@ -232,7 +232,7 @@ def draw(out, analysis=ANALYSIS, fixture=FIXTURE):
               scope_w + run_w(diff(p0["patch"]["scope"], p1["patch"]["scope"]), cw))
     cx0 = W - M - INSET - c_w
     G2 = (cx0 - a_end - b_w) / 2                                          # gutter between stages (content edges)
-    assert G2 >= 4.0, G2
+    assert G2 >= 3.5, G2                                                  # 3-5 mm between framed groups (visual-craft section 6)
     bx0 = a_end + G2
     X_TOK, X_VAL, X_STK = bx0 + fld_w + 1.6, cx0 + chip_w + 1.2, cx0 + scope_w
     stages = [(X_CASE, a_end), (bx0, bx0 + b_w), (cx0, cx0 + c_w)]        # rules run flush with the content

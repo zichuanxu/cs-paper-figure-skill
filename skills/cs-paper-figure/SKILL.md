@@ -30,9 +30,19 @@ rules with measured values.
 10. **Type matches the page**, at sizes that fit the placement: labels at 5.8 pt or above, nothing below
     5 pt.
 
+**The failure to expect.** A figure can obey every budget above and still look unfinished: a motivating
+example set as a table of sentences with score bars, or a method overview cut into lettered panels that
+share nothing. Both come from choosing style values before deciding what the picture is, and from never
+looking at a finished figure of the same kind. So the workflow below has three steps that are not optional:
+write the picture in one sentence (step 2), open a model figure before drawing (step 2), and revise at
+least once after a cold read of the render beside that model (step 6).
+
 ## What to read
 
-**Always, before drawing:** [visual-craft.md](references/visual-craft.md), the rulebook by design
+**Always, before drawing:** [model-figures.md](references/model-figures.md): the seven things every strong
+figure has, the two ways a compliant figure fails, and one rendered model per figure family in
+`assets/models/`. Open the model's PNG, not only its description. Then
+[visual-craft.md](references/visual-craft.md), the rulebook by design
 dimension. Read §1–§2 (message, register) first and pick the register; then read the one section of
 [registers.md](references/registers.md) for that register and family; then the rest of visual-craft
 (colour, typography, layout, white space, shapes, icons, arrows, text, charts, captions, redesign
@@ -96,18 +106,37 @@ Capture, compactly or in [figure-brief.yaml](assets/figure-brief.yaml):
 - For data: comparison, units, sampling unit, aggregation, what intervals mean.
 - For diagrams: verified entities, operations, state, boundaries and directed edges.
 - **Venue, template and placement: one column (76–85 mm) or full width (140–178 mm), and the body face.**
+  "Single-column template" and "one-column figure" are different things. A single-column template (NeurIPS,
+  ICLR: text 140 mm wide) has only full-width figures, and a small one is centred at 76–100 mm. A
+  two-column template (ICML 2 × 83 mm in 171; CVPR 2 × 83 in 175; ACL 2 × 77 in 160; ACM 2 × 85 in 178) has
+  column figures and full-width ones.
 - Unknown facts and necessary qualifications.
 
 Do not add a module, edge, update or memory write the system does not have. Do not invent data or
 uncertainty to complete a layout; show a pending state instead. Label invented measurements
 **SYNTHETIC DATA** or **ILLUSTRATIVE DATA** inside the export and in the caption. A method diagram is
-schematic by nature: say so in the caption, not as a watermark in the art.
+schematic by nature: say so in the caption, not as a watermark in the art. When the paper supplies no
+running example, write a small plausible one (a turn, a query, an answer) and carry it through every stage:
+sample text in a schematic is plainly an example and needs no disclaimer. It must not look like a result.
 
-### 2. Decide the message, the hero and the register
+### 2. Decide the message, the picture, the hero and the register
 
-Write the five-second message. Name the hero and how it will differ from everything else. Pick the
-register (visual-craft §2) and read its section in [registers.md](references/registers.md). For a redesign,
-name the source's register and list its strengths before its defects.
+Write the five-second message. Then write **the picture** in one sentence, before any style value: which
+objects are drawn, what joins them, and what visibly differs. For example: "the task stream once in the
+middle, the baseline above and ours below on the same columns, the revised rule struck out and rewritten on
+its card, a cross and a tick at the two ends." Check the sentence against two tests and rewrite it until it
+passes both ([model-figures.md](references/model-figures.md)):
+
+- **Not a table.** If LaTeX could set the figure as a `tabular` without losing anything, the claim is
+  written, not drawn. Draw the objects and the relation the claim is about.
+- **Not islands.** If the panels share no object and no line, there is no figure, only thumbnails. Find the
+  spine, the path of one concrete item from input to outcome, and hang everything else on it as a zoom, a
+  ghosted lane or an inset attached to the object it describes.
+
+Name the hero and how it will differ from everything else. Pick the register (visual-craft §2) and read its
+section in [registers.md](references/registers.md). Open the model figure for the family in
+`assets/models/` and note three devices you will take from it. For a redesign, name the source's register
+and list its strengths before its defects.
 
 ### 3. Choose the structure
 
@@ -125,6 +154,12 @@ name the source's register and list its strengths before its defects.
 | Compare measured conditions | Claim chart (one comparison) or field chart (many systems × conditions) |
 | Inspect scaling or cost | Small-multiples grid with shared labels; quality-cost trade-off with conditions stated |
 | Diagnose a component | Paired deltas, ablation panels, distributions, shared-scale heatmaps |
+
+**Earn the width.** A full-width figure (140–178 mm) needs content for it: a spine with five or more drawn
+objects on it, a hero that takes 40 % of the area or more, or a long example text. A figure with about a
+dozen small objects is a column figure (76–85 mm) even in a single-column template; drawn across the page
+it is mostly blank and reads as unfinished. Decide the width from the content, then make the objects fill
+it: `paperkit.py fill` fails a full-width diagram that is more than half blank.
 
 For a substantial new figure, sketch two materially different compositions and keep the one with the
 clearer reading order and fewer arrows. Give the most area to the operation that carries the claim. Use a
@@ -173,18 +208,24 @@ Primitives by dimension (signatures are in `scripts/paperkit.py`; usage in visua
 - **Text from the world:** `rich` (coloured terms, marked spans), `para` (the same, word-wrapped to a
   width), `listing` (code with line numbers and highlight bands), `greek` (grey bars for text the reader
   does not need).
-- **Icons and callouts:** `icon_*`, `badge`, `callout`, `image` (rasters embedded unchanged at 600 dpi).
+- **Icons and callouts:** `icon_*` (`icon_user` and `icon_robot` for who speaks and who acts), `badge`,
+  `callout`, `image` (rasters embedded unchanged at 600 dpi).
 - **Arrows:** `arrow` (`dashed=`, `dotted=`, `both=`), `line`, `zoom`, `block_arrow`, `brace`, `op`.
+- **Relations:** `thread` (a curve with a dot at each end, for "this matches or implies that"); its ends
+  come from `cv.spans`, where `rich` and `para` record every marked span as (text, x0, x1, y).
 - **Charts:** `axes`, `axes_grid`, `chart_legend`, `series_kw` / `SERIES_STYLE`, `curve_label`, `radar`,
   `spectrum`.
 - **Series and keys:** `series` (one palette for a paper), `legend`, `phase_bar`, `chapter`.
-- **Audits:** `overlaps`, `text_overlaps`, `wire_crossings`; command line `counts`, `density`, `grey`,
+- **Audits:** `overlaps`, `text_overlaps`, `wire_crossings`; command line `fill`, `counts`, `density`, `grey`,
   `compare`, `parity`, `swatches`, `caption`.
 
 End every script with `assert not cv.overlaps() and not cv.text_overlaps() and not cv.wire_crossings()`.
 Lay chips out with `cv.flow_chips`, never hand-picked x positions. Put the type scale and the stroke
 weights in constants at the top of the script and pass them to every call (`size=`, `lw=`): the defaults
 of several primitives differ, and a figure drawn on defaults ends up with eight sizes and eight weights.
+Some values have no argument and must be overridden on the returned artists or drawn by hand when they
+break a count: `bubble` strokes at 0.55 pt, `zoom` and `rule` at 0.5 pt, `box(sub=)` sets its sub-line at
+size − 0.3, `chip` at size − 0.8, and `head(note=)` at size − 1.6 unless `note_size=` is passed.
 
 Worked examples to adapt (each is `python scripts/examples/<dir>/<script>.py --out figures/<dir>`):
 
@@ -193,6 +234,7 @@ Worked examples to adapt (each is `python scripts/examples/<dir>/<script>.py --o
 | Line art, one column: sequence chart of a protocol | `ray/render_fig7.py` |
 | Idea schematic, one column | `lora/render_fig1.py` (one drawing, two states), `memt/render_idea_column.py` |
 | Example-led text: four methods on one example | `react/render_fig1.py` |
+| Example-led text: a motivating example as a scene (bubble, cards, threads) | `scene/render_retrieval_scene.py` |
 | Field chart, one column | `toolspace/render_table1_column.py` |
 | Claim chart; four-panel results figure | `memt/render_fig3.py`; `restyled/render_experiment.py` |
 | Other example-led and line-art primitives (`listing`, `callout`, `greek`, `axes_grid`) | the `tx` and `g` blocks of the smoke test at the end of `scripts/paperkit.py` |
@@ -211,9 +253,33 @@ style spec, no text in the pixels, a label beside each, a vector fallback in the
 `cv.image`. Use real photos and screenshots for data, inputs and environments. Run
 `python scripts/codex_images.py check` first and follow [image-generation.md](references/image-generation.md).
 
-### 6. Review
+### 6. Review and revise
 
-Open the exported PNG at full resolution, in crops, not only as a downscaled whole.
+The first render is a draft. No figure is delivered without at least one revision made after looking at the
+PNG. Open the exported PNG at full resolution, in crops, not only as a downscaled whole. Judge the PNG or
+the PDF; the SVG keeps its text editable, so a viewer without the figure's font sets it differently.
+
+- **Standard.** `python scripts/paperkit.py compare assets/models/<model>.png fig.png side.png`, open
+  `side.png`, and say which of the two looks more finished, which uses its area better, and which a reader
+  would remember. Where the model wins, name the region of yours that loses and fix it.
+- **Fill.** `python scripts/paperkit.py fill fig.png <width in mm>` (add `chart` for a figure of plots). It
+  exits 1 when the placement is mostly blank. The fix is larger objects, a spine, or a narrower figure;
+  never decoration.
+- **Cold read.** Whoever drew a figure cannot see it fresh. If the harness can start a fresh agent or a
+  second model, give it only the PNG, the caption and the model's PNG (not the brief, not the script, not
+  this conversation) and these questions; otherwise answer them from the PNG at print size before
+  rereading the brief. One fresh read is required, on the first complete draft; later rounds may be your
+  own look at the regions it named. A 1,600-pixel-wide copy is enough for the reader.
+  1. What is the one message? It must match the brief's without help from the caption.
+  2. Where does the eye land first? It must be the hero.
+  3. What is drawn as an object, and what is only written? Every concept in the message must be drawn.
+  4. Could LaTeX set this as a table? Could any part of our method be deleted without the rest noticing?
+     (Numbers can always go in a table. The answer is yes only if nothing else would be lost: no link,
+     position or drawn object that carries the reason. A prior-work lane is tied in by starting from the
+     same input object as ours.)
+  5. Which three regions look weakest (empty, cramped, pale, misaligned, wordy), and what fixes each?
+  6. Would this figure look at home beside the model figure in a best-paper talk?
+  A "no" or a wrong answer on 1–4 or 6 sends the figure back to step 2 or 3, not to a restyle.
 
 - **Science.** Trace every value and edge to evidence. Check units, denominators, intervals, pairing,
   omitted conditions and caption scope.
@@ -229,14 +295,17 @@ Open the exported PNG at full resolution, in crops, not only as a downscaled who
 - **Artifact.** `python scripts/check_figure.py fig.pdf --expected-width-mm 84 --min-font-pt 5` for size
   and fonts; SVG text is editable; the figure, its gap and its caption fit the text block together.
 
-Fix the most consequential defect and look again. Stop when the content, the brief and the checks pass.
+Fix the most consequential defect, render and look again. Stop when the cold read finds nothing that
+changes what a reader understands or how finished the figure looks, and the checks pass; or after four
+renders, and then say what remains.
 
 ### 7. Deliver
 
 Vector PDF, editable SVG and PNG preview; the script and its inputs; a caption that opens with the claim
 and defines every encoding the art does not label (visual-craft §12; `paperkit.py caption` exits 0); alt
 text; and the design decisions in a few lines: message and hero, register, palette roles, type scale,
-where the white space goes, arrow styles, remaining limits. Confirm every delivered file exists and opens.
+where the white space goes, arrow styles, the model it was compared with, what the cold read found and what
+changed because of it, remaining limits. Confirm every delivered file exists and opens.
 
 For a critique, lead with the defects that change what a reader understands, point to the region, and
 separate what was inspected from what is inferred.
@@ -249,6 +318,9 @@ separate what was inspected from what is inferred.
 - Labels are legible at final size (labels and legends ≥ 5.8 pt, nothing under 5 pt); white space is
   grouped; no outer frame.
 - Every colour, line style, hatch, icon and numeral is defined in the figure or its caption.
+- The picture sentence passes the table test and the islands test; every concept in the message is drawn.
+- The render has been revised at least once after a cold read, has been compared with a model figure, and
+  passes `paperkit.py fill`.
 - The export has been opened and inspected; the audits pass; unavailable checks are disclosed.
 - The figure regenerates from preserved inputs and editable source.
 

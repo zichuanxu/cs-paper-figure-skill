@@ -11,13 +11,14 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | Part | Purpose |
 | --- | --- |
 | [`SKILL.md`](skills/cs-paper-figure/SKILL.md) | Ten design principles and the workflow: brief → message, hero and register → structure → visual system → reproducible source → review |
+| [`model-figures.md`](skills/cs-paper-figure/references/model-figures.md) + [`assets/models/`](skills/cs-paper-figure/assets/models/) | What to look at before drawing: the seven things every strong figure has that a rule-abiding plain one lacks, the two ways a figure passes every check and still fails (the typeset table, the islands), and a rendered model figure for each of 16 families |
 | [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | The rulebook by design dimension, with measured values: message and hero, register, colour, typography, layout, white space, shapes, icons, arrows, text, charts, captions, redesign protocol, checklist |
 | [`registers.md`](skills/cs-paper-figure/references/registers.md) | Rules for one kind of figure at a time: line art (systems, PL, theory), idea schematics, example-led text and interface figures, image-led teasers and grids, plates, benchmark contrast figures, showcase teasers |
 | [`venue-study-2026-11.md`](skills/cs-paper-figure/references/venue-study-2026-11.md) | The evidence: about 90 figures from 29 award papers at 17 venues, measured; what held in every venue family, which earlier rules of this skill it overturned, and model figures per family |
 | [`architecture-study-2026-11.md`](skills/cs-paper-figure/references/architecture-study-2026-11.md) | What 23 vision/multimodal method figures (Holmes, ReSet, CoPS, SemDiff, LFBNet, HFF-Net, VideoFusion, …) do well and badly, and the rules taken from them |
 | [`arebench-study-2026-11.md`](skills/cs-paper-figure/references/arebench-study-2026-11.md) | What ARE-bench Figs. 1–3 do well and badly: contrast figures, task cut strips, workspace file trees, construction pipelines, results-chart colour identity |
 | [`toolspace-study-2026-11.md`](skills/cs-paper-figure/references/toolspace-study-2026-11.md) | What ToolSpace Fig. 1 does well (isometric plates, logos as identity marks, radar envelopes) and how a tidier redesign lost it: the "strengths first" rule for redesigns |
-| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) column-width charts (`axes_grid`, `chart_legend`, greyscale-safe `SERIES_STYLE`, `curve_label`), marked spans and wrapped example text (`rich`, `para`), code listings and callouts, plain panel heads, plus layout audits and `counts`, `density`, `grey`, `compare`, `parity` and `caption` checks |
+| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) column-width charts (`axes_grid`, `chart_legend`, greyscale-safe `SERIES_STYLE`, `curve_label`), marked spans and wrapped example text (`rich`, `para`), code listings and callouts, plain panel heads, relation threads between marked spans (`thread`, `spans`), user and agent glyphs, plus layout audits and `fill`, `counts`, `density`, `grey`, `compare`, `parity` and `caption` checks |
 | [`figure-series.md`](skills/cs-paper-figure/references/figure-series.md) | Figure series for surveys and frameworks: one taxonomy palette, chapter frames, running examples, gate stacks, spectra, illustrated scenes with vector dialogue |
 | [`codex_images.py`](skills/cs-paper-figure/scripts/codex_images.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icons, scenes and vignettes generated with Codex CLI, embedded at full resolution |
 | `scripts/examples/`, `references/` | The gallery's render scripts; a 120-paper figure corpus, per-lab studies and review checklists |
@@ -172,6 +173,14 @@ Most figures in a two-column venue are 84 mm wide, and a column figure is its ow
 
 [PDFs](gallery/memt/) · sources: [schematic](skills/cs-paper-figure/scripts/examples/memt/render_idea_column.py), [chart](skills/cs-paper-figure/scripts/examples/toolspace/render_table1_column.py)
 
+### A motivating example as a scene, not a table
+
+<img src="gallery/scene/retrieval_scene.png" width="640">
+
+A motivating example is the figure most often drawn as a table: sentences in rows, a status column, score bars. This one (illustrative, written for the skill) draws what a table cannot. The user asks the question in a bubble, the passages are cards on one tray, and a thread runs from the marked words in the question to the card each retriever ranks first, grey for the keyword baseline and blue for ours, with the relation named on the thread. The threads start from span positions the kit records, so they sit on the words in the PNG, PDF and SVG alike.
+
+[PDF](gallery/scene/retrieval_scene.pdf) · [source](skills/cs-paper-figure/scripts/examples/scene/render_retrieval_scene.py)
+
 ### Five more examples
 
 Illustrative fixtures or synthetic data, not real benchmark results.
@@ -226,6 +235,7 @@ cd skills/cs-paper-figure
 python scripts/examples/transformer/render_fig1.py --out out
 python scripts/examples/ray/render_fig7.py --out out
 python scripts/paperkit.py counts out/ray_fig7_example.pdf
+python scripts/paperkit.py fill out/transformer_fig1.png 178     # exits 1 if the placement is mostly blank
 python scripts/paperkit.py compare original.png out/new.png side_by_side.png
 ```
 
@@ -250,6 +260,8 @@ The ten principles that held in every strong figure studied; `visual-craft.md` g
 8. Draw the noun and put labels on the thing; say shared things once.
 9. Define every encoding beside a sample of itself, in a key or the caption.
 10. Type matches the page, at sizes that fit the placement, never below 5 pt.
+
+These are ceilings: they stop a figure from being loud, and a figure can obey all ten and still look unfinished. So the workflow has three steps that are not optional. Before any style choice the agent writes the picture in one sentence (which objects are drawn, what joins them, what differs) and rejects it if it is a table or a set of unconnected panels. It opens a rendered model figure of the same family before drawing. And it revises at least once after a cold read of its own render beside that model, with `paperkit.py fill` failing a full-width diagram that is more than half blank.
 
 Every number comes from the inputs and is asserted in code; captions say what is shown and how to read it (`paperkit.py caption` checks).
 

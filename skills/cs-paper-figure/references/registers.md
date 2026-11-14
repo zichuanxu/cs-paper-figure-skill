@@ -74,7 +74,8 @@ Families:
 
 The figure that explains an idea before the paper proves it: Figure 1 of an analysis paper, the intuition
 behind a theorem, a failure mode. Very few objects, large type (8–11 pt at full width, 6.2–8 pt in a
-column), 85–90 % white.
+column), 85–90 % white. This is a column register: with about ten objects, draw it at 76–85 mm. It earns
+the full width only with its measurement beside it or when the drawing is repeated per condition.
 
 - **Seven things, not seventy.** Aim for the economy of 2503.14858 Fig. 2: seven bars, three words, two
   multipliers. Label things in place; a key row of up to three samples is fine, a boxed legend means there
@@ -121,6 +122,36 @@ and mark it. Rules for marking are in visual-craft §10.
 - **Example × stage grid.** Rows are two examples from different domains, columns are stages, column
   headers are 8–9 pt bold grey, row labels are grey pills at the left, a hairline between rows, and no
   arrows at all (HALoGEN 1). Each cell shows the same text with one more layer of marking.
+- **Motivating example: draw the scene, not the table.** A figure that shows one input, a few stored or
+  candidate items and what two systems do with them is a scene with actors. Rows of sentences with a status
+  column and score bars is a table and should be typeset as one.
+  - The input is said by someone: a speech bubble with the speaker's glyph (`cv.bubble`, `cv.icon_user`).
+  - Example text at full width is 7–8 pt; in a column, 6.7–7.5 pt.
+  - The items are objects in a place: cards in a store, documents in an index, turns in a thread, each a
+    white tile on one pale tray, the same size.
+  - **The relation the claim is about is a drawn link.** Mark the span in the input and the span in the
+    item with the same tint, and join them with a thread (`cv.thread`, ends taken from `cv.spans`), with
+    the relation named on it ("shares words", "contradicts", "answers it"). The baseline's thread and
+    spans are grey; ours take the figure's one hue, so the eye lands on what ours found. The two threads
+    landing on different cards is the figure.
+  - **Draw the cards once**, side by side under the input, with both systems' marks on the same set. Two
+    copies of the list, one per system, is the table again. A thread arrives vertically, so each card needs
+    clear space above it; order the cards by where their spans sit in the input so the threads do not
+    cross (reordering unordered items is fine; say so if the paper numbers them), and start each card's
+    text with its marked span where the wording allows.
+  - **The system's verdict and the item's status are different marks.** The system's choice is a ring in
+    its hue and a name tab on the card's top border with the tick or cross inside ("Ours: rank 1"). What is
+    true of the item itself ("no longer true", "answers the question") is a tag on its bottom border, the
+    one that matters filled dark. Scores are small bars or numbers inside the cards, secondary to the marks.
+  - The hero is the item ours finds: the only card with the hue.
+  - A control case (a look-alike input that should change nothing) repeats one card beside its own bubble,
+    under the main scene, joined by a dashed line where the thread would be.
+  - Width: three cards side by side need 140 mm; in a column, two cards, or three stacked with the threads
+    run down a side margin. Mark spans only where the paper says why a system ranks an item; a span that is
+    your reading of the example is said to be so in the caption.
+  - `cv.bubble` takes plain text: for marked text draw it empty (`text=""`, `w=`, `h=`) and lay `rich` or
+    `para` over it. Worked example: `scripts/examples/scene/render_retrieval_scene.py`; model
+    `assets/models/example_led_scene.png`.
 - **Voices.** Prompt in the body face, model output in monospace, what a tool or the environment returned
   in the body face in grey, a human turn in a speech bubble with a tail. Box a model output only when
   several outputs must be told apart inside one cell; otherwise a plain head with a hairline under it
@@ -221,11 +252,23 @@ families, drawn tensors and maps, section frames. From a study of 23 vision and 
 ([architecture-study-2026-11.md](architecture-study-2026-11.md)) and the lab figures in
 [craft-study-2026-10.md](craft-study-2026-10.md), corrected by the venue study: keep the plate light.
 
-- **Layout.** Overview pipeline across the top (55–65 % of the height), a row of two to four equal-height
+- **Spine first.** Choose one concrete item (a turn, a request, a file, a token) and draw its whole path
+  through the system as one connected line of objects from the left or top edge to the outcome. Everything
+  else attaches to that line. A write path, a store and a read path are one spine with the store in the
+  middle as the hero, not three panels. A decision rule, a cost model or a schedule opens by zoom rays from
+  the object that applies it. Prior work is a short ghosted or neutral lane beside the part of the spine it
+  replaces, ending on a verdict, never a box in a corner.
+- **Floors.** The store, state or model that the paper is about is the largest object (with its zoom, about
+  40 % of the area). Stages are cards with a role fill, not bare words with a subtitle. A full-width
+  plate has at least five drawn objects on its spine and passes `paperkit.py fill`. Models, in
+  `assets/models/`: `plate_agent_system.png`, `plate_agent_loop.png`, `plate_architecture.png`.
+- **Layout.** Overview pipeline across the top (45–65 % of the height), a row of two to four equal-height
   detail panels opening the new modules, a glyph key strip along the bottom. Zoom rays or a shared hue link
   each detail panel to its block.
-- **The page stays white.** Tint a module's field only when membership would otherwise be unclear, at the
-  role `fill`. Group by white space and fill-on-fill first; frame second. Keep white at or above 40 %.
+- **The page stays white between modules, and the modules are filled.** Each module's card or tray takes
+  its role `fill`; the gutters and the page stay white. Group by white space and fill-on-fill first; frame
+  second. Keep white between 40 % and 75 %: below is crowded, above is a line drawing that has not become a
+  plate.
 - **Heads on the page, trays under them.** For a row of steps or stages: a plain head on the white page
   (number, bold name, the count), then one pale borderless tray per step, with the things the step handles
   as white borderless tiles on the tray. Heads inside the trays push white under 40 %; no trays at all

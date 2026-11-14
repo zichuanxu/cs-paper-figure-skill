@@ -64,8 +64,8 @@ placement:
   height_mm: 60
   usable_page_height_mm: null
   caption_height_mm: null
-  artwork_caption_gap_mm: 3
-  smallest_font_pt: 7
+  artwork_caption_gap_mm: 4
+  smallest_font_pt: 5.8
   outputs:
   - pdf
   - svg

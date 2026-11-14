@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from matplotlib import colors as mcolors  # noqa: E402
 from matplotlib.patches import (Arc, Circle, Ellipse, FancyArrowPatch,  # noqa: E402
-                                FancyBboxPatch, PathPatch, Polygon, Rectangle)
+                                FancyBboxPatch, PathPatch, Polygon, Rectangle, Wedge)
 from matplotlib.path import Path  # noqa: E402
 
 MM = 1 / 25.4
@@ -176,7 +176,9 @@ class Canvas:
         self.solids = []  # (x, y, w, h, kind) of every opaque object, for wire_crossings()
         self.wires = []   # polyline points of every arrow / line, for wire_crossings()
         self.icons = []   # (x0, y0, x1, y1, kind) of every vector icon, for text_overlaps()
+        self.spans = []   # (text, x0, x1, y) of every marked span set by rich / para, for thread()
         self._r = None
+        self._rm = None  # export-resolution renderer, for text_width
         _add = self.ax.add_patch
 
         def add_patch(pp):  # bind the first patch drawn after a solid / wire is recorded, so audits follow moves
@@ -248,17 +250,27 @@ class Canvas:
                             ha=ha, va=va, style=style, zorder=z, **kw)
 
     def text_width(self, s, size, weight="normal", **kw):
+        # measured at the export resolution: at the figure's 100 dpi, hinting makes a run about 0.7 % too wide,
+        # and in rich() the error adds up to a visible gap before the punctuation that follows a marked span
         t = self.ax.text(0, 0, s, fontsize=size, weight=weight, **kw)
-        bb = t.get_window_extent(self._renderer())
+        x0, _, x1, _ = self._text_box(t)
         t.remove()
-        return bb.width / self.fig.dpi * 25.4
+        return x1 - x0
+
+    def _text_box(self, t):
+        """(x0, y0, x1, y1) of a text artist in mm, laid out at the export resolution."""
+        if self._rm is None:
+            from matplotlib.backends.backend_agg import RendererAgg
+            self._rm = RendererAgg(8, 8, RASTER_DPI)
+        return tuple(v / RASTER_DPI * 25.4 for v in t.get_window_extent(self._rm, dpi=RASTER_DPI).extents)
 
     def rich(self, x, y, segments, size=None, ha="left", va="center", z=20, **kw):
         """Inline multi-colour text/math: segments = [(str, color[, weight[, mark]])].
         Use to colour-code terms of one equation by role, or to mark spans of example text: a 4th item (a role
         name or a colour) lays a borderless pale band behind that segment at 1.2 x the font size, the
         annotated-example highlight of HALoGEN Fig. 1. Pass family="monospace" for machine-written text.
-        Returns end x."""
+        Every marked span is recorded in self.spans as (text, x0, x1, y), so a thread can be drawn from the
+        span itself and never from a guessed x. Returns end x."""
         size = size or self.size
         widths = [self.text_width(s[0], size, s[2] if len(s) > 2 else "normal", **kw) for s in segments]
         cx = x - (sum(widths) if ha == "right" else sum(widths) / 2 if ha == "center" else 0)
@@ -267,8 +279,14 @@ class Canvas:
             if len(s) > 3 and s[3]:
                 self.ax.add_patch(Rectangle((cx - 0.15, y - bh / 2), w + 0.3, bh, ec="none", zorder=z - 1,
                                             fc=ROLE[s[3]]["soft"] if s[3] in ROLE else s[3]))
-            self.text(cx, y, s[0], size=size, color=s[1], weight=s[2] if len(s) > 2 else "normal",
-                      ha="left", va=va, z=z, **kw)
+                self.spans.append((s[0], cx, cx + w, y))
+            # SVG viewers drop the leading spaces of a text element ("specialist" + " is" printed as
+            # "specialistis"), so each run is drawn from its first glyph and the space becomes an offset
+            wt = s[2] if len(s) > 2 else "normal"
+            body = s[0].lstrip(" ")
+            lead = w - self.text_width(body, size, wt, **kw) if body != s[0] else 0.0
+            if body:
+                self.text(cx + lead, y, body, size=size, color=s[1], weight=wt, ha="left", va=va, z=z, **kw)
             cx += w
         return cx
 
@@ -327,15 +345,17 @@ class Canvas:
             end = self.rich(x, y - (i + 0.5) * lh, runs, size=size, z=z, **kw)
         return y - len(lines) * lh, end
 
-    def head(self, x, y, letter=None, title="", note=None, size=8.0, rule=None, color="black"):
+    def head(self, x, y, letter=None, title="", note=None, size=8.0, rule=None, color="black", note_size=None):
         """Plain panel head, the default panel treatment: bold '(a)', regular-weight title, optional grey italic
-        note two sizes down, all on one baseline; (x, y) is the top-left. rule=<width in mm> draws a hairline
+        note two sizes down (pass note_size= to keep it on the figure's scale), all on one baseline; (x, y)
+        is the top-left. rule=<width in mm> draws a hairline
         under it. No band, no tab, no frame (visual-craft section 7). Returns the y where content can start."""
         base = y - 0.72 * size / PT_PER_MM
         segs = ([(f"({letter}) ", color, "bold")] if letter else []) + [(title, color)]
         end = self.rich(x, base, segs, size=size, va="baseline")
         if note:
-            self.text(end + 1.6, base, note, size=size - 1.6, color=MUTED, style="italic", ha="left", va="baseline")
+            self.text(end + 1.6, base, note, size=note_size or size - 1.6, color=MUTED, style="italic", ha="left",
+                      va="baseline")
         bottom = y - 1.05 * size / PT_PER_MM
         if rule:
             self.rule(x, x + rule, bottom - 0.5)
@@ -477,7 +497,7 @@ class Canvas:
         for tx in self.ax.texts:
             if not tx.get_text().strip() or not tx.get_visible():
                 continue
-            (x0, y0), (x1, y1) = inv.transform(tx.get_window_extent(r).get_points())
+            x0, y0, x1, y1 = self._text_box(tx)
             boxes.append((x0, y0, x1, y1, tx.get_text().replace("\n", " ")[:28]))
         tbox = list(boxes)
         kids = self.ax._children  # drawn artists only: get_children() appends spines, axes and titles
@@ -497,6 +517,7 @@ class Canvas:
         for tx in self.fig.findobj(Text):  # chart text (ticks, axis titles, legends) lives in other axes
             if id(tx) in own or not tx.get_text().strip() or not tx.get_visible():
                 continue
+            # axis labels are placed during a draw, so they are read from the renderer that drew them
             (x0, y0), (x1, y1) = inv.transform(tx.get_window_extent(r).get_points())
             tbox.append((x0, y0, x1, y1, tx.get_text().replace("\n", " ")[:28]))
         bad = [f"'{s}' is cut by the canvas edge" for x0, y0, x1, y1, s in tbox
@@ -960,6 +981,12 @@ class Canvas:
         self.ax.plot([x, x], [y + hh / 2 - s * 0.08, y + s * 0.42], color=color, lw=lw, zorder=z)
         self.ax.add_patch(Circle((x, y + s * 0.44), s * 0.07, fc=color, ec="none", zorder=z))
 
+    def icon_user(self, x, y, s, color=LINE, fill="white", z=12, lw=0.6):
+        """Person: the user or speaker. Same weight and box as icon_robot, so the two read as one family."""
+        self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "user icon", len(self.ax._children)])
+        self.ax.add_patch(Wedge((x, y - s * 0.5), s * 0.42, 0, 180, fc=fill, ec=color, lw=lw, zorder=z))
+        self.ax.add_patch(Circle((x, y + s * 0.2), s * 0.22, fc=fill, ec=color, lw=lw, zorder=z + 0.1))
+
     def icon_clock(self, x, y, s, color=LINE, z=12, lw=0.55):
         self.icons.append([x - s / 2, y - s / 2, x + s / 2, y + s / 2, "clock icon", len(self.ax._children)])
         self.ax.add_patch(Circle((x, y), s / 2, fc="white", ec=color, lw=lw, zorder=z))
@@ -1400,6 +1427,19 @@ class Canvas:
                                     lw=lw, zorder=z, ls=(0, (3.2, 1.8)) if dashed else "-", alpha=alpha,
                                     capstyle="round", joinstyle="round"))
 
+    def thread(self, p0, p1, color=LINE, lw=0.9, bend=0.5, d=1.1, dashed=False, z=9):
+        """A relation between two things, not a flow: a smooth curve with a dot at each end and no head
+        (visual-craft section 9). Use it to join a marked span to the object it matches or implies; take the
+        ends from self.spans. It leaves and arrives vertically, so stack the two things. bend = how far the
+        curve keeps its direction, as a share of the vertical gap."""
+        (x0, y0), (x1, y1) = p0, p1
+        k = bend * (y1 - y0)
+        path = Path([p0, (x0, y0 + k), (x1, y1 - k), p1], [Path.MOVETO] + [Path.CURVE4] * 3)
+        self.ax.add_patch(PathPatch(path, fc="none", ec=color, lw=lw, zorder=z, capstyle="round",
+                                    ls=(0, (3.2, 1.8)) if dashed else "-"))
+        self.dot(x0, y0, color, d, z + 0.1)
+        self.dot(x1, y1, color, d, z + 0.1)
+
     def dot(self, x, y, color=LINE, d=0.9, z=9):
         self.ax.add_patch(Circle((x, y), d / 2, fc=color, ec="none", zorder=z))
 
@@ -1598,6 +1638,7 @@ def chart_axes(ax, grid="x", size=7.0, box=False):
     """Chart defaults: light grid on the value axis only, short outward ticks, muted tick labels.
     Open (left + bottom spines) by default; box=True keeps the full frame, which most ML and systems venues
     use for line plots and which separates the panels of a tight small-multiples grid."""
+    ax.set_facecolor("none")  # an opaque plot area sits above the canvas and hides labels placed there in mm
     for s in ("top", "right"):
         ax.spines[s].set_visible(box)
     for s in ("left", "bottom") + (("top", "right") if box else ()):
@@ -1627,7 +1668,7 @@ def density(png):
     return tuple(round(100 * float(v), 1) for v in ((a >= 250).mean(), ((a >= 200) & (a < 250)).mean(), (a < 120).mean()))
 
 
-def compare(original, new, out, width=1600):
+def compare(original, new, out, width=1600, labels=("original", "redesign")):
     """Stack two renders at the same pixel width (original on top) for a side-by-side review."""
     from PIL import Image, ImageDraw
     ims = []
@@ -1636,7 +1677,7 @@ def compare(original, new, out, width=1600):
         ims.append(im.resize((width, round(im.height * width / im.width))))
     canvas = Image.new("RGB", (width, sum(i.height for i in ims) + 60), "white")
     y = 0
-    for lab, im in zip(("original", "redesign"), ims):
+    for lab, im in zip(labels, ims):
         ImageDraw.Draw(canvas).text((8, y + 4), lab, fill=(200, 40, 40))
         canvas.paste(im, (0, y + 24))
         y += im.height + 30
@@ -1674,6 +1715,24 @@ def parity(original, new):
     if n["picture"] < 0.6 * o["picture"]:
         warn.append(f"less illustrated: {n['picture']}% picture vs {o['picture']}% (keep what the pictures taught)")
     return {"original": o, "redesign": n}, warn
+
+
+def fill(png, width_mm, chart=False):
+    """Does the figure use its placement? Returns (empty %, limit %, advice or None). `empty` is the share of
+    flat white blocks (visual_stats). Limits come from this skill's gallery: full-width diagrams sit at 14-44 %
+    empty, column schematics at 38-69 %, chart figures at 55-56 %. A full-width diagram above 50 % is a column
+    figure drawn too wide, or a set of small islands on a big page; both read as unfinished."""
+    empty = visual_stats(png)["empty"]
+    limit = (72 if width_mm < 120 else 50) + (12 if chart else 0)
+    if empty <= limit:
+        return empty, limit, None
+    if width_mm >= 120:
+        how = ("redraw it at column width (76-85 mm), or keep the width and make the objects earn it: larger "
+               "drawn objects and type (8-10 pt), one spine joining the panels, the hero at 40 % or more of the "
+               "area. Do not add decoration and do not shrink the canvas to the same sparse drawing")
+    else:
+        how = "cut the canvas height to the content, or enlarge the objects until they fill the column"
+    return empty, limit, f"{empty}% of the canvas is blank (limit {limit}% at {width_mm:g} mm): {how}"
 
 
 def swatches(pngs, out, k=8, height=260):
@@ -1759,9 +1818,10 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
     import sys
     cmd, args = sys.argv[1], sys.argv[2:]
     USAGE = ("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | parity ORIGINAL NEW | "
-             "swatches PNG... OUT | caption FILE_OR_TEXT | grey PNG OUT | counts PDF...]")
+             "swatches PNG... OUT | caption FILE_OR_TEXT | grey PNG OUT | counts PDF... | "
+             "fill PNG WIDTH_MM [chart]]")
     if len(args) < {"density": 1, "compare": 3, "parity": 2, "swatches": 2, "caption": 1, "grey": 2,
-                    "counts": 1}.get(cmd, 0):
+                    "counts": 1, "fill": 2}.get(cmd, 0):
         sys.exit(USAGE)
     if cmd == "counts":  # what the budgets count: text sizes and stroke widths in the exported PDF
         for p in args:
@@ -1776,11 +1836,17 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
             if wh < 40:  # 41 measured award figures: white 41-96 %, median ~71 % (venue-study-2026-11)
                 print(f"  crowded: {wh}% white. Tinted panel bodies and frames around everything are the usual "
                       "cause; let the page be the ground and tint only what the tint explains")
+    elif cmd == "fill":  # paperkit.py fill fig.png 178 [chart]: exit 1 if the placement is mostly blank
+        empty, limit, advice = fill(args[0], float(args[1]), chart="chart" in args[2:])
+        print(f"FAIL {advice}" if advice else f"ok: {empty}% blank (limit {limit}%)")
+        sys.exit(1 if advice else 0)
     elif cmd == "grey":  # what a greyscale printout shows: every series must still be told apart
         _open_rgb(args[0]).convert("L").save(args[1])
         print(args[1])
     elif cmd == "compare":
-        print(compare(*args[:3]))
+        # a first argument from assets/models is a model figure, not an original being redesigned
+        model = "models" in _P(args[0]).parts
+        print(compare(*args[:3], labels=("model", "yours") if model else ("original", "redesign")))
     elif cmd == "caption":  # paperkit.py caption caption.txt|"text": exit 1 if it narrates production
         for a in args:  # a missing caption file must not pass as an empty, clean caption
             if not os.path.isfile(a) and re.fullmatch(r"\S+\.(txt|tex|md)", a):
@@ -1894,6 +1960,7 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
     tx = Canvas(84, 30, family="sans", size=6.8)  # annotated example, listing, callout, greeked text
     tx.rich(3, 26, [("import pandas", "black", "normal", "memory"), (" as pd  ", "black"),
                     ("import pylinreg", "black", "normal", "coral")], family="monospace")
+    assert not any(t.get_text().startswith(" ") for t in tx.ax.texts), "a run starts with a space: SVG drops it"
     hgt = tx.listing(3, 22, ["lock(pt)", "unmap(pt, va)", "unlock(pt)"], hi={8: "coral"}, start=7)
     tx.callout(60, 20, "A", to=(40, 22 - hgt / 2))
     tx.greek(50, 12, 28, rows=3)

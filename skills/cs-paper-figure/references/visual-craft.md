@@ -11,6 +11,10 @@ CVPR, ICCV, SIGGRAPH, ACL, EMNLP, NAACL, CHI, UIST, CSCW, SOSP, OSDI, NSDI, PLDI
 ([venue-study-2026-11.md](venue-study-2026-11.md)). Ranges are what those studies measured; a budget or a
 starting value is this skill's choice inside the range.
 
+The budgets below are ceilings. They keep a figure from being loud; they do not make it good. The floors
+(a composition, drawn objects, a drawn relation, a used placement) are in
+[model-figures.md](model-figures.md), with a rendered model per family. Read that first.
+
 Implementation: [`scripts/paperkit.py`](../scripts/paperkit.py) provides the primitives named here, in
 millimetres. Rules that apply to one kind of figure only are in [registers.md](registers.md).
 
@@ -39,6 +43,13 @@ position (first after the input, or last) and a bold header.
 
 If nothing is visibly the hero, the figure is not done.
 
+**Then say what the picture is**, in one sentence: the objects, what joins them, what differs. A message
+without a picture produces one of two things. A motivating example becomes a typeset table (sentences in
+rows, a status column, score bars), which a `tabular` would do as well. A method overview becomes islands
+(lettered panels that share no object and no line). Neither breaks a rule below, and both read as
+unfinished. The claim has to be drawn as a relation between objects: a link, a position, a size, a
+before and after on the same thing.
+
 ## 2. Choose the register
 
 A register is a coherent set of choices for ground, fills, strokes and type. Award figures do not share
@@ -64,6 +75,13 @@ How to choose:
 - **The claim decides the rest.** An idea → schematic. A mechanism with tensors and modules → plate. A
   protocol, layout or data structure → line art. Behaviour on text → example-led. Behaviour on pixels →
   image-led.
+- **The method or system overview of an ML, NLP or agents paper is a plate**, at full width, on one spine
+  ([registers.md §6](registers.md#6-plate)). Line art is for systems, PL and theory venues; three line-art
+  thumbnails across a NeurIPS page is not a register, it is an unfinished plate.
+- **The sparse registers are column registers.** An idea schematic or a single short example at 85–90 %
+  white works at 76–85 mm, where its few objects are large. Stretched to full width the same drawing is
+  mostly blank. At full width, pair the schematic with its measurement, or the example with what each
+  system did to it, until the width is earned (`paperkit.py fill`).
 
 A skeleton (§5) is not a register. A plate may be laid out as an example × stage grid and a line-art figure
 as a storyboard; what may not mix is the treatment: ground, fills, strokes and type.
@@ -216,7 +234,10 @@ what they have in common is where the white is.
 
 White share by register is in §2. Measure with `python scripts/paperkit.py density fig.png` (white ≥ 250,
 tint 200–249, ink < 120 in greyscale). It warns below 40 % white, the bottom of the measured range outside
-image grids. Ink is typically 2–8 % in diagrams and higher in charts with filled bars; below 2 % with
+image grids. The other side is `python scripts/paperkit.py fill fig.png <width mm>`: it fails a full-width
+diagram that is more than 50 % blank blocks and a column figure above 72 % (this skill's full-width models
+sit at 14–44 %, its column schematics at 38–69 %). A blank figure is fixed by larger objects, a spine or a
+narrower canvas, never by decoration. Ink is typically 2–8 % in diagrams and higher in charts with filled bars; below 2 % with
 hairline coloured strokes is the pale failure, fixed by black text and a darker stroke, not by more fill.
 
 ## 7. Shapes and objects
@@ -295,6 +316,10 @@ means.**
 - **What earns an icon:** an actor (person, agent), a source or product (its real mark), a verdict (tick,
   cross), a state that repeats on many objects (frozen, trainable, locked), the place an action happened (a
   cursor). Operations, stages and abstract concepts get a word.
+- **In a figure about agents, users, tools or models, the actors are nouns and are drawn**: the user who
+  speaks, the agent that acts, the model that is called, each with one glyph from one family, repeated
+  wherever that actor appears. "No icons" is the starting point for theory and systems line art, not for a
+  plate whose subject is who does what.
 - **One family per figure**, line or filled, not both. Line icons take the figure's stroke weight
   (0.5–1.2 pt). The exception is one motif used throughout the paper.
 - **Size 1.7–3 × the cap height of the adjacent text** (about 2.5–4 mm beside 6–7 pt text). Above 3 × an
@@ -308,7 +333,7 @@ means.**
 - **Illustrated icon sets** (generated or drawn) belong to the showcase register only, 3–7 matched icons
   with a label beside each ([image-generation.md](image-generation.md)).
 
-`paperkit`: `icon_snow`, `icon_flame`, `icon_lock`, `icon_cycle`, `icon_robot`, `icon_clock`, `icon_doc`,
+`paperkit`: `icon_snow`, `icon_flame`, `icon_lock`, `icon_cycle`, `icon_robot`, `icon_user`, `icon_clock`, `icon_doc`,
 `icon_check`, `icon_cross`; `badge` for numbered discs; `callout` for lettered discs with a leader.
 
 ## 9. Arrows and connectors
@@ -340,7 +365,8 @@ stack read bottom to top need none. Counts in strong example-led figures are 0�
   about eight steps, give each step its own row and set the numerals in one aligned column, so the eye
   moves a line at a time ([registers.md §1](registers.md#1-line-art), sequence chart).
 - **Leaders are not arrows.** A callout leader is a 0.6–1.0 pt line ending in a dot. A relation between
-  two regions is a line with a dot at each end. A region gets a bracket.
+  two regions is a line with a dot at each end (`cv.thread`, from a marked span recorded in `cv.spans` to
+  the thing it matches or implies). A region gets a bracket.
 - **Wedges and zoom rays tie a word or a block to its detail**: a translucent wedge from a highlighted
   word to the thing it names, a ray pair from a block to its expansion (`cv.zoom`). One per target.
 - **Double-headed arrows measure** an interval or a dimension.
@@ -490,14 +516,25 @@ The caption is part of the figure's design.
 
 ## 14. Checklist
 
-Count first. Each of these has a budget; exceeding one needs a reason.
+Floors first. Missing one sends the figure back to its composition, not to a restyle
+([model-figures.md](model-figures.md)).
+
+- [ ] The picture can be said in one sentence of objects and relations, and it is not a table or islands
+- [ ] One spine, frame or grid joins every panel; no panel could be published alone
+- [ ] Every concept in the message is a drawn object, the same wherever it appears
+- [ ] The claim is a drawn relation (link, position, size, before and after), not a number in a cell
+- [ ] The placement is used: `paperkit.py fill` passes at the printed width
+- [ ] It has been put beside a model figure of its family and does not lose on finish
+
+Then count. Each of these has a budget; exceeding one needs a reason.
 
 - [ ] Hues with a meaning: ≤ 4, each defined, each the same in every figure of the paper
 - [ ] Stroke weights: 1–2; text sizes: 2–3; arrow styles: ≤ 3, each defined; icon families: ≤ 1
 - [ ] Panel treatments: 1 (not a dashed frame here, a banded card there and a bare panel beside them)
 
 Count what the figure's own shapes, wires and labels use. Strokes inside an icon, cell hairlines of a
-strip or matrix, math subscripts, and a grey scope tint are not counted. Count from the PDF, not from
+strip or matrix, math subscripts, a grey scope tint, and the green and red of tick and cross glyphs are
+not counted. Count from the PDF, not from
 memory: `python scripts/paperkit.py counts fig.pdf` lists every text size and stroke width with its uses.
 
 Then walk the figure.
