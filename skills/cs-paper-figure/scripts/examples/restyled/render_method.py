@@ -1,6 +1,6 @@
 """Method figure: evidence-guided memory refinement (fast loop, slow loop, one worked transaction).
 
-Source: gallery/before/method.png, a three-panel schematic (a: frozen runtime with a fast loop and an
+Source: an earlier drawing that is no longer in the repository, a three-panel schematic (a: frozen runtime with a fast loop and an
 epoch loop; b: three competing edits arbitrated into one transaction; c: paired replay of a separate
 case and an audit receipt), plus the bundled fixture data/method/data/dense-method-fixture.json.
 The fixture is a deterministic toy, not an evaluated system, so the figure marks its worked values

@@ -51,38 +51,59 @@ quantity lives.
 Both come from the same habit: following the budgets (few hues, few sizes, white ground, no icons) without
 first deciding what the picture is.
 
+**The opposite failure: decoration in place of a picture.** A figure can also be chosen, shared and still
+not read. The decorated figures of the trending study ([trending-study-2026-11.md](trending-study-2026-11.md))
+have a frame around every panel and frames inside those, a gradient band over each stage, a rendered
+mascot beside a label, emoji for states, seven hues and nine to nineteen text sizes, and four fifths of
+their text under 5.8 pt. Test: *delete every element that states no fact (mascot, gradient, outer frame,
+badge, card); is anything left that a table could not hold?* In the strong figures of the same study the
+attraction is the content: a measured gap, two lanes that merge, real proof steps with one failing row,
+a staircase frontier. Take those; do not answer plainness with ornament.
+
+**A table can be a figure.** The table test fails a figure that LaTeX could set without loss. It passes
+one whose cells are marks: bars, heat cells or stacks in the cells, swatches as row heads, rows sorted,
+no axes (registers §9). The test is whether something is drawn, not whether there are rows.
+
 ## The models
 
 | Family | Preview | Script (`scripts/examples/`) | What to take from it |
 | --- | --- | --- | --- |
 | Method overview of an agent or system with nested loops | `plate_agent_system.png` | `harness2/render_fig3.py` | Inner frame inside outer frame, titles on tabs; one object (the rack C1–C8) drawn at every stage so the merge is visible on it; two candidate lanes in two hues that meet at a composer; phase bar under the frame; key strip |
 | Method overview following one call through components | `plate_agent_components.png` | `harness2/render_fig2.py` | One left-to-right spine; every component a file card with its state as a tag on the border; the context drawn as a stack whose bands take their owner's hue |
-| Ours versus a baseline on one shared stream | `plate_agent_loop.png` | `reharness/render_fig1.py` | The shared instances drawn once in the middle, baseline above and ours below on one column grid; the new operation in its own tinted row and hue; numbered edge labels on the wires; each side ending on a verdict pill; the edit shown as struck text and a highlighted condition |
+| Ours versus a baseline that share part of the run (a fork) | `plate_agent_loop.png` | `reharness/render_fig1.py` | The shared history drawn once as one row; at the failure the path forks, the baseline straight on and ours in a tinted lane below, both docking on one card for the next task with its input between their two answers; the claim drawn as direction (the one arrow that points left, at the old line of the same notebook, struck out and rewritten); memory as one object every time (a notebook with a tabbed line per reflection); hue is the agent; eight arrows, two numerals only where order differs from reading order |
 | Model architecture with mechanism detail | `plate_architecture.png` | `memt/render_fig4.py` | Narrow locator, zoom rays, three detail panels each with a data object (matrices, trapezoids, a curve), section frames in the module's hue, key strip |
 | Classic architecture, calm plate | `plate_architecture_classic.png` | `transformer/render_fig1.py` | Three text sizes and two stroke weights for a whole plate; only the contribution saturated; bare panels under plain heads |
 | Benchmark or dataset overview | `benchmark_overview.png` | `groupassist/render_fig1.py` | Statistics as three large numbers with icons; the real example as a chat thread with avatars and marked spans; each task level a coloured band that begins as a taxonomy row and continues as a worked instance; a red rail joining the two facts that conflict |
 | Construction pipeline | `benchmark_pipeline.png` | `groupassist/render_fig2.py` | Numbered heads on the page over pale trays; one amber object followed through every step; counts and a kept-share bar per step |
 | Idea in one column | `idea_schematic_column.png`, `idea_schematic_two_states.png` | `memt/render_idea_column.py`, `lora/render_fig1.py` | One drawing shown in two states; large objects and 7–8 pt type; three arrow hues defined in a key row; the changed state as the only saturated region |
+| Timing diagram for a speed or latency claim | `idea_timing_diagram.png` | `timing/render_speculation.py` | Baseline rows above and ours below on one time axis at one scale; idle time hatched, and the one saturated block sitting where the baseline has hatch; a hit and a miss both drawn, the discarded plan ghosted and struck out; the saving as a dimension arrow between two dashed end lines; every block computed from the step times; a key row with one sample per kind of mark. 140 mm, an illustrative method with made-up times |
 | Motivating example: one input, a few items, what two systems do | `example_led_scene.png` | `scene/render_retrieval_scene.py` | The input said once in a bubble by a user glyph; items as white cards on one tray, drawn once; a thread from the marked span in the input to the span on the card each system ranks first, grey for the baseline and the one hue for ours, the relation named on the thread; the system's name and verdict as a tab on the card it picks; each item's own status as a tag on its bottom border |
 | Methods compared on one text example | `example_led_methods.png` | `react/render_fig1.py` | The question once across the top; a column per method with ours widest; three voices (monospace, grey body, gutter labels); rails beside reasoning; verdict glyph after each final answer, answers on one line |
 | Protocol in one column | `line_art_sequence.png` | `ray/render_fig7.py` | Lanes with lifelines, one message per row, numerals in one aligned column, state drawn in the row that creates it, one hue for the plane the claim is about |
-| Teaser of a system paper | `showcase_teaser.png` | `toolspace/render_fig1.py` | Isometric plates for a layering claim, logo tiles, honest radars, zoom into the largest panel |
+| Teaser of a system paper | `showcase_teaser.png` | `toolspace/render_fig1.py` | One spine that ends on the numbers: the concept plate and its graph fused into one isometric scene (the graph projected onto the plate, one saturated walk with numbered stops, logo tiles on a shelf below); the walk laid flat as a rail of the same numerals under chips in their environment's hue; the rail funnelling into one task card that forks into the two results under plain heads; honest radars on one stated scale; falls as wedges from the Standard score down to a logo at the Pro score. No card frames, no zoom |
 | Illustrated survey figure | `showcase_illustrated.png` | `proactive/render_overview.py` | Two rows over shared columns, solid colour headers, a vignette and an object made from each stage's definition, a feedback rail |
 | Claim chart | `chart_claim.png` | `memt/render_fig3.py` | Ours in one accent, rivals in two greys, the ratio printed in bold on a bracket |
 | Field chart in one column | `chart_field_column.png` | `toolspace/render_table1_column.py` | One hue plus marker per system, one legend row, shared labels said once |
 | Four-panel results figure | `chart_four_panel.png` | `restyled/render_experiment.py` | One series palette across panels, direct labels, panel heads in the body face |
+| Leaderboard with several measures | `chart_measure_rows.png` | `accelerate/render_table1_rows.py` | Rows named once with the vendor's mark; one panel and one kind of mark per measure (bar, dumbbell, lollipop from a reference); the separated leaders in the one hue and the field grey; a bracket that says which ranks are not established; the dumbbell's key over its first row; pale bands to carry the eye across 120 mm |
+| Quality against cost, one column | `chart_pareto_column.png` | `pareto/render_frontier_column.py` | The front as a step line with the dominated region shaded; points on the front large, outlined and named in place, the rest small and faded; hue for one factor and marker for the other on one key grid, the shape key in grey; a "better" arrow in the empty corner |
 
 The full-width models are 178 mm plates. A 140 mm figure (NeurIPS, ICLR) holds about 60 % of their
 objects at the same type size, and `compare` scales both to one pixel width, so judge finish, composition
 and use of area, not how many things are drawn.
 
 No model for your family: take the nearest one for finish, and find a published figure of your kind with
-`python scripts/reference_catalog.py search --query "..."`.
+`python scripts/reference_catalog.py search --query "..."`. Thirty-four more families have a published
+model named in [trending-study-2026-11.md](trending-study-2026-11.md) (lanes that merge, aligned
+verdicts, counts strip, table-chart, concept plot, behaviour dossier and others), each with the
+devices to take in [registers.md](registers.md).
 
 ## How to use a model
 
 - **Before drawing** (workflow step 2): open the preview. Write down three devices you will take and the
   one thing your figure has that the model does not.
+- **A model of another family** is a standard for finish only: line quality, type, colour discipline,
+  how well the area is used. It is not a target for how many objects the figure holds.
 - **In review** (workflow step 6): `python scripts/paperkit.py compare assets/models/<model>.png
   figures/yours.png out.png`, open `out.png`, and answer in one line each: which looks more finished, which
   uses its area better, which would an area chair remember. If the model wins all three, the figure is not

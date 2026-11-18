@@ -1,6 +1,6 @@
 """Epoch-context figure: how one epoch replay changes the next proposal, traced case by case.
 
-Source: gallery/before/epoch-context.png (a: a table of four cases replayed under memory M0 and M1
+Source: an earlier drawing that is no longer in the repository (a: a table of four cases replayed under memory M0 and M1
 with PASS/FAIL badges and a verdict change; b: a context diff C0 -> C1 with evidence IDs; c: the
 same request P04 rendered under C0 and under C1), plus the bundled data
 data/epoch-context/analysis.json and data/epoch-context/inputs/epoch_fixture.json. The data is a

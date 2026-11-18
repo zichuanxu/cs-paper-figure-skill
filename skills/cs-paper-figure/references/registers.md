@@ -15,7 +15,8 @@ Model figures are cited by paper and figure number; the full list with venues is
 | [5](#5-image-led) | Image-led | Teaser, comparison grid, inset zoom, labels and arrows on pixels, render storyboard, geometry diagram |
 | [6](#6-plate) | Plate | Architecture overview with detail row, section frames, tensors and maps, key strip |
 | [7](#7-contrast-state-and-construction) | Plate, for benchmarks | Existing-versus-ours, non-linear process, task cut, workspace state, construction pipeline |
-| [8](#8-showcase) | Showcase | Isometric plates, logo tiles, radar envelopes, illustrated stages |
+| [8](#8-showcase) | Showcase | Isometric plates, logo tiles, radar envelopes, illustrated stages, what gets a figure chosen |
+| [9](#9-evaluation-figures-of-benchmark-and-agent-papers) | Charts of benchmark and agent papers | Leaderboard, row-aligned measures, quality against cost, table-chart, matrix, concept plot, learning curves over a stream |
 
 ## 1. Line art
 
@@ -79,7 +80,8 @@ the full width only with its measurement beside it or when the drawing is repeat
 
 - **Seven things, not seventy.** Aim for the economy of 2503.14858 Fig. 2: seven bars, three words, two
   multipliers. Label things in place; a key row of up to three samples is fine, a boxed legend means there
-  are too many kinds of thing. When the drawing is repeated, the count is per panel (about ten), and a
+  are too many kinds of thing. (A mechanism drawn on a time axis may need one sample per kind of mark;
+  five is the most seen.) When the drawing is repeated, the count is per panel (about ten), and a
   figure of large filled shapes sits nearer 75 % white than 85–90 %.
 - **A merged state** of two coloured things is the first thing's fill hatched in the second hue, with a
   clear band for the label (LoRA: `W₀ + BA`). Worked example: `scripts/examples/lora/render_fig1.py`.
@@ -110,6 +112,33 @@ Families:
   jump, ghosted branches for the paths not taken.
 - **Displacement scatter.** Before-to-after arrows per item, a halo per cluster, a corner summary with the
   delta (2505.06120 Fig. 1).
+- **Timing diagram.** For a claim about speed, latency or scheduling. One row per actor (Target, Draft) on
+  a shared time axis, drawn twice at one scale: prior above, ours below. Work is a pale filled block with
+  its name inside, idle time a hatched grey block, and the claim is a double-headed arrow labelled "saved"
+  between two dashed verticals. Two text sizes, three fills, one outline weight; about 4 : 1 (JetSpec++
+  Fig. 1: 142.6 × 37 mm, 6.4 and 7.7 pt). This family is full width and made of filled blocks, so the
+  register's figures above do not apply to it: expect 65–80 % white and under half the canvas blank.
+  Compute every block from the step times and assert the two end times; show a hit and a miss when the
+  method can miss (the kept block saturated, the discarded one ghosted and struck out). Hatch with
+  `cv.box(..., hatch="/////")`. Model: `idea_timing_diagram.png`
+  (`scripts/examples/timing/render_speculation.py`).
+- **Landscape trio.** The same pair of axes three times along one long arrow that names the control
+  variable; only the curve changes (two wells, one well, a flat basin); the regime's name is a coloured
+  headline over each; dotted drop-lines run from the curve's minima to real samples framed in the regime's
+  hue, and that frame colour is the legend for every later figure (Diffusion and Associative Memory
+  Fig. 1). Redraw its colours: the source uses pure red, green and blue.
+- **Search tree with outcomes.** Internal nodes neutral, leaves green or red with ✔ and ✘, forward arrows
+  in one hue and the backup arrows beside them in a second, a two-sample key above the tree. The node
+  whose value is being computed is ringed, then drawn again, larger, as the input of the next stage. A
+  matching loss is a spring between the two distributions (`cv.spring`), each drawn as a three-bar strip
+  with its reference line (TreeOPSD Fig. 2).
+- **Stories with one geometry.** Two or three small stories drawn with identical layout (inputs on top, a
+  pipe, an end node, a "first → later" axis), one thing changed in each, a bold claim over the set and one
+  reading line under each story. Where a width is the quantity (a pipe that thickens as a feature
+  strengthens), say so in one line: the stroke budget counts structural strokes, not data.
+- **Two factors: a 2 × 2 with drawn axes.** Arrowed axes with category ticks; all four cells repeat one
+  small drawing and change one thing per axis (Work Agents Fig. 2). Four free scenes do not do this.
+- **Concept plot** for a new metric: [§9](#9-evaluation-figures-of-benchmark-and-agent-papers).
 
 ## 3. Example-led: text
 
@@ -168,6 +197,18 @@ and mark it. Rules for marking are in visual-craft §10.
   cross glyphs at the right end of the span; the caption repeats the tints on its own words.
 - **Largest block = the contribution.** If the paper's point is instance-specific criteria, that card
   takes half the figure (BiGGen 1).
+- **Aligned verdicts.** One real example as numbered rows split into two voices (natural language in the
+  body face, its formal counterpart in monospace), the failing row tinted; beside it the checker's column
+  with ✓ and ✗ at the same heights and the first failure named in words; the output drawn as the same
+  ticks and crosses in miniature. One accent, on the judged objects only (LeanPRM Fig. 1; visual-craft §9).
+- **Stepwise edit.** The same listing in every step, only the changed block tinted, elisions said, the
+  invariant named in an eyebrow (Aligning Autoresearch Fig. 7; visual-craft §10).
+- **Token-level run.** One real sentence carried token by token through every column, a fill for tokens
+  that differ from the target, a heavier outline for tokens that are fixed, "=" and "≠" between compared
+  cells (JetSpec++ Fig. 4). Keep it at 5.8 pt or above by eliding columns, not by shrinking.
+- **Behaviour dossier.** The verbatim board, terminal or code with file and line, two or three callouts,
+  one typographic role per kind of text, a claim sentence as the title and the entity's colour on its
+  sub-head and its left rule (Agent Plasticity Figs. 8, 12–15). Half a page at most in the body.
 - **Taxonomy grid.** Equal cards on a grid, chips of one width inside, one hue on a ramp for an ordered
   level. Nine unrelated hues is the failure (BiGGen 2).
 - **Results** in this lane are usually default plots; build them as claim or field charts
@@ -274,6 +315,27 @@ families, drawn tensors and maps, section frames. From a study of 23 vision and 
   as white borderless tiles on the tray. Heads inside the trays push white under 40 %; no trays at all
   reads as a page of text (about 83 % white, outside the plate's range). Worked example:
   `scripts/examples/groupassist/render_fig2.py`.
+  The trays may go when every stage is itself a drawn object on one thin through-line with a counts strip
+  beneath it: FrontierPhysics Fig. 2 has five numbered heads, five different drawings, no container at
+  all, and is 83 % white.
+- **Lanes that merge.** Prior work and ours as two stacked lanes, each a pale tray in its own hue with
+  the title set in that hue; the stages they share are drawn once, to the right, at the height of both.
+  The same glyphs in both lanes, so the eye finds the one that moved (noise added into the weights above,
+  into the logits below); the cost of each lane written in it; a rejected candidate ghosted along with
+  its arrow (Neural Thickets Fig. 1).
+- **Overview strip and braces.** A strip across the top shows the whole method as one row, repeating the
+  object of the paper's Figure 1; labelled braces under its parts ("(b)", "(c)") name the lower panels
+  that enlarge them; dotted hairlines separate the panels. This is the cure for islands when zoom rays
+  would cross (JetSpec++ Fig. 2).
+- **Results on the schematic.** When the paper measures something per component, print it in the
+  component and colour the boxes by role class; a thick spine arrow carries the stream the components
+  read from and write to (Neural Thickets Fig. 3: 7 pt, three hues, strokes 0.47, 1.17 and 1.94 pt). The
+  same drawing with new numbers serves the appendix.
+- **Define a glyph once, then use it.** An abstract quantity gets a small data glyph (a three-bar
+  histogram, a ring of dots with one ringed) defined in a margin figure of its own and then used in the
+  architecture and again in the inference figure, where the parts not sampled are ghosted (Parallel
+  Language Models Figs. 2, 4, 7).
+- **One level of container, and a head with three slots** (visual-craft §7): eyebrow, title, cost.
 - **The thing being followed takes the one accent.** In a pipeline that runs one example through every
   step, colour that example's object in each step and leave the structure slate and black. A thing that
   has a hue in a sibling figure may be drawn neutral here when it is not what this figure follows; it may
@@ -316,6 +378,16 @@ Benchmark and dataset papers explain what is different about the tasks. From ARE
   card so the text can cite them.
 - **Loops as rails** around the outside of a column, labelled on the line.
 - **Results.** One model = one colour in every panel.
+- **Counts under every stage** (visual-craft §5), and the last stage is the finding: a small chart of
+  the failure modes with their shares, so the pipeline ends in what the benchmark found (FrontierPhysics
+  Fig. 2).
+- **The task as its folder.** Draw the real task directory as nested file chips and let one fill answer
+  one question for every file: who can see it. One key line directly beneath; a lock glyph for what is
+  withheld; rows aligned so each part of the task sits beside the checks that grade it; the same file
+  chips reused as the inputs that drop onto the pipeline's nodes in the next band (FrontierPhysics Fig. 3).
+- **A stream of windows.** Environment windows as equal cards, each with a strip of capsule tokens
+  (serving in one tint, test in another) and its policy chips; one policy followed across the windows by a
+  dotted arrow that says what happened to it ("withdrawn, then returns"; ServeLearnBench Fig. 2).
 
 ## 8. Showcase
 
@@ -337,3 +409,139 @@ idea at a glance. From ToolSpace Fig. 1 ([toolspace-study-2026-11.md](toolspace-
   hero and the path being followed.
 - **Redesigns stay in this register** and pass `paperkit.py parity`. A showcase figure rebuilt as line art
   is more correct and loses.
+
+**What gets a figure chosen** ([trending-study-2026-11.md](trending-study-2026-11.md)). Two paper-reading
+feeds showed one figure for each of 28 papers and reports. What the chosen figures share, and what they do not:
+
+- **Position first.** Nearly every pick is Figure 1 or 2. The figure a reader meets first is the one that
+  travels, so the first figure deserves the most work.
+- **A result is as good as a schematic.** About a third of the picks are charts with no diagram at all: a
+  sorted leaderboard with logos, a staircase frontier, six curves with stars, one green bar among blue. A
+  result chart alone on page 1 keeps its type at 8 pt; a chart squeezed beside a schematic does not.
+- **Honest attraction** is content that reads at thumbnail size (visual-craft §1): a measured gap, two
+  lanes that merge, real proof steps with one failing row, real spectrograms with the masks drawn on
+  them, recognised marks beside a shocking scale. **Decoration** is what could be deleted without losing
+  a fact: a rendered mascot, a planet per panel, contribution cards with numbered badges, a radar's
+  meaningless polygon area. The decorated picks attract and then cannot be read: 81 % of the text in the
+  densest one is under 5.8 pt.
+- **Three template looks, and what to keep from each.** *Slide kits* (gradient header bands, fat block
+  arrows, emoji, a dashed frame per panel, 9–19 text sizes): keep nothing but the real example in the
+  middle. *Generated art* (glossy 3-D objects, paintings): keep one recurring noun at most (visual-craft
+  §8). *Model-written HTML* (cream ground, small-caps eyebrows, pill badges, cards in cards): keep its
+  good habits, which are claim titles, eyebrows that name what is fixed, and labelled reference lines;
+  drop the nesting, the word count, the 4–5 pt text and the bitmap export.
+- **A title-page illustration is not a figure.** One generated picture under the title with five short
+  labels on leader lines may brand a survey; it carries one ordered list and nothing else. Do not number
+  it, and do not let its style into the technical figures.
+- **A ring of bars** (bars radiating from a circle, grouped by sector) is a showcase device: it earns a
+  cover and costs every comparison across sectors, upside-down labels on the lower half and a legend
+  lookup per bar. Use it only as a teaser with at most six bars per sector and the top values printed, and
+  give the same numbers a row-aligned figure or a table in the body.
+
+## 9. Evaluation figures of benchmark and agent papers
+
+Benchmark and agent papers lead with their numbers: who wins, at what cost, and how behaviour changes over
+a run. From the trending study ([trending-study-2026-11.md](trending-study-2026-11.md)); the general chart
+rules are in visual-craft §11. Models in `assets/models/`: `chart_measure_rows.png`,
+`chart_pareto_column.png`. Charts of this kind are full width at 140–170 mm and only 37–80 mm tall, or
+one column. Type follows visual-craft §4: panel heads about 8 pt, labels 7–8 pt, ticks and notes 6–7 pt
+(the models use 8.2 / 7.2 / 6.2 and 7 / 6); the same scale in every chart of the paper. A chart is not a
+register and has no white-share range; `paperkit.py fill PNG WIDTH chart` is the area check.
+
+**Who wins**
+
+- **Leaderboard.** Sorted by the headline measure, the value printed at the end of each bar, the system's
+  identity mark at its name. (Every value is printed when the figure stands in for the table; when the
+  same numbers are also in a table of the paper, print only what the claim needs, visual-craft §11.)
+  A sorted bar chart claims an order, so say which gaps are established: an
+  interval on every bar (FrontierPhysics Fig. 1), or a bracket over the rows the test does not separate,
+  in the paper's own words. If the paper reports only a spread over runs, the bracket says that ("within
+  run-to-run noise"), not "tied" or "not significant". Colour is one of three things: the systems the
+  claim is about in one hue with the field grey; the vendor's identity hue on every bar with the vendor's
+  mark as the tick, kept in every figure of the paper and needing no legend (FrontierPhysics Figs. 1, 5,
+  7); or, in a benchmark paper with no system of its own and no marks to show, one hue per model family
+  with a dot at each name, the same in every figure, so that no hue changes owner when the next figure
+  is about a different system. Never a different
+  arbitrary hue per bar (Aligning Autoresearch Fig. 5: eight bars, eight hues, no meaning). With more
+  than about eight systems, or names longer than a few characters, run the bars horizontally: names
+  rotated 45° under vertical bars take a third of the figure's height and are read with a tilted head.
+- **Row-aligned measure panels** (`cv.row_panels`). When each system has several measures, name the rows
+  once at the left and give each measure its own panel on those rows, with its own x scale and the mark
+  that suits it: a bar from zero for a score, a 100 % stack for outcome shares, a dumbbell between two
+  thresholds or two phases, a lollipop from a reference value, a point with its interval for a difference.
+  Only the bottom spine and a light vertical grid; a head per panel that names the quantity and unit, so
+  the x axis needs no title. Order the rows to make the claim, not alphabetically. Past about eight rows
+  add pale bands on alternate rows across all panels. Worked example:
+  `scripts/examples/accelerate/render_table1_rows.py`.
+- **A reference row** (human experts, an oracle, an upper bound) is set apart at the top in dark
+  neutral, with a gap under it (give `row_panels` a fractional `n` and place the rows yourself), and its
+  value drops through each panel as a dashed line. The other rows' marks may run from that line, so the
+  stem is the gap; then one italic phrase over the first stem says which way it runs ("more harmful →",
+  "← faster"). The headline gap is a dimension arrow with its number, drawn in one figure of the set and
+  not repeated in the next.
+- **A dumbbell or ordered-marker row carries its own key**: the labels sit over the marks of the first
+  row (open = ≥ 2×, filled = ≥ 1.25×; E, M, L over early, middle, late), in that row's ink. No legend.
+- **An ours band.** In a multi-panel leaderboard a pale band in our hue runs across every panel on our
+  row; values are printed for ours and the runner-up only (AudioFM Fig. 3).
+- **Outcome palette.** A run that failed is grey; runs that succeeded are one hue on a lightness ramp by
+  how well (correct but slow → pale, fast → saturated). Keep that triple in every figure of the paper
+  (Accelerate Bench Figs. 3–6).
+
+**At what cost**
+
+- **Quality against cost** (`paperkit.pareto_front`). Draw the front as a step line and shade the region
+  it dominates; make the points on it full size with a dark edge and name them in place; keep the
+  dominated points as the same marks, smaller and at about 45 % strength; put a small "better" arrow in
+  the empty corner. Two factors take two channels (hue = method, marker = model) and the shape legend is
+  grey. A step, not a diagonal: between two points on the front nothing cheaper reaches the higher value.
+  Worked example: `scripts/examples/pareto/render_frontier_column.py`.
+  Alternatives seen: a thick pale line under logo markers for the front, and two settings of one system
+  joined by a thin line from a ghosted marker to a solid one (FrontierPhysics Fig. 5). Name tags must
+  not sit on the front.
+- **Draw the claim as a bracket or a band.** A Δ bracket at a fixed x between two curves with the gap on
+  it; a shaded band between two x positions at equal score with "≈ 2.0× fewer steps" on a double arrow; an
+  arrow from the baseline point to ours with the ratio on it, in our hue for a gain and grey for a
+  regression, which is drawn and not hidden (MASS Fig. 2: 1.60×, 1.35×, 0.96×, 0.94×). In a
+  quality-per-cost plot add the dashed iso-ratio line through the baseline: above it is better per token.
+- **The operating point is a marker form**: the default setting, the chosen configuration or the
+  full-scale measurement is one large open marker on its own line, which leaves colour for identity.
+
+**Over a run**
+
+- **A derived metric is marked where it is read.** A star on each learning curve at its saturation point,
+  filled when reached and open when not, then the metric as bars in the same colours beside the curves
+  (Agent Plasticity Fig. 1).
+- **Phases of a stream are bands**, tinted in the colour of the task that is active in that segment, so
+  the band and the curve it explains share a hue (Self-Evolving Agents Fig. 1).
+- **A shared history is grey and the fork is coloured**: one dark-grey run up to the intervention, a
+  dashed vertical naming it, then the two branches in two hues with a star at each branch's best point.
+- **Smoothed over raw.** The fitted or smoothed line at full weight over the raw points or trace at about
+  a third of it; measured range solid, extrapolation dashed with a pale band.
+- **Paired units.** Each unit is a pair of dots joined by a thin line (best and last, before and after),
+  the median a short black tick, the group size in the tick label ("New best (26)").
+- **A series that occupies a tenth of the axis gets a zoom row**: the same panel underneath with that
+  series alone on its own scale.
+
+**Tables and matrices that are figures**
+
+- **A table becomes a figure when its cells are marks.** Row heads carry the legend swatches or short
+  codes, each cell holds a bar, a heat cell or a 100 % stack with its number, there are no axes, rows are
+  sorted, exceptions sit apart at the bottom, and *n* closes the row (FrontierPhysics Figs. 4, 6, 10). A
+  table of numbers in a figure float is still a table, and a chart beside three tabulars under one
+  figure number is four things.
+- **In a matrix, zero is a ghost tile and the argument is a rectangle.** Cells with nothing to say are
+  pale and empty; the cells the text discusses carry a bold value; a dashed neutral outline marks the
+  expected block and one solid accent outline the surprising one (Self-Evolving Agents Fig. 4).
+- **An inventory is a tile matrix**: category rows with one chip per item, or a count per category with
+  three named examples. A sunburst of 110 labels at 1.4 pt is a texture, not an inventory.
+
+**Defining what is measured**
+
+- **A concept plot defines a new quantity** before the data shows it: no tick numbers, the regimes named
+  on the curves ("high P", "low P", "P < 0"), the formula on the plot, every annotation in the colour of
+  the thing it names, and the same axes as the data panel beside it (Agent Plasticity Fig. 2).
+
+**The paper, not the figure.** The strongest papers of the study are strong as sets: one toolchain, at most
+two font families across all figures, one thing → colour table, one width. The weakest have nine font
+families in eighteen figures, five visual languages in nine, or two systems that swap colours between
+Figures 4 and 11. Audit the set before delivering any one figure ([figure-series.md](figure-series.md)).

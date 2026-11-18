@@ -1,6 +1,6 @@
 ---
 name: cs-paper-figure
-description: Design, implement, critique and redesign figures for computer science research papers, with deliberate control of colour, layout, typography, white space, shapes, icons and arrows. Use for method and architecture diagrams, idea schematics, system and protocol figures, annotated examples, interface and study figures, teasers, qualitative grids, evaluation charts and multi-figure sets, at single-column or full width. Use when asked to draw or improve a paper figure, make a NeurIPS/ICML/ICLR/CVPR/ACL/CHI/SOSP/OSDI/SIGGRAPH-quality figure, redesign Figure N of a paper, or extract a figure's visual style. Rules are measured from award papers at those venues and from 2025–2026 AI-lab reports. Produces scientifically faithful, editable, reproducible vector figures.
+description: Design, implement, critique and redesign figures for computer science research papers, with deliberate control of colour, layout, typography, white space, shapes, icons and arrows. Use for method and architecture diagrams, idea schematics, system and protocol figures, annotated examples, interface and study figures, teasers, qualitative grids, evaluation charts, benchmark leaderboards, cost–quality plots and multi-figure sets, at single-column or full width. Use when asked to draw or improve a paper figure, make a NeurIPS/ICML/ICLR/CVPR/ACL/CHI/SOSP/OSDI/SIGGRAPH-quality figure, redesign Figure N of a paper, or extract a figure's visual style. Rules are measured from award papers at those venues, 2025–2026 AI-lab reports and widely shared 2026 agent and benchmark papers. Produces scientifically faithful, editable, reproducible vector figures.
 ---
 
 # CS Paper Figure
@@ -37,6 +37,13 @@ looking at a finished figure of the same kind. So the workflow below has three s
 write the picture in one sentence (step 2), open a model figure before drawing (step 2), and revise at
 least once after a cold read of the render beside that model (step 6).
 
+**The opposite failure** is as common in the wild: a figure that gets shared and cannot be read. Frames in
+frames, a gradient band per stage, a rendered mascot, emoji, seven hues, a dozen text sizes, most of the
+text under 5.8 pt. Plainness is not cured by ornament. What makes a figure get chosen is content that
+still reads at thumbnail size: one large contrast of shape (a measured gap, two lanes that merge, a
+staircase, one warm line) and one real example. Delete anything that states no fact
+([registers.md §8](references/registers.md#8-showcase), "What gets a figure chosen").
+
 ## What to read
 
 **Always, before drawing:** [model-figures.md](references/model-figures.md): the seven things every strong
@@ -46,9 +53,13 @@ figure has, the two ways a compliant figure fails, and one rendered model per fi
 dimension. Read §1–§2 (message, register) first and pick the register; then read the one section of
 [registers.md](references/registers.md) for that register and family; then the rest of visual-craft
 (colour, typography, layout, white space, shapes, icons, arrows, text, charts, captions, redesign
-protocol, checklist).
+protocol, checklist). Two shorter paths: a results chart has no register and no shapes, so read
+visual-craft §1, §3–§4, §11–§12 and §14 and [registers.md §9](references/registers.md#9-evaluation-figures-of-benchmark-and-agent-papers);
+a diagram with no chart in it skips §11. Where a family's own entry in registers.md disagrees with its
+register's general bullets (size, white share, how many things), the family entry wins.
 
-Paths in this file are relative to the skill directory; run the commands from there.
+Paths in this file are relative to the skill directory. Call the scripts by their full path from the
+paper's directory, where the figures are written.
 
 **When the task calls for it:**
 
@@ -72,6 +83,7 @@ model figure; do not load them for every task.
 | [venue-study-2026-11.md](references/venue-study-2026-11.md) | 29 award papers (NeurIPS, ICLR, ICML, CVPR, ICCV, SIGGRAPH, ACL, EMNLP, NAACL, CHI, UIST, CSCW, SOSP, OSDI, NSDI, PLDI, VLDB): measurements, what held everywhere, model figures per family |
 | [craft-study-2026-10.md](references/craft-study-2026-10.md), [architecture-study-2026-11.md](references/architecture-study-2026-11.md) | AI-lab method figures; 23 vision and multimodal architecture figures |
 | [arebench-study-2026-11.md](references/arebench-study-2026-11.md), [toolspace-study-2026-11.md](references/toolspace-study-2026-11.md) | Benchmark contrast and construction figures; showcase teasers and a failed redesign |
+| [trending-study-2026-11.md](references/trending-study-2026-11.md) | 29 agent, benchmark and LM-systems papers that readers shared (about 270 figures): what gets a figure chosen, a published model for each of 34 families, the chart families of benchmark papers, what slide kits and generated art cost |
 | Lab corpus: 120 papers, 261 figure anchors | `python scripts/reference_catalog.py search --query "attention mask streaming" --since 2025 --limit 6`, then `show <paper-id> --figure "Figure 2"`; atlases and per-lab studies under `references/` ([dense-paper-atlas.md](references/dense-paper-atlas.md) is the index) |
 
 Older references ([visual-design.md](references/visual-design.md), [style-recipes.md](references/style-recipes.md),
@@ -151,7 +163,13 @@ and list its strengths before its defects.
 | See behaviour on pixels | Hero-plus-satellites teaser; comparison grid with fixed camera; inset zooms |
 | Understand an interface | Rebuilt screenshot with lettered callouts; numbered interaction storyboard |
 | Compare alternatives | Matched positions and shapes; only the real differences change |
+| See ours against prior work when part of the pipeline is shared | Lanes that merge: two lanes, the shared stages drawn once at the height of both, the one quantitative difference written on each lane |
+| See ours against a baseline that agree up to one event | A fork: the shared history once, then two futures on one column grid that end on one object with both outcomes; a claim about direction is drawn as direction |
+| Believe a speed, latency or scheduling claim | Timing diagram: actor rows on one time axis, prior above ours, idle time hatched, the saving a dimension arrow |
+| Follow a check, a translation or a judgement step by step | Aligned rows: step *i* and its verdict at the same height in two containers |
 | Compare measured conditions | Claim chart (one comparison) or field chart (many systems × conditions) |
+| Rank systems, on one measure or several | Leaderboard as row-aligned measure panels, with what the data establishes about the order (registers §9) |
+| Weigh quality against cost | Scatter with the Pareto front drawn, the points on it named, the rest faded (registers §9) |
 | Inspect scaling or cost | Small-multiples grid with shared labels; quality-cost trade-off with conditions stated |
 | Diagnose a component | Paired deltas, ablation panels, distributions, shared-scale heatmaps |
 
@@ -212,12 +230,14 @@ Primitives by dimension (signatures are in `scripts/paperkit.py`; usage in visua
   `callout`, `image` (rasters embedded unchanged at 600 dpi).
 - **Arrows:** `arrow` (`dashed=`, `dotted=`, `both=`), `line`, `zoom`, `block_arrow`, `brace`, `op`.
 - **Relations:** `thread` (a curve with a dot at each end, for "this matches or implies that"); its ends
-  come from `cv.spans`, where `rich` and `para` record every marked span as (text, x0, x1, y).
-- **Charts:** `axes`, `axes_grid`, `chart_legend`, `series_kw` / `SERIES_STYLE`, `curve_label`, `radar`,
-  `spectrum`.
+  come from `cv.spans`, where `rich` and `para` record every marked span as (text, x0, x1, y). `no_flow`
+  (the flow whose absence is the claim: dashed, crossed, one sentence), `spring` (a loss that pulls two
+  things together).
+- **Charts:** `axes`, `axes_grid`, `row_panels` (rows named once, one panel and one mark per measure),
+  `chart_legend`, `series_kw` / `SERIES_STYLE`, `curve_label`, `pareto_front`, `radar`, `spectrum`.
 - **Series and keys:** `series` (one palette for a paper), `legend`, `phase_bar`, `chapter`.
-- **Audits:** `overlaps`, `text_overlaps`, `wire_crossings`; command line `fill`, `counts`, `density`, `grey`,
-  `compare`, `parity`, `swatches`, `caption`.
+- **Audits:** `overlaps`, `text_overlaps`, `wire_crossings`; command line `fill`, `thumb`, `counts`,
+  `density`, `grey`, `compare`, `parity`, `swatches`, `caption`.
 
 End every script with `assert not cv.overlaps() and not cv.text_overlaps() and not cv.wire_crossings()`.
 Lay chips out with `cv.flow_chips`, never hand-picked x positions. Put the type scale and the stroke
@@ -237,6 +257,9 @@ Worked examples to adapt (each is `python scripts/examples/<dir>/<script>.py --o
 | Example-led text: a motivating example as a scene (bubble, cards, threads) | `scene/render_retrieval_scene.py` |
 | Field chart, one column | `toolspace/render_table1_column.py` |
 | Claim chart; four-panel results figure | `memt/render_fig3.py`; `restyled/render_experiment.py` |
+| Leaderboard as row-aligned measure panels, full width | `accelerate/render_table1_rows.py` |
+| Quality against cost with the Pareto front, one column | `pareto/render_frontier_column.py` |
+| Timing diagram for a latency claim, 140 mm | `timing/render_speculation.py` (every block computed from the step times) |
 | Other example-led and line-art primitives (`listing`, `callout`, `greek`, `axes_grid`) | the `tx` and `g` blocks of the smoke test at the end of `scripts/paperkit.py` |
 | Plate: architecture | `transformer/render_fig1.py` (three sizes, two weights, bare panels), `memt/render_fig4.py`, `restyled/render_attention.py` |
 | Plate on an example × stage grid | `restyled/render_epoch_context.py` |
@@ -265,6 +288,10 @@ the PDF; the SVG keeps its text editable, so a viewer without the figure's font 
 - **Fill.** `python scripts/paperkit.py fill fig.png <width in mm>` (add `chart` for a figure of plots). It
   exits 1 when the placement is mostly blank. The fix is larger objects, a spine, or a narrower figure;
   never decoration.
+- **Thumbnail.** `python scripts/paperkit.py thumb fig.png thumb.png` and open it: the figure at 40 mm
+  wide. One contrast of shape must still be there (the gap, the merge, the staircase, the tinted row, the
+  one warm line), and it must be the content. A grey rectangle means the figure has no hero at a
+  distance; fix the composition, not the styling.
 - **Cold read.** Whoever drew a figure cannot see it fresh. If the harness can start a fresh agent or a
   second model, give it only the PNG, the caption and the model's PNG (not the brief, not the script, not
   this conversation) and these questions; otherwise answer them from the PNG at print size before
@@ -278,14 +305,23 @@ the PDF; the SVG keeps its text editable, so a viewer without the figure's font 
      position or drawn object that carries the reason. A prior-work lane is tied in by starting from the
      same input object as ours.)
   5. Which three regions look weakest (empty, cramped, pale, misaligned, wordy), and what fixes each?
-  6. Would this figure look at home beside the model figure in a best-paper talk?
-  A "no" or a wrong answer on 1–4 or 6 sends the figure back to step 2 or 3, not to a restyle.
+  6. Would this figure look at home beside the model figure in a best-paper talk? (When the model is of
+     another family or a wider plate, this asks about finish, not about how many things are drawn.)
+  A "no" or a wrong answer on 1–4 or 6 sends the figure back to step 2 or 3, not to a restyle: change
+  the composition where the reader went wrong; do not start again and do not add objects to match a
+  denser model. A fresh reader also reports things that are not there. Check each finding against the
+  render at full resolution before acting on it, and say which you rejected.
 
 - **Science.** Trace every value and edge to evidence. Check units, denominators, intervals, pairing,
-  omitted conditions and caption scope.
+  omitted conditions and caption scope. When a stated total does not follow from the stated parts (step
+  times that do not sum to the reported latency, shares that do not reach 100), draw what the parts give,
+  never the stated number on a scale that contradicts it; assert the derived value in the script and tell
+  the author which two numbers disagree before the figure is used.
 - **Count.** Hues, stroke weights, text sizes, arrow styles, icon families, panel treatments, against the
   budgets in visual-craft §14. `python scripts/paperkit.py counts fig.pdf` reads the text sizes and stroke
   widths from the export.
+- **Set.** When the paper has other figures, check this one against them: the same thing in the same hue,
+  no hue with a second owner, at most two font families across the set, one width per placement.
 - **Craft.** Walk the checklist. Run `python scripts/paperkit.py density fig.png` and compare the white
   share with the register's range; run `grey` for a field chart; for a redesign run `compare`, and `parity`
   when the source is a showcase or illustrated figure.
@@ -297,7 +333,8 @@ the PDF; the SVG keeps its text editable, so a viewer without the figure's font 
 
 Fix the most consequential defect, render and look again. Stop when the cold read finds nothing that
 changes what a reader understands or how finished the figure looks, and the checks pass; or after four
-renders, and then say what remains.
+complete drafts (a render that only fixes an overlap or a clipped label is not a draft), and then say
+what remains.
 
 ### 7. Deliver
 
@@ -320,7 +357,9 @@ separate what was inspected from what is inferred.
 - Every colour, line style, hatch, icon and numeral is defined in the figure or its caption.
 - The picture sentence passes the table test and the islands test; every concept in the message is drawn.
 - The render has been revised at least once after a cold read, has been compared with a model figure, and
-  passes `paperkit.py fill`.
+  passes `paperkit.py fill`; its 40 mm thumbnail still shows the hero.
+- Nothing in it could be deleted without losing a fact: no frame around a panel, no nested cards, no
+  ornament.
 - The export has been opened and inspected; the audits pass; unavailable checks are disclosed.
 - The figure regenerates from preserved inputs and editable source.
 

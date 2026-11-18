@@ -235,6 +235,29 @@ class Canvas:
             self.text(max(1.8, x - (12.0 if row_titles else 8.5)), y + h / 2, ylabel, size=size - 0.3, rotation=90)
         return axs
 
+    def row_panels(self, x, y, w, h, n, widths, gap=6.0, xlims=None, size=None):
+        """Row-aligned measure panels: n rows named once at the left of x, then one panel per measure, each with
+        its own x scale and its own mark (bar, dumbbell, lollipop, point-range, 100 % stack). The rows are the
+        shared axis, so a reader compares measures along a row and systems down a column, and no label is
+        rotated (Accelerate Bench Figs. 4-5; references/trending-study-2026-11.md). Panels keep only the
+        bottom spine and a light vertical grid. `widths` are relative shares of w; `gap` is in mm.
+        Returns (axes, row_y): inside every axes row i sits at y = i with row 0 on top; row_y(i) is the same
+        row's canvas y in mm, for the names and identity marks drawn once at the left."""
+        size = size or self.size
+        unit = (w - gap * (len(widths) - 1)) / sum(widths)
+        axs, x0 = [], x
+        for k, share in enumerate(widths):
+            ax = chart_axes(self.fig.add_axes([x0 / self.w, y / self.h, unit * share / self.w, h / self.h]),
+                            grid="x", size=size)
+            ax.set_ylim(n - 0.5, -0.5)
+            ax.set_yticks([])
+            ax.spines["left"].set_visible(False)
+            if xlims:
+                ax.set_xlim(*xlims[k])
+            axs.append(ax)
+            x0 += unit * share + gap
+        return axs, (lambda i: y + h * (1 - (i + 0.5) / n))
+
     def chart_legend(self, handles, labels, x, y, ncol=None, size=None, loc="lower center", **kw):
         """One frameless legend row for a whole grid of axes, anchored at (x, y) mm: put it above the grid,
         the paper's own method first. Use ax.legend(frameon=False) instead when one panel has an empty corner."""
@@ -379,9 +402,12 @@ class Canvas:
     # ---- containers -------------------------------------------------------
     def box(self, x, y, w, h, r="neutral", title=None, sub=None, *, fill=None, stroke=None,
             lw=0.6, radius=None, dashed=False, shadow=False, size=None, tsize=None, icon=None,
-            weight="bold", z=5, title_color=None, align="center", name=None, alpha=1.0, gap=None, container=False):
+            weight="bold", z=5, title_color=None, align="center", name=None, alpha=1.0, gap=None, container=False,
+            hatch=None):
         """Rounded node. Title bold in role ink, optional sub-line (math welcome). container=True marks a lane or
-        background field that wires may cross, so wire_crossings() ignores it."""
+        background field that wires may cross, so wire_crossings() ignores it. hatch="////" draws the
+        hatch in the stroke colour (idle time, a merged state); hatch lines are 0.45 pt and are not a
+        stroke weight of the figure."""
         c = role(r)
         rad = radius if radius is not None else min(1.6, 0.16 * h)
         if shadow:
@@ -390,7 +416,7 @@ class Canvas:
                               fc="#1A2230", alpha=0.08, zorder=z - 0.2))
         p = FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={rad}",
                            lw=lw, ec=stroke or c["stroke"], fc=fill or c["fill"], zorder=z,
-                           ls=(0, (3, 2)) if dashed else "-", alpha=alpha)
+                           ls=(0, (3, 2)) if dashed else "-", alpha=alpha, hatch=hatch)
         self.ax.add_patch(p)
         if not container:
             self.solids.append((x, y, w, h, f"box '{title or ''}'", p))
@@ -489,8 +515,9 @@ class Canvas:
         return bad
 
     def text_overlaps(self, tol=0.15):
-        """Layout audit for all text: pairs of labels whose rendered boxes overlap, and labels cut by the
-        canvas edge. Empty list = clean. Complements overlaps() (chips) for bubbles, cards and captions."""
+        """Layout audit for all text, on the canvas and inside chart axes (data labels, ticks, axis
+        titles): pairs of labels whose rendered boxes overlap, and labels cut by the canvas edge. It does
+        not see a line or arrow drawn through a label inside a chart; look for that. Empty list = clean. Complements overlaps() (chips) for bubbles, cards and captions."""
         r = self._renderer()
         inv = self.ax.transData.inverted()
         boxes = []
@@ -520,6 +547,7 @@ class Canvas:
             # axis labels are placed during a draw, so they are read from the renderer that drew them
             (x0, y0), (x1, y1) = inv.transform(tx.get_window_extent(r).get_points())
             tbox.append((x0, y0, x1, y1, tx.get_text().replace("\n", " ")[:28]))
+            boxes.append(tbox[-1])  # a chart's own labels are paired with each other and with canvas text
         bad = [f"'{s}' is cut by the canvas edge" for x0, y0, x1, y1, s in tbox
                if x0 < -tol or y0 < -tol or x1 > self.w + tol or y1 > self.h + tol]
         for i, (a0, b0, a1, b1, s) in enumerate(boxes):
@@ -598,7 +626,7 @@ class Canvas:
         return x0 + 2.0, y + 2.0, x1 - x0 - 4.0, h - 8.0
 
     def bubble(self, cx, cy, text, tail=None, r="neutral", size=None, w=None, h=None, fill="white", z=14,
-               italic=False, left=None):
+               italic=False, left=None, lw=0.55):
         """Speech bubble centred at (cx, cy) (or with its left edge at `left`), sized from its text, with
         vector text (never bake dialogue into a generated image). tail = (tx, ty), the point the tail aims
         at, e.g. the speaker's head; it leaves from the side of the bubble that faces that point."""
@@ -611,7 +639,7 @@ class Canvas:
             cx = left + w / 2
         x, y = cx - w / 2, cy - h / 2
         self.ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle=f"round,pad=0,rounding_size={min(h, w) * 0.3}",
-                          lw=0.55, ec=c["stroke"], fc=fill, zorder=z))
+                          lw=lw, ec=c["stroke"], fc=fill, zorder=z))
         if tail:
             tx, ty = tail
             if x <= tx <= x + w or y <= ty <= y + h and x <= tx <= x + w:
@@ -626,7 +654,7 @@ class Canvas:
                 bx, by = (x if side == "left" else x + w), min(max(ty, y + 1.6), y + h - 1.6)
                 base = [(bx, by - 0.9), (bx, by + 0.9)]
                 inner = (bx + (0.6 if side == "left" else -0.6), by)
-            self.ax.add_patch(Polygon([base[0], (tx, ty), base[1]], closed=True, fc=fill, ec=c["stroke"], lw=0.55,
+            self.ax.add_patch(Polygon([base[0], (tx, ty), base[1]], closed=True, fc=fill, ec=c["stroke"], lw=lw,
                                       zorder=z - 0.1))
             # hide the bubble outline where the tail joins it
             self.ax.add_patch(Polygon([base[0], base[1], inner], closed=True, fc=fill, ec="none", zorder=z + 0.05))
@@ -1440,6 +1468,37 @@ class Canvas:
         self.dot(x0, y0, color, d, z + 0.1)
         self.dot(x1, y1, color, d, z + 0.1)
 
+    def no_flow(self, pts, label=None, color=LINE, lw=0.7, size=None, s=2.0, z=8, **kw):
+        """A flow that does not exist, drawn because its absence is the claim ("no checker feedback reaches
+        the generator", LeanPRM Fig. 1): the dashed arrow it would have been, a cross on its longest segment,
+        and one short sentence over the cross. At most one per figure; an ordinary missing edge is simply not
+        drawn. Extra keywords go to arrow()."""
+        self.arrow(pts, color=color, lw=lw, dashed=True, z=z, **kw)
+        k = max(range(len(pts) - 1), key=lambda i: math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]))
+        mx, my = (pts[k][0] + pts[k + 1][0]) / 2, (pts[k][1] + pts[k + 1][1]) / 2
+        self.ax.add_patch(Circle((mx, my), s * 0.62, fc="white", ec="none", zorder=z + 0.1))
+        for sx in (1, -1):
+            self.ax.plot([mx - s / 2, mx + s / 2], [my - sx * s / 2, my + sx * s / 2], color="black", lw=lw * 1.7,
+                         zorder=z + 0.2, solid_capstyle="butt")
+        if label:
+            self.text(mx, my + s / 2 + 0.9, label, size=size or self.size, style="italic", va="bottom", color="black")
+
+    def spring(self, p0, p1, n=5, amp=1.1, color=LINE, lw=0.7, z=8):
+        """A zigzag between two things that a loss pulls together (a matching or distillation term): it says
+        "these are driven to agree", where an arrow would say that one feeds the other (TreeOPSD Fig. 2).
+        Set the loss beside it as the label; one per figure."""
+        (x0, y0), (x1, y1) = p0, p1
+        L = math.hypot(x1 - x0, y1 - y0)
+        ux, uy = (x1 - x0) / L, (y1 - y0) / L
+        pts = [p0, (x0 + ux * 0.18 * L, y0 + uy * 0.18 * L)]
+        for k in range(2 * n):
+            t, sgn = 0.18 + 0.64 * (k + 0.5) / (2 * n), 1 if k % 2 else -1
+            pts.append((x0 + ux * t * L - uy * amp * sgn, y0 + uy * t * L + ux * amp * sgn))
+        pts += [(x0 + ux * 0.82 * L, y0 + uy * 0.82 * L), p1]
+        self.wires.append((pts, None))
+        self.ax.add_patch(PathPatch(Path(pts), fc="none", ec=color, lw=lw, zorder=z, joinstyle="miter",
+                                    capstyle="butt"))
+
     def dot(self, x, y, color=LINE, d=0.9, z=9):
         self.ax.add_patch(Circle((x, y), d / 2, fc=color, ec="none", zorder=z))
 
@@ -1662,6 +1721,18 @@ def curve_label(ax, xs, ys, i, text, size=6.5, color="black", boxed=True, **kw):
                    transform_rotates_text=True, ha="center", va="center", bbox=box, zorder=6, **kw)
 
 
+def pareto_front(cost, value):
+    """Indices of the points that no other point beats on both axes (lower cost, higher value), ordered by
+    cost. Draw the front as a step line through these, enlarge and name them, and fade the dominated points
+    (visual-craft section 11, quality-cost scatter)."""
+    best, out = -math.inf, []
+    for i in sorted(range(len(cost)), key=lambda i: (cost[i], -value[i])):
+        if value[i] > best:
+            best = value[i]
+            out.append(i)
+    return out
+
+
 def density(png):
     """(white, tint, ink) percentages of a rendered figure: grey >=250, 200-249, <120."""
     a = np.asarray(_open_rgb(png).convert("L"), float)
@@ -1819,9 +1890,9 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
     cmd, args = sys.argv[1], sys.argv[2:]
     USAGE = ("usage: paperkit.py [density PNG... | compare ORIGINAL NEW OUT | parity ORIGINAL NEW | "
              "swatches PNG... OUT | caption FILE_OR_TEXT | grey PNG OUT | counts PDF... | "
-             "fill PNG WIDTH_MM [chart]]")
+             "fill PNG WIDTH_MM [chart] | thumb PNG OUT]")
     if len(args) < {"density": 1, "compare": 3, "parity": 2, "swatches": 2, "caption": 1, "grey": 2,
-                    "counts": 1, "fill": 2}.get(cmd, 0):
+                    "counts": 1, "fill": 2, "thumb": 2}.get(cmd, 0):
         sys.exit(USAGE)
     if cmd == "counts":  # what the budgets count: text sizes and stroke widths in the exported PDF
         for p in args:
@@ -1840,6 +1911,10 @@ if __name__ == "__main__" and len(__import__("sys").argv) > 1:
         empty, limit, advice = fill(args[0], float(args[1]), chart="chart" in args[2:])
         print(f"FAIL {advice}" if advice else f"ok: {empty}% blank (limit {limit}%)")
         sys.exit(1 if advice else 0)
+    elif cmd == "thumb":  # the figure at 40 mm wide (236 px at 150 dpi): what a reader sees in a feed or a
+        im = _open_rgb(args[0])  # contact sheet. One contrast of shape must survive (visual-craft section 1)
+        im.resize((236, max(1, round(im.height * 236 / im.width))), 1).save(args[1])  # 1 = Lanczos
+        print(args[1])
     elif cmd == "grey":  # what a greyscale printout shows: every series must still be told apart
         _open_rgb(args[0]).convert("L").save(args[1])
         print(args[1])
@@ -1972,7 +2047,12 @@ elif __name__ == "__main__":  # smoke test: one of every primitive, asserted to 
     y0 = tx.head(50, 5, "b", "Plain head", note="no band", size=7.0, rule=30)
     assert 0 < y0 < 5
     tx.arrow([(46, 20), (46, 14)], color="black", lw=0.6, head=1.0, dotted=True, both=True)
+    tx.no_flow([(52, 27.5), (80, 27.5)], color="black", lw=0.6, head=1.0)   # an absent edge, and a matching loss
+    tx.spring((82, 25), (82, 15), color="black", lw=0.6)
     assert not tx.text_overlaps(), tx.text_overlaps()
+    rp, row_y = tx.row_panels(60, 1, 20, 4, 2, widths=[1, 1], gap=2, xlims=[(0, 1), (0, 1)])
+    assert len(rp) == 2 and row_y(0) > row_y(1) and rp[0].get_ylim() == (1.5, -0.5)
+    assert pareto_front([1, 2, 3, 2.5], [1, 3, 2, 4]) == [0, 1, 3]            # (3, 2) is dominated by (2, 3)
     tx.save(os.path.join(d, "text"))
     assert not g.text_overlaps(), g.text_overlaps()
     g.save(os.path.join(d, "grid"))

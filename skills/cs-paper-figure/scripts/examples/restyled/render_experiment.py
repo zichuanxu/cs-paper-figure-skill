@@ -1,6 +1,6 @@
 """Experiment: results figure for a synthetic memory-policy study (four bare panels, 178 x 129 mm).
 
-Source. gallery/before/experiment.png, an older four-panel drawing of the same study, and the bundled
+Source. an earlier drawing that is no longer in the repository, an older four-panel drawing of the same study, and the bundled
 analysis (data/experiment/analysis.json). The analysis is the output of a constructed online-memory
 simulator: 4 policies x 4 task families x 4 memory budgets x 24 matched seed blocks x 96 episodes.
 The numbers are SYNTHETIC; the figure says so once, in the words of the file's own `data_status`.

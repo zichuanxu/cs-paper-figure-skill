@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Scene-grounded planning with swept-path checks: one scene, three rollouts, one executed step.
 
-Source: gallery/before/scene-planning.png (a deterministic illustrative simulation, not a
+Source: an earlier drawing that is no longer in the repository (a deterministic illustrative simulation, not a
 benchmark) and the bundled data/scene-planning/scene_fixture.json, computed_rollouts.json and
 scene_model.py, the model that produced the rollouts.
 

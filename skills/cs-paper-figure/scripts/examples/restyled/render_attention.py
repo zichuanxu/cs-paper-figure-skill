@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Causal cache attention: one column grid for the cache, the mask and a worked read.
 
-Source: gallery/before/attention.png (an original schematic with an illustrative numerical
+Source: an earlier drawing that is no longer in the repository (an original schematic with an illustrative numerical
 example; it makes no empirical claim) and the bundled data/attention/inputs.json and
 numerical_checks.json.
 

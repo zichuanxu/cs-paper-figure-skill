@@ -11,14 +11,15 @@ An agent skill for designing, drawing and critiquing figures for computer-scienc
 | Part | Purpose |
 | --- | --- |
 | [`SKILL.md`](skills/cs-paper-figure/SKILL.md) | Ten design principles and the workflow: brief → message, hero and register → structure → visual system → reproducible source → review |
-| [`model-figures.md`](skills/cs-paper-figure/references/model-figures.md) + [`assets/models/`](skills/cs-paper-figure/assets/models/) | What to look at before drawing: the seven things every strong figure has that a rule-abiding plain one lacks, the two ways a figure passes every check and still fails (the typeset table, the islands), and a rendered model figure for each of 16 families |
+| [`model-figures.md`](skills/cs-paper-figure/references/model-figures.md) + [`assets/models/`](skills/cs-paper-figure/assets/models/) | What to look at before drawing: the seven things every strong figure has that a rule-abiding plain one lacks, the two ways a figure passes every check and still fails (the typeset table, the islands), the opposite failure (decoration in place of a picture), and a rendered model figure for each of 19 families |
 | [`visual-craft.md`](skills/cs-paper-figure/references/visual-craft.md) | The rulebook by design dimension, with measured values: message and hero, register, colour, typography, layout, white space, shapes, icons, arrows, text, charts, captions, redesign protocol, checklist |
 | [`registers.md`](skills/cs-paper-figure/references/registers.md) | Rules for one kind of figure at a time: line art (systems, PL, theory), idea schematics, example-led text and interface figures, image-led teasers and grids, plates, benchmark contrast figures, showcase teasers |
 | [`venue-study-2026-11.md`](skills/cs-paper-figure/references/venue-study-2026-11.md) | The evidence: about 90 figures from 29 award papers at 17 venues, measured; what held in every venue family, which earlier rules of this skill it overturned, and model figures per family |
+| [`trending-study-2026-11.md`](skills/cs-paper-figure/references/trending-study-2026-11.md) | About 270 figures from 29 agent, benchmark and LM-systems papers that readers shared: what gets a figure chosen and whether that attraction is honest, a published model for each of 34 families (timing diagram, lanes that merge, aligned verdicts, counts strip, table-chart, concept plot, …), and what slide kits, generated art and scaled-down charts cost |
 | [`architecture-study-2026-11.md`](skills/cs-paper-figure/references/architecture-study-2026-11.md) | What 23 vision/multimodal method figures (Holmes, ReSet, CoPS, SemDiff, LFBNet, HFF-Net, VideoFusion, …) do well and badly, and the rules taken from them |
 | [`arebench-study-2026-11.md`](skills/cs-paper-figure/references/arebench-study-2026-11.md) | What ARE-bench Figs. 1–3 do well and badly: contrast figures, task cut strips, workspace file trees, construction pipelines, results-chart colour identity |
 | [`toolspace-study-2026-11.md`](skills/cs-paper-figure/references/toolspace-study-2026-11.md) | What ToolSpace Fig. 1 does well (isometric plates, logos as identity marks, radar envelopes) and how a tidier redesign lost it: the "strengths first" rule for redesigns |
-| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) column-width charts (`axes_grid`, `chart_legend`, greyscale-safe `SERIES_STYLE`, `curve_label`), marked spans and wrapped example text (`rich`, `para`), code listings and callouts, plain panel heads, relation threads between marked spans (`thread`, `spans`), user and agent glyphs, plus layout audits and `fill`, `counts`, `density`, `grey`, `compare`, `parity` and `caption` checks |
+| [`paperkit.py`](skills/cs-paper-figure/scripts/paperkit.py) | Drawing primitives in millimetres at print size (cards, section frames, cuboids and layer slabs, feature maps, numeric matrices, mini plots, graphs, key strips, matrices, trapezoids, ⊕/⊙, tokens, documents, icons, routed arrows, typeset math) column-width charts (`axes_grid`, `chart_legend`, greyscale-safe `SERIES_STYLE`, `curve_label`), row-aligned measure panels and Pareto fronts (`row_panels`, `pareto_front`), the absent edge and the matching loss (`no_flow`, `spring`), marked spans and wrapped example text (`rich`, `para`), code listings and callouts, plain panel heads, relation threads between marked spans (`thread`, `spans`), user and agent glyphs, plus layout audits and `fill`, `thumb`, `counts`, `density`, `grey`, `compare`, `parity` and `caption` checks |
 | [`figure-series.md`](skills/cs-paper-figure/references/figure-series.md) | Figure series for surveys and frameworks: one taxonomy palette, chapter frames, running examples, gate stacks, spectra, illustrated scenes with vector dialogue |
 | [`codex_images.py`](skills/cs-paper-figure/scripts/codex_images.py) + [`image-generation.md`](skills/cs-paper-figure/references/image-generation.md) | Optional matched icons, scenes and vignettes generated with Codex CLI, embedded at full resolution |
 | `scripts/examples/`, `references/` | The gallery's render scripts; a 120-paper figure corpus, per-lab studies and review checklists |
@@ -82,42 +83,15 @@ A register is a coherent set of choices for ground, fills, strokes and type; the
 
 [PDF](gallery/ray/ray_fig7_example.pdf) · [source](skills/cs-paper-figure/scripts/examples/ray/render_fig7.py)
 
-### Harness², Figures 2 and 3 ([arXiv:2610.14224](https://arxiv.org/abs/2610.14224))
-
-| Original | Redesign |
-| --- | --- |
-| <img src="gallery/harness2/original/harness2_original_fig2.png" width="420"> | <img src="gallery/harness2/harness2_fig2_components.png" width="420"> |
-| <img src="gallery/harness2/original/harness2_original_fig3.png" width="420"> | <img src="gallery/harness2/harness2_fig3_pipeline.png" width="420"> |
-
-- Fig. 2 follows one model call from left to right: files, context, frozen model, plugin hook, tools. Each of the eight components is a file card with its activation as a tag on the border (solid = every call, dashed = on demand), and the context is a stack whose bands take the colour of the group that owns them.
-- Fig. 3 nests the task-level frame inside the harnessing-level frame. Every harness is a rack of C1–C8 in which grey cells are inherited, teal cells were edited by the invariant candidate and coral cells by the domain candidate, so the composed successor shows the merge on the object. Both probes are contrasted with the same reference record e₀.
-- The two figures share one visual system (the rack, the execution-record page, one robot and file-icon family, no hue with two meanings). The icons come from the skill's Codex helper; `--vector-icons` renders without them.
-
-[Fig. 2 PDF](gallery/harness2/harness2_fig2_components.pdf) · [Fig. 3 PDF](gallery/harness2/harness2_fig3_pipeline.pdf) · [source](skills/cs-paper-figure/scripts/examples/harness2/)
-
-### A figure series: *Proactive AI for Superintelligent Agents*
-
-Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-research2023-media/pubtools/1048480.pdf)) rebuilt as one series; Fig. 1 is shown here, the other five are in the PDFs and source linked below. The originals are illustrated figures, and their pictures, solid headers and large type are what make them work, so the redesigns keep all of that and fix the faults: each capacity's colour now stays the same in every figure (the paper paints Agenda pink, purple and blue), text baked into the illustrations becomes editable vector text, and overlapping eras, crossings and uneven type are cleaned up. The 41 illustrations come from the skill's Codex helper as one cast; every redesign passes `paperkit.py parity` (not emptier, greyer or less illustrated than its original).
-
-| | Original | Redesign |
-| --- | --- | --- |
-| **Fig. 1**, proactive vs. reactive | <img src="gallery/proactive/original/proactive_original_fig1.png" width="400"> | <img src="gallery/proactive/proactive_overview.png" width="400"> |
-
-- Two rows over three shared columns (identify the work and initiate action, act, outcome). In the reactive row the first columns are the user's turn; in the proactive row the same columns hold Awareness, Anticipation, Agenda and Arbitration, and "Act when asked" sits directly above "Action: before being asked".
-- Each stage card ends in an object made from its own definition: a progress bar with the gap left open, the candidate goals as a checklist, three ticked tests (worthwhile, timely, safe), and suggest / assist / execute on a lightness ramp.
-- Adaptation is a rail under the stages: outcomes and feedback enter it, dashed arrows return to every capacity, and no feedback line crosses a card.
-
-[PDFs](gallery/proactive/) · [source](skills/cs-paper-figure/scripts/examples/proactive/) · [what the studies found](skills/cs-paper-figure/references/figure-series.md)
-
 ### ReHarness, Figure 1 ([arXiv:2610.12668](https://arxiv.org/abs/2610.12668))
 
 | Original | Redesign |
 | --- | --- |
 | <img src="gallery/reharness/original/reharness_original_fig1.png" width="420"> | <img src="gallery/reharness/reharness_fig1.png" width="420"> |
 
-- One instance stream, two harnesses: the three trajectories are drawn once in the middle, with the stateful harness above and ReHarness below on the same column grid. The τ<sub>t+1</sub> card carries both answers, {7,4,3} wrong for (a) and {3,4,7} correct for (b).
-- Backward revision is its own orange row under the unchanged blue forward row. The h′<sub>t</sub> card shows the edit itself: "Put larger numbers first" struck out, "Larger first only if descending" with the new condition highlighted.
-- Every numbered edge carries its label on the wire ("write R<sub>t</sub>", "read R′<sub>t−1</sub>", "revise R<sub>t−1</sub>"), coloured by type; numbers are tokens shaded by magnitude, and each panel ends on a verdict pill.
+- One history, two futures. The original draws everything twice in two panels; here the shared history (task, memory, failed task) is drawn once as one row, and at the failure the path forks: the stateful harness runs straight on, ReHarness drops into the orange lane below.
+- "Backward" is a direction, not a word: the one arrow that points left runs from the failed task back under the history to the old reflection in the same notebook, where "Put larger numbers first" is struck out and "only if descending" is added.
+- Both futures end on one card for the next task, with its input between the two answers: {7,4,3} misled again, {3,4,7} guided correctly. Hue is the agent (slate decision, blue memory, orange revision); eight arrows instead of fourteen, no frames around half the figure, no key strip.
 
 [PDF](gallery/reharness/reharness_fig1.pdf) · [source](skills/cs-paper-figure/scripts/examples/reharness/render_fig1.py)
 
@@ -127,10 +101,10 @@ Six figures of a 15-figure survey ([PDF](https://storage.googleapis.com/gweb-res
 | --- | --- |
 | <img src="gallery/toolspace/original/toolspace_original_fig1.png" width="420"> | <img src="gallery/toolspace/toolspace_fig1_overview.png" width="420"> |
 
-- What the original does well is kept: the tool space is a plate floating between the agent and a plate of MCP servers, with tools standing on it as tiles and the ten servers shown by their own logos; the two radar charts stay radars, because the claim is that one polygon encloses the others.
-- What it does badly is repaired. ToolSpace is blue in every panel. Each radar prints the ToolSpace value at every vertex and, on the one axis it loses (τ³-Bench Banking, 43.3 against 46.9), the winner's value beside it; the card states that each axis runs from 0 to its best score. All baseline values are from the paper's Table 1.
-- The upper plate opens by zoom rays into the largest panel, where one hue per environment is shared by a walk node, its cluster and its row in the tool chain: "8 calls across 4 environments". Panel (d) shows the drop the text claims, a pale bar to the Standard score and a blue bar to the Pro score for all seven models of Table 2, each row led by the model's mark; the original draws six models and no Standard scores.
-- A first redesign of this figure replaced the plates, logos and radars with a flat box, text labels and dot rows, and came out tidier and plainer. The lessons are in [`toolspace-study-2026-11.md`](skills/cs-paper-figure/references/toolspace-study-2026-11.md), and `paperkit` gained `plate`, `tile` and `radar`.
+- One spine that ends on the numbers, instead of four panels in a 2 × 2 grid. The original's plate and its graph are fused into one isometric scene: the tool-composition graph is drawn on the Tool Space plate itself, four environments are coloured regions, and one state-aware walk of eight calls is the only saturated path. No zoom is needed, and no panel has a frame.
+- The walk is then laid flat: the same eight numerals on a rail under their API names, in their environment's hue, funnelling into one task card ("task q + checks V, kept if the replay passes"). The card forks into the paper's two uses of the tasks: train on them, and extend two benchmarks.
+- What the original does well is kept: plates with depth, the ten servers and seven models by their own marks, radars for the claim that one polygon exceeds the others. What it does badly is repaired: the radars share one stated scale (0 to 80 on every axis), print the ToolSpace value at each vertex and the rival's on the axis it loses, and the Pro result is drawn as a fall, a wedge from each model's Standard score down to its mark at the Pro score, for all seven models of Table 2 (the original draws six and no Standard scores).
+- Facts on the figure are the paper's text, not its teaser: the walk is a state-aware random walk (the original's key says depth-first), nodes are tool-call patterns (77,760 from 2,042 tools in 804 environments). The lessons from the first, plainer redesign of this figure are in [`toolspace-study-2026-11.md`](skills/cs-paper-figure/references/toolspace-study-2026-11.md).
 
 [PDF](gallery/toolspace/toolspace_fig1_overview.pdf) · [source](skills/cs-paper-figure/scripts/examples/toolspace/render_fig1.py)
 
@@ -173,39 +147,24 @@ Most figures in a two-column venue are 84 mm wide, and a column figure is its ow
 
 [PDFs](gallery/memt/) · sources: [schematic](skills/cs-paper-figure/scripts/examples/memt/render_idea_column.py), [chart](skills/cs-paper-figure/scripts/examples/toolspace/render_table1_column.py)
 
-### A motivating example as a scene, not a table
+### A leaderboard and a frontier, from a study of shared papers
 
-<img src="gallery/scene/retrieval_scene.png" width="640">
+| Leaderboard with several measures (170 mm) | Quality against cost (84 mm) |
+| --- | --- |
+| <img src="gallery/accelerate/accelerate_table1_rows.png" width="520"> | <img src="gallery/pareto/pareto_frontier_column.png" width="320"> |
 
-A motivating example is the figure most often drawn as a table: sentences in rows, a status column, score bars. This one (illustrative, written for the skill) draws what a table cannot. The user asks the question in a bubble, the passages are cards on one tray, and a thread runs from the marked words in the question to the card each retriever ranks first, grey for the keyword baseline and blue for ours, with the relation named on the thread. The threads start from span positions the kit records, so they sit on the words in the PNG, PDF and SVG alike.
+Benchmark and agent papers lead with their numbers. These two families came out of a study of about 270 figures in 29 papers that readers shared in November 2026.
 
-[PDF](gallery/scene/retrieval_scene.pdf) · [source](skills/cs-paper-figure/scripts/examples/scene/render_retrieval_scene.py)
+- Accelerate Bench's Table 1 ([arXiv:2611.20882](https://arxiv.org/abs/2611.20882)) as row-aligned measure panels: sixteen agents named once with their vendor's mark, three measures as three panels with three kinds of mark, nothing rotated and no legend. The two agents the paper's bootstrap separates take the one hue; a bracket says, in the paper's words, that the ranks below them are not established, which a sorted bar chart otherwise claims by itself.
+- A cost–reward scatter (synthetic data, labelled in the figure) with the Pareto front drawn as a step: points on the front are large, outlined and named in place; dominated ones are the same marks, small and faded; hue is one factor and marker shape the other, on one key grid.
 
-### Five more examples
+[PDFs](gallery/accelerate/) · sources: [leaderboard](skills/cs-paper-figure/scripts/examples/accelerate/render_table1_rows.py), [frontier](skills/cs-paper-figure/scripts/examples/pareto/render_frontier_column.py)
 
-Illustrative fixtures or synthetic data, not real benchmark results.
+<img src="gallery/timing/timing_speculation.png" width="760">
 
-**Method.** A memory-update loop drawn as one clockwise cycle of real artifacts: ledger rows, three edit cards, a conflict matrix, the candidate record, and a paired-replay gate whose "3 > 1" drives the only arrow into memory v13.
+A timing diagram for a latency claim (140 mm; an illustrative method with made-up step times). A fresh agent drew it from a one-paragraph brief with the updated skill alone, as the test of the changes; it is kept as the model for its family. Every block is computed from the step times, a hit and a miss are both drawn, and the saving is a dimension arrow.
 
-<img src="gallery/after/method.png" width="760">
-
-**Attention.** One eight-column grid runs through the cache slots, the 4 × 8 causal mask and the worked read for q10, so a key keeps its position from the slot that stores it to the weight it receives.
-
-<img src="gallery/after/attention.png" width="760">
-
-**Experiment.** Four bare panels and one key row, with no cards. One policy keeps one colour and marker in all four panels; the primary contrast (+6.6 pp) is the only filled cloud of 24 seed-block dots, and the grand mean of the heat table is asserted equal to it.
-
-<img src="gallery/after/experiment.png" width="760">
-
-**Scene planning.** Three candidate rollouts share one scene; the stretch of the direct path inside the barrier is the thick stroke with a cross, and the only solid arrow is the first step that is executed.
-
-<img src="gallery/after/scene-planning.png" width="760">
-
-**Epoch context.** One lane per replayed case crosses the three stages on one line grid, with no panel frames and no wires. The regressed case is the only tinted lane, so it can be followed from the two checks that flipped to the context edit they caused and the clause that cites it.
-
-<img src="gallery/after/epoch-context.png" width="760">
-
-[PDFs](gallery/after/) · [source](skills/cs-paper-figure/scripts/examples/restyled/)
+[PDF](gallery/timing/timing_speculation.pdf) · [source](skills/cs-paper-figure/scripts/examples/timing/render_speculation.py)
 
 ## Installation
 
@@ -267,4 +226,4 @@ Every number comes from the inputs and is asserted in code; captions say what is
 
 ## License
 
-[MIT](LICENSE), except the original figure crops in `gallery/*/original/`, each © its authors: MemT-1.0 (CC BY-NC-SA 4.0), Harness², GroupAssistBench and ReAct (CC BY 4.0), the Transformer (reproduced under Google's permission for scholarly use with attribution), and *Proactive AI for Superintelligent Agents*, ReHarness, ToolSpace, LoRA and Ray (reproduced for commentary and comparison; removed on request). All redesigns are independent demonstrations, not affiliated with the papers' authors. Product and model logos in the ToolSpace example are the marks embedded in that paper's figure; they are trademarks of their owners and are used only to identify the products.
+[MIT](LICENSE), except the original figure crops in `gallery/*/original/`, each © its authors: MemT-1.0 (CC BY-NC-SA 4.0), GroupAssistBench and ReAct (CC BY 4.0), the Transformer (reproduced under Google's permission for scholarly use with attribution), and ReHarness, ToolSpace, LoRA and Ray (reproduced for commentary and comparison; removed on request). All redesigns are independent demonstrations, not affiliated with the papers' authors. Product and model logos in the ToolSpace example are the marks embedded in that paper's figure; they are trademarks of their owners and are used only to identify the products.
