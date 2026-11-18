@@ -1,6 +1,6 @@
 ---
 name: cs-paper-figure
-description: Design, implement, critique and redesign figures for computer science research papers, with deliberate control of colour, layout, typography, white space, shapes, icons and arrows. Use for method and architecture diagrams, idea schematics, system and protocol figures, annotated examples, interface and study figures, teasers, qualitative grids, evaluation charts, benchmark leaderboards, cost–quality plots and multi-figure sets, at single-column or full width. Use when asked to draw or improve a paper figure, make a NeurIPS/ICML/ICLR/CVPR/ACL/CHI/SOSP/OSDI/SIGGRAPH-quality figure, redesign Figure N of a paper, or extract a figure's visual style. Rules are measured from award papers at those venues, 2025–2026 AI-lab reports and widely shared 2026 agent and benchmark papers. Produces scientifically faithful, editable, reproducible vector figures.
+description: Design, draw, critique and redesign figures for computer science research papers as editable, reproducible vector graphics. Use when the user wants to create or improve a paper figure, such as a method or architecture diagram, an idea schematic, a system or protocol figure, an annotated example, a teaser, a qualitative grid, a results chart or leaderboard, or a set of figures for one paper. Also use when asked to redesign or critique Figure N of a paper, or to match the visual style of an existing figure.
 ---
 
 # CS Paper Figure
